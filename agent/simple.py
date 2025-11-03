@@ -144,12 +144,15 @@ class SimpleAgent:
         # Display parameters for LLM prompts
         self.history_display_count = history_display_count
         self.actions_display_count = actions_display_count
+
+        self.turn_summaries = []
         
         # Movement memory clearing interval
         self.movement_memory_clear_interval = movement_memory_clear_interval
         
         # Initialize storyline objectives for Emerald progression
         self._initialize_storyline_objectives()
+
         
     def _initialize_storyline_objectives(self):
         """Initialize the main storyline objectives for Pokémon Emerald progression"""
@@ -753,6 +756,8 @@ class SimpleAgent:
             active_objectives = self.get_active_objectives()
             completed_objectives_list = self.get_completed_objectives()
             objectives_summary = self._format_objectives_for_llm(active_objectives, completed_objectives_list)
+
+            recent_turn_summaries = self.turn_summaries[-20:]
             
             # Build pathfinding rules section (only if not in title sequence)
             pathfinding_rules = ""
@@ -800,7 +805,8 @@ EXAMPLE - DO THIS INSTEAD:
             If you notice that you are repeating the same action sequences over and over again, you definitely need to try something different since what you are doing is wrong! Try exploring different new areas or interacting with different NPCs if you are stuck.
             Look at the summary of your recent turns. This will give you an overview of your recent history. Use this to determine if you are stuck or need to try a different approach.
 
-RECENT TURN SUMMARIES 
+RECENT TURN SUMMARIES:
+{recent_turn_summaries}
 
 RECENT ACTION HISTORY (last {self.actions_display_count} actions):
 {recent_actions_str}
@@ -845,8 +851,9 @@ REASONING:
 ACTION:
 [Your final action choice - PREFER SINGLE ACTIONS like 'RIGHT' or 'A'. Only use multiple actions like 'UP, UP, RIGHT' if you've verified each step is WALKABLE in the movement preview and map.]
 
-SUMMARIZE:
-[Summarize your current turn and explain briefly why you took that action. This response will persist in your context for multiple turns]
+SUMMARY:
+[Summarize your current turn and explain briefly why you took that action. This response will persist in your context for multiple turns. Use this to pass on information to subsequent turns.]
+
 {pathfinding_rules}
 
 Context: {context} | Coords: {coords} """
@@ -880,7 +887,10 @@ Context: {context} | Coords: {coords} """
                 return "WAIT"
             
             # Extract action(s) from structured response
-            actions, reasoning = self._parse_structured_response(response, game_state)
+            actions, reasoning, turn_summary = self._parse_structured_response(response, game_state)
+
+            if turn_summary:
+                self.turn_summaries.append(turn_summary)
             
             # Check for failed movement by comparing previous coordinates
             if len(self.state.history) > 0:
@@ -1001,7 +1011,7 @@ Context: {context} | Coords: {coords} """
         return "\n".join(lines)
     
     def _parse_structured_response(self, response: str, game_state: Dict[str, Any] = None) -> Tuple[List[str], str]:
-        """Parse structured chain-of-thought response and extract actions and reasoning"""
+        """Parse structured chain-of-thought response and extract actions, reasoning, and the summary"""
         try:
             # Extract sections from structured response
             analysis = ""
@@ -1036,6 +1046,9 @@ Context: {context} | Coords: {coords} """
                     action_text = line[7:].strip()  # Remove "ACTION:" prefix
                     if action_text:  # Only parse if there's content
                         actions = self._parse_actions(action_text, game_state)
+                elif line.upper().startswith('SUMMARY:'):
+                    current_section = 'summary'
+                    summary = line[10:].strip()
                 elif line and current_section:
                     # Continue content of current section
                     if current_section == 'analysis':
@@ -1046,6 +1059,8 @@ Context: {context} | Coords: {coords} """
                         plan += " " + line
                     elif current_section == 'reasoning':
                         reasoning += " " + line
+                    elif current_section == 'summary':
+                        summary += " " + line
                     elif current_section == 'action':
                         # Additional action parsing from action section content
                         if line.strip():  # Only process non-empty lines
@@ -1073,10 +1088,12 @@ Context: {context} | Coords: {coords} """
                 reasoning_parts.append(f"Plan: {plan}")
             if reasoning:
                 reasoning_parts.append(f"Reasoning: {reasoning}")
+            if summary:
+                reasoning_parts.append(f"Summary: {summary}")
             
             full_reasoning = " | ".join(reasoning_parts) if reasoning_parts else "No reasoning provided"
             
-            return actions, full_reasoning
+            return actions, full_reasoning, summary
             
         except Exception as e:
             logger.warning(f"Error parsing structured response: {e}")
