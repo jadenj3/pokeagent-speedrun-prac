@@ -28,6 +28,7 @@ class LLMLogger:
         self.log_dir = log_dir
         self.session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
         self.log_file = os.path.join(log_dir, f"llm_log_{self.session_id}.jsonl")
+        self.prompt_log_file = os.path.join(log_dir, f"llm_prompts_{self.session_id}.jsonl")
         
         # Ensure log directory exists
         os.makedirs(log_dir, exist_ok=True)
@@ -55,8 +56,19 @@ class LLMLogger:
         
         # Initialize log file with session info
         self._log_session_start()
+        self._log_prompt_session_start()
         
         logger.info(f"LLM Logger initialized: {self.log_file}")
+    
+    def _log_prompt_session_start(self):
+        """Log session start information for prompt log"""
+        session_info = {
+            "timestamp": datetime.now().isoformat(),
+            "type": "prompt_session_start",
+            "session_id": self.session_id,
+            "log_file": self.prompt_log_file
+        }
+        self._write_prompt_entry(session_info)
     
     def _log_session_start(self):
         """Log session start information"""
@@ -186,6 +198,27 @@ class LLMLogger:
         self._write_log_entry(log_entry)
         logger.error(f"LLM {interaction_type.upper()} ERROR: {error}")
     
+    def log_prompt_text(self,
+                        prompt: str,
+                        interaction_type: str = "prompt",
+                        metadata: Optional[Dict[str, Any]] = None):
+        """Log raw prompt text to dedicated prompt log file.
+        
+        Args:
+            prompt: The full prompt text sent to the model (without image data).
+            interaction_type: Identifier for the prompt source.
+            metadata: Optional metadata related to the prompt.
+        """
+        prompt_entry = {
+            "timestamp": datetime.now().isoformat(),
+            "type": "prompt",
+            "interaction_type": interaction_type,
+            "prompt": prompt,
+            "metadata": metadata or {}
+        }
+        self._write_prompt_entry(prompt_entry)
+        logger.debug(f"Logged prompt for interaction {interaction_type}")
+    
     def log_step_start(self, step: int, step_type: str = "agent_step"):
         """Log the start of an agent step
         
@@ -289,6 +322,14 @@ class LLMLogger:
                 f.write(json.dumps(log_entry, ensure_ascii=False) + '\n')
         except Exception as e:
             logger.error(f"Failed to write log entry: {e}")
+    
+    def _write_prompt_entry(self, log_entry: Dict[str, Any]):
+        """Write an entry to the prompt log file."""
+        try:
+            with open(self.prompt_log_file, 'a', encoding='utf-8') as f:
+                f.write(json.dumps(log_entry, ensure_ascii=False) + '\n\n')
+        except Exception as e:
+            logger.error(f"Failed to write prompt log entry: {e}")
     
     def get_cumulative_metrics(self) -> Dict[str, Any]:
         """Get cumulative metrics for the session

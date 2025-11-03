@@ -41,6 +41,7 @@ import numpy as np
 from PIL import Image
 
 from utils.state_formatter import format_state_for_llm
+from utils.llm_logger import get_llm_logger
 #from utils.agent_helpers import update_server_metrics
 
 logger = logging.getLogger(__name__)
@@ -757,7 +758,8 @@ class SimpleAgent:
             completed_objectives_list = self.get_completed_objectives()
             objectives_summary = self._format_objectives_for_llm(active_objectives, completed_objectives_list)
 
-            recent_turn_summaries = self.turn_summaries[-20:]
+            recent_turn_summaries_list = self.turn_summaries[-20:]
+            recent_turn_summaries = "\n".join(recent_turn_summaries_list) if recent_turn_summaries_list else "No recent summaries."
             
             # Build pathfinding rules section (only if not in title sequence)
             pathfinding_rules = ""
@@ -857,6 +859,18 @@ SUMMARY:
 {pathfinding_rules}
 
 Context: {context} | Coords: {coords} """
+
+            # Log prompt text to dedicated prompt log file (image data excluded)
+            try:
+                llm_logger = get_llm_logger()
+                if llm_logger:
+                    llm_logger.log_prompt_text(
+                        prompt,
+                        interaction_type="simple_mode_prompt",
+                        metadata={"step": self.state.step_counter}
+                    )
+            except Exception as log_error:
+                logger.debug(f"Failed to log prompt text: {log_error}")
             
             # Print complete prompt to terminal for debugging
             print("\n" + "="*120)
@@ -891,6 +905,8 @@ Context: {context} | Coords: {coords} """
 
             if turn_summary:
                 self.turn_summaries.append(turn_summary)
+                if len(self.turn_summaries) > 50:
+                    self.turn_summaries = self.turn_summaries[-50:]
             
             # Check for failed movement by comparing previous coordinates
             if len(self.state.history) > 0:
@@ -1010,7 +1026,7 @@ Context: {context} | Coords: {coords} """
         
         return "\n".join(lines)
     
-    def _parse_structured_response(self, response: str, game_state: Dict[str, Any] = None) -> Tuple[List[str], str]:
+    def _parse_structured_response(self, response: str, game_state: Dict[str, Any] = None) -> Tuple[List[str], str, str]:
         """Parse structured chain-of-thought response and extract actions, reasoning, and the summary"""
         try:
             # Extract sections from structured response
