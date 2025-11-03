@@ -180,7 +180,7 @@ class SimpleAgent:
             },
             {
                 "id": "story_player_bedroom",
-                "description": "Go upstairs to player's bedroom",
+                "description": "Go upstairs to player's bedroom. The stairs are at (2,5), don't use the door.",
                 "objective_type": "location",
                 "target_value": "Player's Bedroom",
                 "milestone_id": "PLAYER_BEDROOM"
