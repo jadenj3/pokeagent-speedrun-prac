@@ -818,6 +818,9 @@ CURRENT GAME STATE:
 
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
 
+VERY IMPORTANT: PRIORITIZE WHAT YOU SEE IN THE IMAGE FRAME WHEN ASSESSING GAME STATE AND YOUR NEXT MOVE. 
+The game state information is only there to assist you, but you should base your decisions primarily off the image.
+
 IMPORTANT: Please think step by step before choosing your action. Structure your response like this:
 
 ANALYSIS:
@@ -832,7 +835,7 @@ OBJECTIVES:
 
 PLAN:
 [Think about your immediate goal - what do you want to accomplish in the next few actions? Consider your current objectives and recent history. 
-Check MOVEMENT MEMORY for areas you've had trouble with before and plan your route accordingly.]
+Check MOVEMENT MEMORY for areas you've had trouble with before and plan your route accordingly. Look for loops and in your current history, then avoid repeating those mistakes and come up with a new plan.]
 
 REASONING:
 [Explain why you're choosing this specific action. Reference the MOVEMENT PREVIEW and MOVEMENT MEMORY sections. Check the visual frame for NPCs before moving. If you see NPCs in the image, avoid walking into them. Consider any failed movements or known obstacles from your memory.]
