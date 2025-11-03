@@ -209,14 +209,19 @@ class LLMLogger:
             interaction_type: Identifier for the prompt source.
             metadata: Optional metadata related to the prompt.
         """
-        prompt_entry = {
-            "timestamp": datetime.now().isoformat(),
-            "type": "prompt",
-            "interaction_type": interaction_type,
-            "prompt": prompt,
-            "metadata": metadata or {}
-        }
-        self._write_prompt_entry(prompt_entry)
+        section_header = f"===== PROMPT START ({interaction_type}) at {datetime.now().isoformat()} ====="
+        section_footer = f"===== PROMPT END ({interaction_type}) ====="
+        
+        lines = [
+            section_header,
+            f"Metadata: {json.dumps(metadata) if metadata else '{}'}",
+            "",
+            prompt,
+            "",
+            section_footer,
+            ""
+        ]
+        self._write_prompt_entry("\n".join(lines))
         logger.debug(f"Logged prompt for interaction {interaction_type}")
     
     def log_step_start(self, step: int, step_type: str = "agent_step"):
@@ -323,11 +328,11 @@ class LLMLogger:
         except Exception as e:
             logger.error(f"Failed to write log entry: {e}")
     
-    def _write_prompt_entry(self, log_entry: Dict[str, Any]):
+    def _write_prompt_entry(self, entry_text: str):
         """Write an entry to the prompt log file."""
         try:
             with open(self.prompt_log_file, 'a', encoding='utf-8') as f:
-                f.write(json.dumps(log_entry, ensure_ascii=False) + '\n\n')
+                f.write(entry_text + '\n')
         except Exception as e:
             logger.error(f"Failed to write prompt log entry: {e}")
     
