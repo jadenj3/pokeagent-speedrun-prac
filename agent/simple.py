@@ -1099,7 +1099,7 @@ Context: {context} | Coords: {coords} """
         except Exception as e:
             logger.warning(f"Error parsing structured response: {e}")
             # Fall back to basic action parsing
-            return self._parse_actions(response, game_state), "Error parsing reasoning"
+            return self._parse_actions(response, game_state), "Error parsing reasoning", ""
     
     def _process_objectives_from_response(self, objectives_text: str):
         """Process objective management commands from LLM response"""
