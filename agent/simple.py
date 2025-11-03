@@ -798,7 +798,9 @@ EXAMPLE - DO THIS INSTEAD:
             prompt = f"""You are playing as the Protagonist in Pokemon Emerald. Progress quickly to the milestones by balancing exploration and exploitation of things you know, but have fun for the Twitch stream while you do it. 
             Based on the current game frame and state information, think through your next move and choose the best button action. 
             If you notice that you are repeating the same action sequences over and over again, you definitely need to try something different since what you are doing is wrong! Try exploring different new areas or interacting with different NPCs if you are stuck.
-            
+            Look at the summary of your recent turns. This will give you an overview of your recent history. Use this to determine if you are stuck or need to try a different approach.
+
+RECENT TURN SUMMARIES 
 
 RECENT ACTION HISTORY (last {self.actions_display_count} actions):
 {recent_actions_str}
@@ -818,7 +820,7 @@ CURRENT GAME STATE:
 
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
 
-VERY IMPORTANT: PRIORITIZE WHAT YOU SEE IN THE IMAGE FRAME WHEN ASSESSING GAME STATE AND YOUR NEXT MOVE. 
+VERY IMPORTANT: PRIORITIZE WHAT YOU SEE IN THE IMAGE FRAME AND THE RECENT TURN SUMMARIES WHEN ASSESSING GAME STATE AND YOUR NEXT MOVE. 
 The game state information is only there to assist you, but you should base your decisions primarily off the image.
 
 IMPORTANT: Please think step by step before choosing your action. Structure your response like this:
@@ -843,6 +845,8 @@ REASONING:
 ACTION:
 [Your final action choice - PREFER SINGLE ACTIONS like 'RIGHT' or 'A'. Only use multiple actions like 'UP, UP, RIGHT' if you've verified each step is WALKABLE in the movement preview and map.]
 
+SUMMARIZE:
+[Summarize your current turn and explain briefly why you took that action. This response will persist in your context for multiple turns]
 {pathfinding_rules}
 
 Context: {context} | Coords: {coords} """
