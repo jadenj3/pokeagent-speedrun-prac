@@ -1018,6 +1018,7 @@ Context: {context} | Coords: {coords} """
             objectives_section = ""
             plan = ""
             reasoning = ""
+            summary = ""
             actions = []
             
             # Split response into lines for processing
