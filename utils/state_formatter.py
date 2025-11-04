@@ -1601,7 +1601,7 @@ def get_movement_preview(state_data):
                     elif tile_symbol == 'D':
                         tile_description = f"Walkable - Door/Entrance (ID: {tile_id})"
                     elif tile_symbol == 'S':
-                        tile_description = f"Walkable - Stairs/Warp (ID: {tile_id})"
+                        tile_description = f"Walkable - Warp (ID: {tile_id})"
                     elif tile_symbol in ['↓', '↑', '←', '→', '↗', '↖', '↘', '↙']:
                         # Ledge description based on whether movement is allowed
                         if is_blocked:
