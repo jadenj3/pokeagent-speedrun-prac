@@ -766,6 +766,7 @@ class SimpleAgent:
             if context != "title":
                 pathfinding_rules = """
 🚨 PATHFINDING RULES:
+0. **ALWAYS CONTINUE WITH DIALOGUE IF YOU SEE A DIALOGUE BOX** You will be prevented from issuing any other actions until you complete the dialogue. Press A to advance the dialogue. 
 1. **SINGLE STEP FIRST**: Always prefer single actions (UP, DOWN, LEFT, RIGHT, A, B) unless you're 100% certain about multi-step paths
 2. **CHECK EVERY STEP**: Before chaining movements, verify EACH step in your sequence using the MOVEMENT PREVIEW and map
 3. **BLOCKED = STOP**: If ANY step shows BLOCKED in the movement preview, the entire sequence will fail
