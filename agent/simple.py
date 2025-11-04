@@ -816,9 +816,6 @@ RECENT TURN SUMMARIES:
 RECENT ACTION HISTORY (last {self.actions_display_count} actions):
 {recent_actions_str}
 
-LOCATION/CONTEXT HISTORY (last {self.history_display_count} steps):
-{history_summary}
-
 CURRENT OBJECTIVES:
 {objectives_summary}
 
