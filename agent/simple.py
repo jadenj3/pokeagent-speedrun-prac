@@ -883,11 +883,14 @@ Context: {context} | Coords: {coords} """
 
             planning_prefix = "You are the planning module for a pokemon agent, below is the current context and recent turn summaries. The current frame image is attached. You should examine the current context, look for any loops or patterns and synthesize a plan for the action module. The action module will be the one to output the specific action."
             planning_prompt = planning_prefix + prompt
+            is_stuck = False
+            if stuck_warning:
+                is_stuck = bool(stuck_warning)
 
             if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                 print("🔍 Making VLM call...")
                 try:
-                    response = self.vlm.get_query(frame, planning_prompt, "simple_mode")
+                    response = self.vlm.get_query(frame, planning_prompt, "simple_mode", is_stuck)
                     print(f"🔍 VLM response received: {response[:100]}..." if len(response) > 100 else f"🔍 VLM response: {response}")
                 except Exception as e:
                     print(f"❌ VLM call failed: {e}")
