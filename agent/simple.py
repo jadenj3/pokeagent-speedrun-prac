@@ -806,7 +806,7 @@ EXAMPLE - DO THIS INSTEAD:
             prompt = f"""You are playing as the Protagonist in Pokemon Emerald. Progress quickly to the milestones by balancing exploration and exploitation of things you know, but have fun for the Twitch stream while you do it. 
             Based on the current game frame and state information, think through your next move and choose the best button action. 
             If you notice that you are repeating the same action sequences over and over again, you definitely need to try something different since what you are doing is wrong! Try exploring different new areas or interacting with different NPCs if you are stuck.
-            Look at the summary of your recent turns. This will give you an overview of your recent history. Use this to determine if you are stuck or need to try a different approach.
+            Look at the summary of your recent turns. This will give you an overview of your recent history. Use this to determine if you are stuck or need to try a different approach. If you made a prediction on a previous turn, it will be marked with PREDICTION in the summary. Use this to realize when you are making mistakes, and choose a different decision.
 
 RECENT TURN SUMMARIES:
 {recent_turn_summaries}
@@ -857,6 +857,9 @@ ACTION:
 SUMMARY:
 [Summarize your current turn and explain briefly why you took that action. This response will persist in your context for multiple turns. Use this to pass on information to subsequent turns.]
 
+PREDICT:
+[Whenever you are faced with an uncertain decision or action and you want to test a hypothesis, write PREDICT to mark your prediction. For example: This turn I am deciding between decisions A and B, I predict that if I choose A X will happen. This prediction will be passed to the turn summary in subsequent turns to allow the agent to decide between multiple actions]
+
 {pathfinding_rules}
 
 Context: {context} | Coords: {coords} """
@@ -902,10 +905,13 @@ Context: {context} | Coords: {coords} """
                 return "WAIT"
             
             # Extract action(s) from structured response
-            actions, reasoning, turn_summary = self._parse_structured_response(response, game_state)
+            actions, reasoning, turn_summary, prediction = self._parse_structured_response(response, game_state)
 
             if turn_summary:
-                self.turn_summaries.append(turn_summary)
+                summary_text = turn_summary
+                if prediction:
+                    summary_text += f" PREDICTION: {prediction}"
+                self.turn_summaries.append(summary_text)
                 if len(self.turn_summaries) > 50:
                     self.turn_summaries = self.turn_summaries[-50:]
             
@@ -1027,8 +1033,8 @@ Context: {context} | Coords: {coords} """
         
         return "\n".join(lines)
     
-    def _parse_structured_response(self, response: str, game_state: Dict[str, Any] = None) -> Tuple[List[str], str, str]:
-        """Parse structured chain-of-thought response and extract actions, reasoning, and the summary"""
+    def _parse_structured_response(self, response: str, game_state: Dict[str, Any] = None) -> Tuple[List[str], str, str, str]:
+        """Parse structured chain-of-thought response and extract actions, reasoning, summary, and prediction"""
         try:
             # Extract sections from structured response
             analysis = ""
@@ -1036,6 +1042,7 @@ Context: {context} | Coords: {coords} """
             plan = ""
             reasoning = ""
             summary = ""
+            prediction = ""
             actions = []
             
             # Split response into lines for processing
@@ -1067,6 +1074,9 @@ Context: {context} | Coords: {coords} """
                 elif line.upper().startswith('SUMMARY:'):
                     current_section = 'summary'
                     summary = line[10:].strip()
+                elif line.upper().startswith('PREDICT:'):
+                    current_section = 'prediction'
+                    prediction = line[8:].strip()
                 elif line and current_section:
                     # Continue content of current section
                     if current_section == 'analysis':
@@ -1079,6 +1089,8 @@ Context: {context} | Coords: {coords} """
                         reasoning += " " + line
                     elif current_section == 'summary':
                         summary += " " + line
+                    elif current_section == 'prediction':
+                        prediction += " " + line
                     elif current_section == 'action':
                         # Additional action parsing from action section content
                         if line.strip():  # Only process non-empty lines
@@ -1108,15 +1120,18 @@ Context: {context} | Coords: {coords} """
                 reasoning_parts.append(f"Reasoning: {reasoning}")
             if summary:
                 reasoning_parts.append(f"Summary: {summary}")
+            if prediction:
+                reasoning_parts.append(f"Prediction: {prediction}")
             
             full_reasoning = " | ".join(reasoning_parts) if reasoning_parts else "No reasoning provided"
             
-            return actions, full_reasoning, summary
+            return actions, full_reasoning, summary, prediction
             
         except Exception as e:
             logger.warning(f"Error parsing structured response: {e}")
             # Fall back to basic action parsing
-            return self._parse_actions(response, game_state), "Error parsing reasoning", ""
+            parsed_actions = self._parse_actions(response, game_state)
+            return parsed_actions, "Error parsing reasoning", "", ""
     
     def _process_objectives_from_response(self, objectives_text: str):
         """Process objective management commands from LLM response"""
