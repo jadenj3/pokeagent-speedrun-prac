@@ -572,6 +572,20 @@ class SimpleAgent:
         
         # Consider stuck if we've been in the same location/context for 8+ consecutive steps
         return self.state.stuck_detection[key] >= 8
+
+    def remove_movement_preview(self, state_text: str) -> str:
+        lines = state_text.splitlines()
+        cleaned, skip = [], False
+        for line in lines:
+            if line.startswith("MOVEMENT PREVIEW:"):
+                skip = True
+                continue
+            if skip:
+                if line.strip() == "" or not line[:2].strip():  # blank line ends the block
+                    skip = False
+                continue
+            cleaned.append(line)
+        return "\n".join(cleaned)
     
     def is_black_frame(self, frame) -> bool:
         """
@@ -743,6 +757,7 @@ class SimpleAgent:
             
             # Format the current state for LLM (includes movement preview)
             formatted_state = format_state_for_llm(game_state)
+            map_only = self.remove_movement_preview(formatted_state)
             
             # Get movement memory for the current area
             movement_memory = ""
@@ -855,26 +870,15 @@ Context: {context} | Coords: {coords}
             # Create enhanced prompt with objectives, history context and chain of thought request
             prompt = f"""You are playing as the Protagonist in Pokemon Emerald. Progress quickly to the milestones by balancing exploration and exploitation of things you know, but have fun for the Twitch stream while you do it. 
             Based on the current game frame and state information, think through your next move and choose the best button action. 
-            If you notice that you are repeating the same action sequences over and over again, you definitely need to try something different since what you are doing is wrong! Try exploring different new areas or interacting with different NPCs if you are stuck.
-            Look at the summary of your recent turns. This will give you an overview of your recent history. Use this to determine if you are stuck or need to try a different approach.
 
-RECENT TURN SUMMARIES:
-{recent_turn_summaries}
-
-RECENT ACTION HISTORY (last {self.actions_display_count} actions):
-{recent_actions_str}
 
 CURRENT OBJECTIVES:
 {objectives_summary}
 
 CURRENT GAME STATE:
-{formatted_state}
+{map_only}
 
-{movement_memory}
-
-{stuck_warning}
-
-Context: {context} | Coords: {coords} """
+Context: {context} """
 
             planning_prefix = "You are the planning module for a pokemon agent, below is the current context and recent turn summaries. The current frame image is attached. You should examine the current context, look for any loops or patterns and synthesize a plan for the action module. The action module will be the one to output the specific action."
             planning_prompt = planning_prefix + prompt
@@ -1299,8 +1303,8 @@ Context: {context} | Coords: {coords} """
     def reset_objectives_updated_flag(self):
         """Reset the objectives updated flag (call after forwarding state)"""
         self.state.objectives_updated = False
-    
-    def configure_history_limits(self, max_history_entries: int = None, max_recent_actions: int = None, 
+
+    def configure_history_limits(self, max_history_entries: int = None, max_recent_actions: int = None,
                                 history_display_count: int = None, actions_display_count: int = None,
                                 movement_memory_clear_interval: int = None):
         """Configure history tracking parameters at runtime"""
