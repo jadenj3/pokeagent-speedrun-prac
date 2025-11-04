@@ -771,61 +771,8 @@ class SimpleAgent:
             # Build pathfinding rules section (only if not in title sequence)
             pathfinding_rules = ""
             if context != "title":
-                pathfinding_rules = """
-🚨 PATHFINDING RULES:
-0. **ALWAYS CONTINUE WITH DIALOGUE IF YOU SEE A DIALOGUE BOX** You will be prevented from issuing any other actions until you complete the dialogue. Press A to advance the dialogue. 
-1. **SINGLE STEP FIRST**: Always prefer single actions (UP, DOWN, LEFT, RIGHT, A, B) unless you're 100% certain about multi-step paths
-2. **CHECK EVERY STEP**: Before chaining movements, verify EACH step in your sequence using the MOVEMENT PREVIEW and map
-3. **BLOCKED = STOP**: If ANY step shows BLOCKED in the movement preview, the entire sequence will fail
-4. **NO BLIND CHAINS**: Never chain movements through areas you can't see or verify as walkable
-5. **PERFORM PATHFINDING**: Find a path to a target location (X',Y') from the player position (X,Y) on the map. DO NOT TRAVERSE THROUGH OBSTACLES (#) -- it will not work.
-
-💡 SMART MOVEMENT STRATEGY:
-- Use MOVEMENT PREVIEW to see exactly what happens with each direction
-- If your target requires multiple steps, plan ONE step at a time
-- Only chain 2-3 moves if ALL intermediate tiles are confirmed WALKABLE
-- When stuck, try a different direction rather than repeating the same blocked move
-- After moving in a direction, you will be facing that direction for interactions with NPCs, etc.
-
-EXAMPLE - DON'T DO THIS:
-❌ "I want to go right 5 tiles" → "RIGHT, RIGHT, RIGHT, RIGHT, RIGHT" (may hit wall on step 2!)
-
-EXAMPLE - DO THIS INSTEAD:
-✅ Check movement preview → "RIGHT shows (X+1,Y) WALKABLE" → "RIGHT" (single safe step)
-✅ Next turn, check again → "RIGHT shows (X+2,Y) WALKABLE" → "RIGHT" (another safe step)
-
-💡 SMART NAVIGATION:
-- The Player's sprite in the visual frame is located at the coordinates (X,Y) in the game state. Objects in the visual frame should be represented in relation to the Player's sprite.
-- Check the VISUAL FRAME for NPCs (people/trainers) and other objects like clocks before moving - they're not always on the map! NPCs may block movement even when the movement preview shows them as walkable.
-- Review MOVEMENT MEMORY for locations where you've failed to move before
-- Only explore areas marked with ? (these are confirmed explorable edges)
-- Avoid areas surrounded by # (walls) - they're fully blocked
-- Use doors (D), stairs (S), or walk around obstacles when pathfinding suggests it
-
-💡 NPC & OBSTACLE HANDLING:
-- If you see NPCs in the image, avoid walking into them or interact with A/B if needed
-- If a movement fails (coordinates don't change), that location likely has an NPC or obstacle
-- Use your MOVEMENT MEMORY to remember problem areas and plan around them
-- NPCs can trigger battles or dialogue, which may be useful for objectives
-"""
-
-            # Create enhanced prompt with objectives, history context and chain of thought request
-            prompt = f"""You are playing as the Protagonist in Pokemon Emerald. Progress quickly to the milestones by balancing exploration and exploitation of things you know, but have fun for the Twitch stream while you do it. 
-            Based on the current game frame and state information, think through your next move and choose the best button action. 
-            If you notice that you are repeating the same action sequences over and over again, you definitely need to try something different since what you are doing is wrong! Try exploring different new areas or interacting with different NPCs if you are stuck.
-            Look at the summary of your recent turns. This will give you an overview of your recent history. Use this to determine if you are stuck or need to try a different approach. If you made a prediction on a previous turn, it will be marked with PREDICTION in the summary.
-            
-            **IMPORTANT** Using predictions: If your previous predictions don't line up with what you see on your current turn, you should try a different approach. Don't repeat failing actions, think deeply about a different plan of action.
-
-RECENT TURN SUMMARIES:
-{recent_turn_summaries}
-
-RECENT ACTION HISTORY (last {self.actions_display_count} actions):
-{recent_actions_str}
-
-CURRENT OBJECTIVES:
-{objectives_summary}
-
+                pathfinding_rules = f"""
+                
 CURRENT GAME STATE:
 {formatted_state}
 
@@ -863,21 +810,93 @@ SUMMARY:
 PREDICT:
 [Whenever you are faced with an uncertain decision or action and you want to test a hypothesis, write PREDICT to mark your prediction. For example: This turn I am deciding between decisions A and B, I predict that if I choose A X will happen. This prediction will be passed to the turn summary in subsequent turns to allow the agent to decide between multiple actions]
 
-{pathfinding_rules}
+🚨 PATHFINDING RULES:
+0. **ALWAYS CONTINUE WITH DIALOGUE IF YOU SEE A DIALOGUE BOX** You will be prevented from issuing any other actions until you complete the dialogue. Press A to advance the dialogue. 
+1. **SINGLE STEP FIRST**: Always prefer single actions (UP, DOWN, LEFT, RIGHT, A, B) unless you're 100% certain about multi-step paths
+2. **CHECK EVERY STEP**: Before chaining movements, verify EACH step in your sequence using the MOVEMENT PREVIEW and map
+3. **BLOCKED = STOP**: If ANY step shows BLOCKED in the movement preview, the entire sequence will fail
+4. **NO BLIND CHAINS**: Never chain movements through areas you can't see or verify as walkable
+5. **PERFORM PATHFINDING**: Find a path to a target location (X',Y') from the player position (X,Y) on the map. DO NOT TRAVERSE THROUGH OBSTACLES (#) -- it will not work.
+
+💡 SMART MOVEMENT STRATEGY:
+- Use MOVEMENT PREVIEW to see exactly what happens with each direction
+- If your target requires multiple steps, plan ONE step at a time
+- Only chain 2-3 moves if ALL intermediate tiles are confirmed WALKABLE
+- When stuck, try a different direction rather than repeating the same blocked move
+- After moving in a direction, you will be facing that direction for interactions with NPCs, etc.
+
+EXAMPLE - DON'T DO THIS:
+❌ "I want to go right 5 tiles" → "RIGHT, RIGHT, RIGHT, RIGHT, RIGHT" (may hit wall on step 2!)
+
+EXAMPLE - DO THIS INSTEAD:
+✅ Check movement preview → "RIGHT shows (X+1,Y) WALKABLE" → "RIGHT" (single safe step)
+✅ Next turn, check again → "RIGHT shows (X+2,Y) WALKABLE" → "RIGHT" (another safe step)
+
+💡 SMART NAVIGATION:
+- The Player's sprite in the visual frame is located at the coordinates (X,Y) in the game state. Objects in the visual frame should be represented in relation to the Player's sprite.
+- Check the VISUAL FRAME for NPCs (people/trainers) and other objects like clocks before moving - they're not always on the map! NPCs may block movement even when the movement preview shows them as walkable.
+- Review MOVEMENT MEMORY for locations where you've failed to move before
+- Only explore areas marked with ? (these are confirmed explorable edges)
+- Avoid areas surrounded by # (walls) - they're fully blocked
+- Use doors (D), stairs (S), or walk around obstacles when pathfinding suggests it
+
+💡 NPC & OBSTACLE HANDLING:
+- If you see NPCs in the image, avoid walking into them or interact with A/B if needed
+- If a movement fails (coordinates don't change), that location likely has an NPC or obstacle
+- Use your MOVEMENT MEMORY to remember problem areas and plan around them
+- NPCs can trigger battles or dialogue, which may be useful for objectives
+
+Context: {context} | Coords: {coords}
+"""
+
+            # Create enhanced prompt with objectives, history context and chain of thought request
+            prompt = f"""You are playing as the Protagonist in Pokemon Emerald. Progress quickly to the milestones by balancing exploration and exploitation of things you know, but have fun for the Twitch stream while you do it. 
+            Based on the current game frame and state information, think through your next move and choose the best button action. 
+            If you notice that you are repeating the same action sequences over and over again, you definitely need to try something different since what you are doing is wrong! Try exploring different new areas or interacting with different NPCs if you are stuck.
+            Look at the summary of your recent turns. This will give you an overview of your recent history. Use this to determine if you are stuck or need to try a different approach. If you made a prediction on a previous turn, it will be marked with PREDICTION in the summary.
+            
+            **IMPORTANT** Using predictions: If your previous predictions don't line up with what you see on your current turn, you should try a different approach. Don't repeat failing actions, think deeply about a different plan of action.
+
+RECENT TURN SUMMARIES:
+{recent_turn_summaries}
+
+RECENT ACTION HISTORY (last {self.actions_display_count} actions):
+{recent_actions_str}
+
+CURRENT OBJECTIVES:
+{objectives_summary}
+
+CURRENT GAME STATE:
+{formatted_state}
+
+{movement_memory}
+
+{stuck_warning}
 
 Context: {context} | Coords: {coords} """
 
-            # Log prompt text to dedicated prompt log file (image data excluded)
-            try:
-                llm_logger = get_llm_logger()
-                if llm_logger:
-                    llm_logger.log_prompt_text(
-                        prompt,
-                        interaction_type="simple_mode_prompt",
-                        metadata={"step": self.state.step_counter}
-                    )
-            except Exception as log_error:
-                logger.debug(f"Failed to log prompt text: {log_error}")
+            planning_prefix = "You are the planning module for a pokemon agent, below is the current context and recent turn summaries. The current frame image is attached. You should examine the current context, look for any loops or patterns and synthesize a plan for the action module. The action module will be the one to output the specific action."
+            planning_prompt = planning_prefix + prompt
+
+            if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
+                print("🔍 Making VLM call...")
+                try:
+                    response = self.vlm.get_query(frame, planning_prompt, "simple_mode")
+                    print(f"🔍 VLM response received: {response[:100]}..." if len(response) > 100 else f"🔍 VLM response: {response}")
+                except Exception as e:
+                    print(f"❌ VLM call failed: {e}")
+                    return "WAIT"
+            else:
+                logger.error("🚫 CRITICAL: About to call VLM but frame validation failed - this should never happen!")
+                return "WAIT"
+
+            current_plan = response
+
+            action_prefix = "You are the action agent for the Protagonist in a Pokemon Emerald speedrun. Progress quickly to the milestones by balancing exploration and exploitation of things you know. You will receive a plan from the planning agent and some context that may be useful for deciding your next move. Prioritize the plan from the planning agent when deciding your next move, but the map and movement preview are there to assist you if you need additional context."
+
+            action_prompt = action_prefix + current_plan + pathfinding_rules
+
+
             
             # Print complete prompt to terminal for debugging
             print("\n" + "="*120)
@@ -898,7 +917,7 @@ Context: {context} | Coords: {coords} """
             if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                 print("🔍 Making VLM call...")
                 try:
-                    response = self.vlm.get_query(frame, prompt, "simple_mode")
+                    response = self.vlm.get_text_query(action_prompt, "simple_mode")
                     print(f"🔍 VLM response received: {response[:100]}..." if len(response) > 100 else f"🔍 VLM response: {response}")
                 except Exception as e:
                     print(f"❌ VLM call failed: {e}")
@@ -906,6 +925,23 @@ Context: {context} | Coords: {coords} """
             else:
                 logger.error("🚫 CRITICAL: About to call VLM but frame validation failed - this should never happen!")
                 return "WAIT"
+
+                # Log prompt text to dedicated prompt log file (image data excluded)
+                try:
+                    llm_logger = get_llm_logger()
+                    if llm_logger:
+                        llm_logger.log_prompt_text(
+                            planning_prompt,
+                            interaction_type="simple_mode_prompt",
+                            metadata={"step": self.state.step_counter}
+                        )
+                        llm_logger.log_prompt_text(
+                            action_prompt,
+                            interaction_type="simple_mode_prompt",
+                            metadata={"step": self.state.step_counter}
+                        )
+                except Exception as log_error:
+                    logger.debug(f"Failed to log prompt text: {log_error}")
             
             # Extract action(s) from structured response
             actions, reasoning, turn_summary, prediction = self._parse_structured_response(response, game_state)
