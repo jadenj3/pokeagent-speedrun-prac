@@ -1474,6 +1474,8 @@ def get_movement_preview(state_data):
         current_tile = raw_tiles[center_y][center_x]
         current_tile_symbol = format_tile_to_symbol(current_tile)
     
+    dialogue_active = state_data.get("game", {}).get("dialogue_detected", {}).get("has_dialogue", False)
+
     for direction, (dx, dy) in directions.items():
         # Calculate new world coordinates
         new_world_x = current_x + dx
@@ -1505,17 +1507,15 @@ def get_movement_preview(state_data):
                 # Determine if movement is blocked
                 is_blocked = tile_symbol in ['#', 'W']  # Walls and water block movement
                 
-                # SPECIAL CASE: If player is standing on stairs/door, don't block the warp direction
-                # Stairs and doors often require moving in a specific direction to activate
-                if current_tile_symbol in ['S', 'D']:
-                    # When on stairs/doors, typically you need to move forward to activate them
-                    # Don't block any direction when on these tiles to allow proper navigation
-                    # This ensures the agent can properly use warps/doors even if the destination
-                    # tile might normally be considered blocked
-                    if tile_symbol in ['#', 'W']:
-                        # Override the blocking for navigation tiles but KEEP original symbol
-                        is_blocked = False
-                        # DO NOT change tile_symbol - preserve S, D, #, W, etc.
+                # Track whether a warp override is applied for description purposes
+                warp_override_applied = False
+                if (current_tile_symbol in ['S', 'D']
+                        and tile_symbol in ['#', 'W']
+                        and not dialogue_active):
+                    # Only override if the destination tile metadata indicates a warp/door
+                    potential_warp_override = True
+                else:
+                    potential_warp_override = False
                 
                 # Special handling for jump ledges - they're only walkable in their direction
                 if tile_symbol in ['↓', '↑', '←', '→', '↗', '↖', '↘', '↙']:
@@ -1551,9 +1551,15 @@ def get_movement_preview(state_data):
                     else:
                         behavior_name = str(behavior)
                     
+                    if potential_warp_override:
+                        behavior_upper = behavior_name.upper()
+                        if any(keyword in behavior_upper for keyword in ["WARP", "DOOR", "STAIR"]):
+                            is_blocked = False
+                            warp_override_applied = True
+                    
                     # Create human-readable description
                     # Check if we're overriding blocking due to being on stairs/door
-                    is_override = current_tile_symbol in ['S', 'D'] and not is_blocked and tile_symbol in ['#', 'W']
+                    is_override = warp_override_applied
                     
                     if is_override:
                         # We're on stairs/door and this normally blocked tile is walkable
