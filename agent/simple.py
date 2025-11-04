@@ -829,9 +829,6 @@ CURRENT GAME STATE:
 
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
 
-VERY IMPORTANT: PRIORITIZE WHAT YOU SEE IN THE IMAGE FRAME AND THE RECENT TURN SUMMARIES WHEN ASSESSING GAME STATE AND YOUR NEXT MOVE. 
-The game state information is only there to assist you, but you should base your decisions primarily off the image.
-
 IMPORTANT: Please think step by step before choosing your action. Structure your response like this:
 
 ANALYSIS:
