@@ -1504,8 +1504,15 @@ def get_movement_preview(state_data):
                 # Get tile symbol and check if walkable
                 tile_symbol = format_tile_to_symbol(target_tile)
                 
-                # Determine if movement is blocked
-                is_blocked = tile_symbol in ['#', 'W']  # Walls and water block movement
+                # Determine if movement is blocked (walls, water, or collision flag)
+                collision_value = 0
+                if len(target_tile) >= 3:
+                    try:
+                        collision_value = int(target_tile[2])
+                    except (TypeError, ValueError):
+                        collision_value = 0
+                collision_flag = bool(collision_value)
+                is_blocked = tile_symbol in ['#', 'W'] or collision_flag
                 
                 # Track whether a warp override is applied for description purposes
                 warp_override_applied = False
@@ -1556,6 +1563,7 @@ def get_movement_preview(state_data):
                         if any(keyword in behavior_upper for keyword in ["WARP", "DOOR", "STAIR"]):
                             is_blocked = False
                             warp_override_applied = True
+                            collision_flag = False  # Treat as walkable despite collision flag
                     
                     # Create human-readable description
                     # Check if we're overriding blocking due to being on stairs/door
@@ -1568,7 +1576,10 @@ def get_movement_preview(state_data):
                         elif tile_symbol == 'W':
                             tile_description = f"Walkable - Warp/Door exit over water (ID: {tile_id})"
                     elif tile_symbol == '.':
-                        tile_description = f"Walkable path (ID: {tile_id})"
+                        if is_blocked:
+                            tile_description = f"BLOCKED - Obstacle (ID: {tile_id}, {behavior_name})"
+                        else:
+                            tile_description = f"Walkable path (ID: {tile_id})"
                     elif tile_symbol == '#':
                         tile_description = f"BLOCKED - Wall/Obstacle (ID: {tile_id}, {behavior_name})"
                     elif tile_symbol == 'W':
@@ -1576,17 +1587,28 @@ def get_movement_preview(state_data):
                     elif tile_symbol == '~':
                         tile_description = f"Walkable - Tall grass (wild encounters) (ID: {tile_id})"
                     elif tile_symbol == 'D':
-                        tile_description = f"Walkable - Door/Entrance (ID: {tile_id})"
+                        if is_blocked:
+                            tile_description = f"BLOCKED - Door/Entrance (ID: {tile_id})"
+                        else:
+                            tile_description = f"Walkable - Door/Entrance (ID: {tile_id})"
                     elif tile_symbol == 'S':
-                        tile_description = f"Walkable - Stairs/Warp (ID: {tile_id})"
+                        if is_blocked:
+                            tile_description = f"BLOCKED - Stairs/Warp (ID: {tile_id})"
+                        else:
+                            tile_description = f"Walkable - Stairs/Warp (ID: {tile_id})"
                     elif tile_symbol in ['↓', '↑', '←', '→', '↗', '↖', '↘', '↙']:
                         # Ledge description based on whether movement is allowed
                         if is_blocked:
                             tile_description = f"BLOCKED - Jump ledge {tile_symbol} (wrong direction) (ID: {tile_id})"
                         else:
                             tile_description = f"Walkable - Jump ledge {tile_symbol} (correct direction) (ID: {tile_id})"
+                    elif tile_symbol == 'T':
+                        if is_blocked:
+                            tile_description = f"BLOCKED - Television (ID: {tile_id})"
+                        else:
+                            tile_description = f"Walkable - Television (ID: {tile_id})"
                     else:
-                        tile_description = f"Walkable - {behavior_name} (ID: {tile_id})"
+                        tile_description = f"{'BLOCKED' if is_blocked else 'Walkable'} - {behavior_name} (ID: {tile_id})"
                 else:
                     tile_description = "Unknown tile"
                 
