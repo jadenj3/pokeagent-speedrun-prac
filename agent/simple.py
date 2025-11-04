@@ -770,16 +770,7 @@ class SimpleAgent:
             
             # Build pathfinding rules section (only if not in title sequence)
             pathfinding_rules = ""
-            if context != "title":
-                pathfinding_rules = f"""
-                
-CURRENT GAME STATE:
-{formatted_state}
-
-{movement_memory}
-
-{stuck_warning}
-
+            action_descriptions = f"""
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
 
 IMPORTANT: Please think step by step before choosing your action. Structure your response like this:
@@ -809,6 +800,21 @@ SUMMARY:
 
 PREDICT:
 [Whenever you are faced with an uncertain decision or action and you want to test a hypothesis, write PREDICT to mark your prediction. For example: This turn I am deciding between decisions A and B, I predict that if I choose A X will happen. This prediction will be passed to the turn summary in subsequent turns to allow the agent to decide between multiple actions]
+
+"""
+
+
+            if context != "title":
+                pathfinding_rules = f"""
+                
+CURRENT GAME STATE:
+{formatted_state}
+
+{movement_memory}
+
+{stuck_warning}
+
+{action_descriptions}
 
 🚨 PATHFINDING RULES:
 0. **ALWAYS CONTINUE WITH DIALOGUE IF YOU SEE A DIALOGUE BOX** You will be prevented from issuing any other actions until you complete the dialogue. Press A to advance the dialogue. 
@@ -893,8 +899,10 @@ Context: {context} | Coords: {coords} """
             current_plan = response
 
             action_prefix = "You are the action agent for the Protagonist in a Pokemon Emerald speedrun. Progress quickly to the milestones by balancing exploration and exploitation of things you know. You will receive a plan from the planning agent and some context that may be useful for deciding your next move. Prioritize the plan from the planning agent when deciding your next move, but the map and movement preview are there to assist you if you need additional context."
-
-            action_prompt = action_prefix + current_plan + pathfinding_rules
+            if context == "title":
+                action_prompt = action_prefix + current_plan + prompt + action_descriptions
+            else:
+                action_prompt = action_prefix + current_plan + pathfinding_rules
 
 
             
@@ -927,21 +935,21 @@ Context: {context} | Coords: {coords} """
                 return "WAIT"
 
                 # Log prompt text to dedicated prompt log file (image data excluded)
-                try:
-                    llm_logger = get_llm_logger()
-                    if llm_logger:
-                        llm_logger.log_prompt_text(
-                            planning_prompt,
-                            interaction_type="simple_mode_prompt",
-                            metadata={"step": self.state.step_counter}
-                        )
-                        llm_logger.log_prompt_text(
-                            action_prompt,
-                            interaction_type="simple_mode_prompt",
-                            metadata={"step": self.state.step_counter}
-                        )
-                except Exception as log_error:
-                    logger.debug(f"Failed to log prompt text: {log_error}")
+            try:
+                llm_logger = get_llm_logger()
+                if llm_logger:
+                    llm_logger.log_prompt_text(
+                        planning_prompt,
+                        interaction_type="simple_mode_prompt",
+                        metadata={"step": self.state.step_counter}
+                    )
+                    llm_logger.log_prompt_text(
+                        action_prompt,
+                        interaction_type="simple_mode_prompt",
+                        metadata={"step": self.state.step_counter}
+                    )
+            except Exception as log_error:
+                logger.debug(f"Failed to log prompt text: {log_error}")
             
             # Extract action(s) from structured response
             actions, reasoning, turn_summary, prediction = self._parse_structured_response(response, game_state)
