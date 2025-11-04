@@ -1601,7 +1601,7 @@ def get_movement_preview(state_data):
                     elif tile_symbol == 'D':
                         tile_description = f"Walkable - Door/Entrance (ID: {tile_id})"
                     elif tile_symbol == 'S':
-                        tile_description = f"Walkable - Warp (ID: {tile_id})"
+                        tile_description = f"Walkable - Stairs/Warp (ID: {tile_id})"
                     elif tile_symbol in ['↓', '↑', '←', '→', '↗', '↖', '↘', '↙']:
                         # Ledge description based on whether movement is allowed
                         if is_blocked:
@@ -1670,8 +1670,10 @@ def format_movement_preview_for_llm(state_data):
                 # Add brief description for walkable tiles
                 if 'Tall grass' in desc:
                     lines[-1] += " - Tall grass (wild encounters)"
-                elif 'Stairs' in desc or 'Warp' in desc:
-                    lines[-1] += " - Stairs/Warp"
+                elif 'Stairs' in desc:
+                    lines[-1] += " - Stairs"
+                elif 'Warp' in desc:
+                    lines[-1] += " - Warp"
                 elif 'Door' in desc or 'Entrance' in desc:
                     lines[-1] += " - Door/Entrance"
                 elif 'Jump ledge' in desc and 'correct direction' in desc:
