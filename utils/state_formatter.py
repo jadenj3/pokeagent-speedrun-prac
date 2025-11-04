@@ -1608,6 +1608,8 @@ def get_movement_preview(state_data):
                             tile_description = f"BLOCKED - Jump ledge {tile_symbol} (wrong direction) (ID: {tile_id})"
                         else:
                             tile_description = f"Walkable - Jump ledge {tile_symbol} (correct direction) (ID: {tile_id})"
+                    elif tile_symbol == 'T':
+                        tile_description = f"BLOCKED - Television (ID: {tile_id})"
                     else:
                         tile_description = f"Walkable - {behavior_name} (ID: {tile_id})"
                 else:
