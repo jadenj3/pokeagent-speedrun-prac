@@ -806,7 +806,9 @@ EXAMPLE - DO THIS INSTEAD:
             prompt = f"""You are playing as the Protagonist in Pokemon Emerald. Progress quickly to the milestones by balancing exploration and exploitation of things you know, but have fun for the Twitch stream while you do it. 
             Based on the current game frame and state information, think through your next move and choose the best button action. 
             If you notice that you are repeating the same action sequences over and over again, you definitely need to try something different since what you are doing is wrong! Try exploring different new areas or interacting with different NPCs if you are stuck.
-            Look at the summary of your recent turns. This will give you an overview of your recent history. Use this to determine if you are stuck or need to try a different approach. If you made a prediction on a previous turn, it will be marked with PREDICTION in the summary. Use this to realize when you are making mistakes, and choose a different decision.
+            Look at the summary of your recent turns. This will give you an overview of your recent history. Use this to determine if you are stuck or need to try a different approach. If you made a prediction on a previous turn, it will be marked with PREDICTION in the summary.
+            
+            **IMPORTANT** Using predictions: If your previous predictions don't line up with what you see on your current turn, you should try a different approach. Don't repeat failing actions, think deeply about a different plan of action.
 
 RECENT TURN SUMMARIES:
 {recent_turn_summaries}
