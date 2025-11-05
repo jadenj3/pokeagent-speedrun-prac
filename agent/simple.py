@@ -610,6 +610,10 @@ class SimpleAgent:
         filtered = []
         for line in state_text.splitlines():
             upper = line.upper()
+            if upper.startswith("PLAYER AT"):
+                continue
+            if upper.startswith("POSITION: X="):
+                continue
             if "NAVIGATE_TO" in upper:
                 continue
             if "MOVEMENT: UP=" in upper:
