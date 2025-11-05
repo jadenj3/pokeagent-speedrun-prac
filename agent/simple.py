@@ -858,13 +858,13 @@ Context: {context} """
 
             PLANNING MODULE ACTIONS (Choose your action from one of these):
 
-            FIRST:
+            FIRST (this is the highest confidence action from the planning module):
             {first}
 
-            SECOND:
+            SECOND (this is the second highest confidence, use this if you are stuck in a loop using the first action and not making any progress):
             {second}
 
-            THIRD:
+            THIRD (this is the third most confident action from the planning module, this is available for you, but should be used when both FIRST and SECOND are leading to repeated failure modes):
             {third}
 
             CURRENT GAME STATE:
