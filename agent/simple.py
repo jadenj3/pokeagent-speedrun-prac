@@ -794,166 +794,43 @@ class SimpleAgent:
 
             recent_turn_summaries_list = self.turn_summaries[-20:]
             recent_turn_summaries = "\n".join(recent_turn_summaries_list) if recent_turn_summaries_list else "No recent summaries."
-
-
-            reflective_prompt = (f"""You are an agent designed to assist other agents in a pokemon agent speedrun. Your objective is to look at the current 
-                        turn, history, frame, and game state and decide if we need to update or add any new objectives to assist the other agents. You are also the main context manager for the agent system, and have access to the most historical context!
-    
-            **IMPORTANT** Look for any loops or failure modes that indicate the agent is stuck. It is your job to spot those and suggest an alternative action in the summary section!!
-            
-            CURRENT OBJECTIVES:
-            {objectives_summary}
-
-            CURRENT GAME STATE:
-            {formatted_state}
-
-            CURRENT TURN SUMMARIES:
-            {recent_turn_summaries}
-
-            Your response should be structured like this:
-
-            OBJECTIVES:
-            [Review your current objectives. You have main storyline objectives (story_*) that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them.  There may be sub-objectives that you need to complete before the main milestone. You can create your own sub-objectives to help achieve the main goals. Do any need to be updated, added, or marked as complete?
-            - Add sub-objectives: ADD_OBJECTIVE: type:description:target_value (e.g., "ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)" or "ADD_OBJECTIVE: item:Buy Pokeballs:5")
-            - Complete sub-objectives only: COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs")
-            - NOTE: Do NOT try to complete storyline objectives (story_*) - they auto-complete when milestones are reached]
-            
-            PLAN:
-            [Think about your immediate goal - what do you want to accomplish in the next few actions? Consider your current objectives and recent history. 
-            Check MOVEMENT MEMORY for areas you've had trouble with before and plan your route accordingly. Look for loops and in your current history, then avoid repeating those mistakes and come up with a new plan.]
-            
-            REASONING:
-            [Explain why you're choosing this specific action. Reference the MOVEMENT PREVIEW and MOVEMENT MEMORY sections. Check the visual frame for NPCs before moving. If you see NPCs in the image, avoid walking into them. Consider any failed movements or known obstacles from your memory.]
-
-            
-            SUMMARY:
-            [Look at the current state, history, objective, and image. You will provide guidance to the planning module. Look for failure modes/loops, potential alternative routes and provide a brief suggestion for this turn.
-            DO NOT reference specific coordinates or APIs in your suggestions, provide natural language guidance. You are here to help the agent.
-            This summary should be relatively brief, just get the main point across.]
-
-            """)
             
             # Build pathfinding rules section (only if not in title sequence)
             pathfinding_rules = ""
-            action_descriptions = f"""
-Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
-
-IMPORTANT: Please think step by step before choosing your action. Structure your response like this:
-
-ANALYSIS:
-[Analyze what you see in the frame and current game state - what's happening? where are you? what should you be doing? 
-IMPORTANT: Look carefully at the game image for objects (clocks, pokeballs, bags) and NPCs (people, trainers) that might not be shown on the map. NPCs appear as sprite characters and can block movement or trigger battles/dialogue. When you see them try determine their location (X,Y) on the map relative to the player and any objects.]
-
-OBJECTIVES:
-[Review your current objectives. You have main storyline objectives (story_*) that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them.  There may be sub-objectives that you need to complete before the main milestone. You can create your own sub-objectives to help achieve the main goals. Do any need to be updated, added, or marked as complete?
-- Add sub-objectives: ADD_OBJECTIVE: type:description:target_value (e.g., "ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)" or "ADD_OBJECTIVE: item:Buy Pokeballs:5")
-- Complete sub-objectives only: COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs")
-- NOTE: Do NOT try to complete storyline objectives (story_*) - they auto-complete when milestones are reached]
-
-PLAN:
-[Think about your immediate goal - what do you want to accomplish in the next few actions? Consider your current objectives and recent history. 
-Check MOVEMENT MEMORY for areas you've had trouble with before and plan your route accordingly. Look for loops and in your current history, then avoid repeating those mistakes and come up with a new plan.]
-
-REASONING:
-[Explain why you're choosing this specific action. Reference the MOVEMENT PREVIEW and MOVEMENT MEMORY sections. Check the visual frame for NPCs before moving. If you see NPCs in the image, avoid walking into them. Consider any failed movements or known obstacles from your memory.]
-
-ACTION:
-[Your final action choice - PREFER SINGLE ACTIONS like 'RIGHT' or 'A'. Only use multiple actions like 'UP, UP, RIGHT' if you've verified each step is WALKABLE in the movement preview and map.]
-
-SUMMARY:
-[Summarize your current turn and explain briefly why you took that action. This response will persist in your context for multiple turns. Use this to pass on information to subsequent turns.]
-
-"""
-
-            if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
-                print("🔍 Making VLM call...")
-                try:
-                    response = self.vlm.get_text_query(reflective_prompt, "simple_mode")
-                    print(f"🔍 VLM response received: {response[:100]}..." if len(response) > 100 else f"🔍 VLM response: {response}")
-                except Exception as e:
-                    print(f"❌ VLM call failed: {e}")
-                    return "WAIT"
-            else:
-                logger.error("🚫 CRITICAL: About to call VLM but frame validation failed - this should never happen!")
-                return "WAIT"
-
-            actions, full_reasoning, reflective_summary, prediction = self._parse_structured_response(response, game_state)
-
-
-            if context != "title":
-                pathfinding_rules = f"""
-                
-                
-CURRENT GAME STATE:
-{formatted_state}
-
-{movement_memory}
-
-{stuck_warning}
-
-{action_descriptions}
-
-🚨 PATHFINDING RULES:
-0. **ALWAYS CONTINUE WITH DIALOGUE IF YOU SEE A DIALOGUE BOX** You will be prevented from issuing any other actions until you complete the dialogue. Press A to advance the dialogue. 
-1. **SINGLE STEP FIRST**: Always prefer single actions (UP, DOWN, LEFT, RIGHT, A, B) unless you're 100% certain about multi-step paths
-2. **CHECK EVERY STEP**: Before chaining movements, verify EACH step in your sequence using the MOVEMENT PREVIEW and map
-3. **BLOCKED = STOP**: If ANY step shows BLOCKED in the movement preview, the entire sequence will fail
-4. **NO BLIND CHAINS**: Never chain movements through areas you can't see or verify as walkable
-5. **PERFORM PATHFINDING**: Find a path to a target location (X',Y') from the player position (X,Y) on the map. DO NOT TRAVERSE THROUGH OBSTACLES (#) -- it will not work.
-
-💡 SMART MOVEMENT STRATEGY:
-- Use MOVEMENT PREVIEW to see exactly what happens with each direction
-- If your target requires multiple steps, plan ONE step at a time
-- Only chain 2-3 moves if ALL intermediate tiles are confirmed WALKABLE
-- When stuck, try a different direction rather than repeating the same blocked move
-- After moving in a direction, you will be facing that direction for interactions with NPCs, etc.
-
-EXAMPLE - DON'T DO THIS:
-❌ "I want to go right 5 tiles" → "RIGHT, RIGHT, RIGHT, RIGHT, RIGHT" (may hit wall on step 2!)
-
-EXAMPLE - DO THIS INSTEAD:
-✅ Check movement preview → "RIGHT shows (X+1,Y) WALKABLE" → "RIGHT" (single safe step)
-✅ Next turn, check again → "RIGHT shows (X+2,Y) WALKABLE" → "RIGHT" (another safe step)
-
-💡 SMART NAVIGATION:
-- The Player's sprite in the visual frame is located at the coordinates (X,Y) in the game state. Objects in the visual frame should be represented in relation to the Player's sprite.
-- Check the VISUAL FRAME for NPCs (people/trainers) and other objects like clocks before moving - they're not always on the map! NPCs may block movement even when the movement preview shows them as walkable.
-- Review MOVEMENT MEMORY for locations where you've failed to move before
-- Only explore areas marked with ? (these are confirmed explorable edges)
-- Avoid areas surrounded by # (walls) - they're fully blocked
-- Use doors (D), stairs (S), or walk around obstacles when pathfinding suggests it
-
-💡 NPC & OBSTACLE HANDLING:
-- If you see NPCs in the image, avoid walking into them or interact with A/B if needed
-- If a movement fails (coordinates don't change), that location likely has an NPC or obstacle
-- Use your MOVEMENT MEMORY to remember problem areas and plan around them
-- NPCs can trigger battles or dialogue, which may be useful for objectives
-
-Context: {context} | Coords: {coords}
-"""
 
             # Create enhanced prompt with objectives, history context and chain of thought request
             prompt = f"""You are playing as the Protagonist in Pokemon Emerald. Progress quickly to the milestones by balancing exploration and exploitation of things you know. 
-            Based on the current game frame and state information, think through your next move and choose the best button action. 
+            Based on the current game frame and state information, think through your next move and choose the best button action. You are the planning module, which will be followed by the action module.
+            Your purpose is to provide action options for the action module. You will choose distinct and different three actions in order of confidence.
+            You will examine the current map, frame, and objectives to decide the best path forward.
 
-This is some helpful information provided by the reflective agent (which has access to a much longer context history): 
-{reflective_summary}
+
+Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
+*Important: If you see a dialogue in the frame, you should continue with the dialogue. Press A to move forward.
+If you see multiple options in the dialogue with a highlighted arrow, you can also select UP or DOWN to change your selection before moving forward.
 
 CURRENT OBJECTIVES:
 {objectives_summary}
 
 CURRENT GAME STATE:
-{formatted_state}
+{map_only}
 
-You have the most information about the current game state. You should take into account the information provided by the relfection agent, but you should look at your available data
-and decide the best course of action by yourself. If the reflective agent gives a clearly wrong or invalid move, you should override their decision and ask the action agent to take a correct move.
+
+FORMAT YOUR RESPONSE AS FOLLOWS:
+
+FIRST:
+[Your most confident action based on the available information, and represents the main branch of your plan]
+
+SECOND:
+[A second option for the action module incase the first option is stuck or leads to a failure mode or dead end, this is the second branch of your plan]
+
+THIRD:
+[The last backup option for the action module, this should be a different approach to be used if both the FIRST and SECOND actions are leading to dead ends]
+
 
 Context: {context} """
 
-            planning_prefix = ("You are the planning module for a pokemon agent, below is the current context. The current frame image is attached. You should examine the current context, look for any loops or patterns and synthesize a plan for the action module. The action module will be the one to output the specific action "
-                               "Look at your objectives, game state, and the image to decide the best course of action. If you see dialogue in the image you should ALWAYS suggest finishing the dialogue before any other action. If the dialogue has multiple options you can select, reflect and choose the correct one to accomplish your current objectives. "
-                               "When giving directions to the action agent, feel free to suggest simple actions like A, B, START, SELECT, UP, DOWN, LEFT, RIGHT. Don't reference coordinates or api calls.")
-            planning_prompt = planning_prefix + prompt
+            planning_prompt =  prompt
             is_stuck = False
             #if stuck_warning:
                 #is_stuck = bool(stuck_warning)
@@ -970,13 +847,115 @@ Context: {context} """
                 logger.error("🚫 CRITICAL: About to call VLM but frame validation failed - this should never happen!")
                 return "WAIT"
 
-            current_plan = response
+            actions, reasoning, turn_summary, prediction, planned_actions = self._parse_structured_response(response, game_state)
+            first, second, third = planned_actions
 
-            action_prefix = "You are the action agent for the Protagonist in a Pokemon Emerald speedrun. Progress quickly to the milestones by balancing exploration and exploitation of things you know. You will receive a plan from the planning agent and some context that may be useful for deciding your next move. Prioritize the plan from the planning agent when deciding your next move, but the map and movement preview are there to assist you if you need additional context."
+            action_descriptions = f"""
+            IMPORTANT: the planning module will provide you with three potential actions, FIRST, SECOND, THIRD. You will examine this, look at the context and turn history, and decide which action is the best route forward.
+            You should check the TURN HISTORY, MOVEMENT PREVIEW, OBJECTIVES, and MAP to see if you are stuck in a loop or some other failure mode, and use this information to choose the action.
+
+            Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
+
+            IMPORTANT: Please think step by step before choosing your action. Structure your response like this:
+
+            PLANNING MODULE ACTIONS:
+
+            FIRST:
+            {first}
+
+            SECOND:
+            {second}
+
+            THIRD:
+            {third}
+
+            CURRENT GAME STATE:
+            {formatted_state}
+
+            {movement_memory}
+
+            {stuck_warning}
+
+            YOUR RESPONSE SHOULD BE FORMATTED AS FOLLOWS:
+
+            ANALYSIS:
+            [Analyze what you see in the frame and current game state - what's happening? where are you? what should you be doing? 
+            IMPORTANT: Look carefully at the game image for objects (clocks, pokeballs, bags) and NPCs (people, trainers) that might not be shown on the map. NPCs appear as sprite characters and can block movement or trigger battles/dialogue. When you see them try determine their location (X,Y) on the map relative to the player and any objects.]
+
+            OBJECTIVES:
+            [Review your current objectives. You have main storyline objectives (story_*) that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them.  There may be sub-objectives that you need to complete before the main milestone. You can create your own sub-objectives to help achieve the main goals. Do any need to be updated, added, or marked as complete?
+            - Add sub-objectives: ADD_OBJECTIVE: type:description:target_value (e.g., "ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)" or "ADD_OBJECTIVE: item:Buy Pokeballs:5")
+            - Complete sub-objectives only: COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs")
+            - NOTE: Do NOT try to complete storyline objectives (story_*) - they auto-complete when milestones are reached]
+
+            PLAN:
+            [Think about your immediate goal - what do you want to accomplish in the next few actions? Consider your current objectives and recent history. 
+            Check MOVEMENT MEMORY for areas you've had trouble with before and plan your route accordingly. Think about the pros and cons from the provided actions from the planning module]
+
+            REASONING:
+            [Explain why you're choosing this specific action. Reference the MOVEMENT PREVIEW and MOVEMENT MEMORY sections. Check the visual frame for NPCs before moving. If you see NPCs in the image, avoid walking into them. Consider any failed movements or known obstacles from your memory.]
+
+            ACTION:
+            [Your final action choice - PREFER SINGLE ACTIONS like 'RIGHT' or 'A'. Only use multiple actions like 'UP, UP, RIGHT' if you've verified each step is WALKABLE in the movement preview and map.
+            This action should be one of FIRST, SECOND, or THIRD provided by the planning module.]
+
+            SUMMARY:
+            [Summarize your current turn and explain briefly why you took that action. This response will persist in your context for multiple turns. Use this to pass on information to subsequent turns.]
+
+            """
+
+            if context != "title":
+                pathfinding_rules = f"""
+
+
+            🚨 PATHFINDING RULES:
+            0. **ALWAYS CONTINUE WITH DIALOGUE IF YOU SEE A DIALOGUE BOX** You will be prevented from issuing any other actions until you complete the dialogue. Press A to advance the dialogue. 
+            1. **SINGLE STEP FIRST**: Always prefer single actions (UP, DOWN, LEFT, RIGHT, A, B) unless you're 100% certain about multi-step paths
+            2. **CHECK EVERY STEP**: Before chaining movements, verify EACH step in your sequence using the MOVEMENT PREVIEW and map
+            3. **BLOCKED = STOP**: If ANY step shows BLOCKED in the movement preview, the entire sequence will fail
+            4. **NO BLIND CHAINS**: Never chain movements through areas you can't see or verify as walkable
+            5. **PERFORM PATHFINDING**: Find a path to a target location (X',Y') from the player position (X,Y) on the map. DO NOT TRAVERSE THROUGH OBSTACLES (#) -- it will not work.
+
+            💡 SMART MOVEMENT STRATEGY:
+            - Use MOVEMENT PREVIEW to see exactly what happens with each direction
+            - If your target requires multiple steps, plan ONE step at a time
+            - Only chain 2-3 moves if ALL intermediate tiles are confirmed WALKABLE
+            - When stuck, try a different direction rather than repeating the same blocked move
+            - After moving in a direction, you will be facing that direction for interactions with NPCs, etc.
+
+            EXAMPLE - DON'T DO THIS:
+            ❌ "I want to go right 5 tiles" → "RIGHT, RIGHT, RIGHT, RIGHT, RIGHT" (may hit wall on step 2!)
+
+            EXAMPLE - DO THIS INSTEAD:
+            ✅ Check movement preview → "RIGHT shows (X+1,Y) WALKABLE" → "RIGHT" (single safe step)
+            ✅ Next turn, check again → "RIGHT shows (X+2,Y) WALKABLE" → "RIGHT" (another safe step)
+
+            💡 SMART NAVIGATION:
+            - The Player's sprite in the visual frame is located at the coordinates (X,Y) in the game state. Objects in the visual frame should be represented in relation to the Player's sprite.
+            - Check the VISUAL FRAME for NPCs (people/trainers) and other objects like clocks before moving - they're not always on the map! NPCs may block movement even when the movement preview shows them as walkable.
+            - Review MOVEMENT MEMORY for locations where you've failed to move before
+            - Only explore areas marked with ? (these are confirmed explorable edges)
+            - Avoid areas surrounded by # (walls) - they're fully blocked
+            - Use doors (D), stairs (S), or walk around obstacles when pathfinding suggests it
+
+            💡 NPC & OBSTACLE HANDLING:
+            - If you see NPCs in the image, avoid walking into them or interact with A/B if needed
+            - If a movement fails (coordinates don't change), that location likely has an NPC or obstacle
+            - Use your MOVEMENT MEMORY to remember problem areas and plan around them
+            - NPCs can trigger battles or dialogue, which may be useful for objectives
+
+            Context: {context} | Coords: {coords}
+            """
+
+
+
+
+
+            action_prefix = "You are the action agent for the Protagonist in a Pokemon Emerald speedrun. Progress quickly to the milestones by balancing exploration and exploitation of things you know."
             if context == "title":
-                action_prompt = action_prefix + current_plan + prompt + action_descriptions
+                action_prompt = action_prefix + prompt + action_descriptions
             else:
-                action_prompt = action_prefix + current_plan + pathfinding_rules
+                action_prompt = action_prefix + pathfinding_rules
             
             # Print complete prompt to terminal for debugging
             print("\n" + "="*120)
@@ -1013,11 +992,6 @@ Context: {context} """
                 llm_logger = get_llm_logger()
                 if llm_logger:
                     llm_logger.log_prompt_text(
-                        reflective_prompt,
-                        interaction_type="simple_mode_prompt",
-                        metadata={"step": self.state.step_counter}
-                    )
-                    llm_logger.log_prompt_text(
                         planning_prompt,
                         interaction_type="simple_mode_prompt",
                         metadata={"step": self.state.step_counter}
@@ -1031,7 +1005,7 @@ Context: {context} """
                 logger.debug(f"Failed to log prompt text: {log_error}")
             
             # Extract action(s) from structured response
-            actions, reasoning, turn_summary, prediction = self._parse_structured_response(response, game_state)
+            actions, reasoning, turn_summary, prediction, planned_actions = self._parse_structured_response(response, game_state)
 
             if turn_summary:
                 summary_text = turn_summary
@@ -1169,6 +1143,9 @@ Context: {context} """
             reasoning = ""
             summary = ""
             prediction = ""
+            first = ""
+            second = ""
+            third = ""
             actions = []
             
             # Split response into lines for processing
@@ -1203,6 +1180,15 @@ Context: {context} """
                 elif line.upper().startswith('PREDICT:'):
                     current_section = 'prediction'
                     prediction = line[8:].strip()
+                elif line.upper().startswith('FIRST:'):
+                    current_section = 'first'
+                    first = line[6:].strip()
+                elif line.upper().startswith('SECOND:'):
+                    current_section = 'second'
+                    second = line[7:].strip()
+                elif line.upper().startswith('THIRD:'):
+                    current_section = 'third'
+                    third = line[6:].strip()
                 elif line and current_section:
                     # Continue content of current section
                     if current_section == 'analysis':
@@ -1217,6 +1203,12 @@ Context: {context} """
                         summary += " " + line
                     elif current_section == 'prediction':
                         prediction += " " + line
+                    elif current_section == 'first':
+                        first += " " + line
+                    elif current_section == 'second':
+                        second += " " + line
+                    elif current_section == 'third':
+                        third += " " + line
                     elif current_section == 'action':
                         # Additional action parsing from action section content
                         if line.strip():  # Only process non-empty lines
@@ -1248,16 +1240,18 @@ Context: {context} """
                 reasoning_parts.append(f"Summary: {summary}")
             if prediction:
                 reasoning_parts.append(f"Prediction: {prediction}")
+
+            planned_actions = (first, second, third)
             
             full_reasoning = " | ".join(reasoning_parts) if reasoning_parts else "No reasoning provided"
             
-            return actions, full_reasoning, summary, prediction
+            return actions, full_reasoning, summary, prediction, planned_actions
             
         except Exception as e:
             logger.warning(f"Error parsing structured response: {e}")
             # Fall back to basic action parsing
             parsed_actions = self._parse_actions(response, game_state)
-            return parsed_actions, "Error parsing reasoning", "", ""
+            return parsed_actions, "Error parsing reasoning", "", "", ""
     
     def _process_objectives_from_response(self, objectives_text: str):
         """Process objective management commands from LLM response"""
