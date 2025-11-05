@@ -868,7 +868,7 @@ Context: {context} | Coords: {coords}
 """
 
             # Create enhanced prompt with objectives, history context and chain of thought request
-            prompt = f"""You are playing as the Protagonist in Pokemon Emerald. Progress quickly to the milestones by balancing exploration and exploitation of things you know, but have fun for the Twitch stream while you do it. 
+            prompt = f"""You are playing as the Protagonist in Pokemon Emerald. Progress quickly to the milestones by balancing exploration and exploitation of things you know. 
             Based on the current game frame and state information, think through your next move and choose the best button action. 
 
 
@@ -878,12 +878,11 @@ CURRENT OBJECTIVES:
 CURRENT GAME STATE:
 {map_only}
 
-Look at your objectives, game state, and the image to decide the best course of action. If you see dialogue in the image you should ALWAYS suggest
-finishing the dialogue before any other action. If the dialogue has multiple options you can select, reflect and choose the correct one to accomplish your current objectives.
-
 Context: {context} """
 
-            planning_prefix = "You are the planning module for a pokemon agent, below is the current context and recent turn summaries. The current frame image is attached. You should examine the current context, look for any loops or patterns and synthesize a plan for the action module. The action module will be the one to output the specific action."
+            planning_prefix = ("You are the planning module for a pokemon agent, below is the current context. The current frame image is attached. You should examine the current context, look for any loops or patterns and synthesize a plan for the action module. The action module will be the one to output the specific action "
+                               "Look at your objectives, game state, and the image to decide the best course of action. If you see dialogue in the image you should ALWAYS suggest finishing the dialogue before any other action. If the dialogue has multiple options you can select, reflect and choose the correct one to accomplish your current objectives. "
+                               "When giving directions to the action agent, suggest single actions like A, B, START, SELECT, UP, DOWN, LEFT, RIGHT. Don't reference coordinates or api calls.")
             planning_prompt = planning_prefix + prompt
             is_stuck = False
             if stuck_warning:
