@@ -815,6 +815,9 @@ class SimpleAgent:
             - Add sub-objectives: ADD_OBJECTIVE: type:description:target_value (e.g., "ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)" or "ADD_OBJECTIVE: item:Buy Pokeballs:5")
             - Complete sub-objectives only: COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs")
             - NOTE: Do NOT try to complete storyline objectives (story_*) - they auto-complete when milestones are reached]
+            
+            SUMMARY:
+            [You can provide a summary of the current state, history, objective, and anything else that might be useful to the planning agent]
 
             """)
             
@@ -862,11 +865,12 @@ SUMMARY:
                 logger.error("🚫 CRITICAL: About to call VLM but frame validation failed - this should never happen!")
                 return "WAIT"
 
-            _, _, _, _ = self._parse_structured_response(response, game_state)
+            actions, full_reasoning, reflective_summary, prediction = self._parse_structured_response(response, game_state)
 
 
             if context != "title":
                 pathfinding_rules = f"""
+                
                 
 CURRENT GAME STATE:
 {formatted_state}
@@ -920,6 +924,8 @@ Context: {context} | Coords: {coords}
             prompt = f"""You are playing as the Protagonist in Pokemon Emerald. Progress quickly to the milestones by balancing exploration and exploitation of things you know. 
             Based on the current game frame and state information, think through your next move and choose the best button action. 
 
+This is some helpful information provided by the reflective agent (which has access to a much longer context history): 
+{reflective_summary}
 
 CURRENT OBJECTIVES:
 {objectives_summary}
