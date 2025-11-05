@@ -856,9 +856,7 @@ Context: {context} """
 
             Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
 
-            IMPORTANT: Please think step by step before choosing your action. Structure your response like this:
-
-            PLANNING MODULE ACTIONS:
+            PLANNING MODULE ACTIONS (Choose your action from one of these):
 
             FIRST:
             {first}
