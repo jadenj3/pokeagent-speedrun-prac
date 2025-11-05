@@ -36,15 +36,11 @@ import sys
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
-from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
 import numpy as np
 from PIL import Image
 
 from utils.state_formatter import format_state_for_llm
-from utils.map_formatter import format_tile_to_symbol
-from utils.llm_logger import get_llm_logger
-#from utils.agent_helpers import update_server_metrics
 
 logger = logging.getLogger(__name__)
 
@@ -55,14 +51,14 @@ DEFAULT_HISTORY_DISPLAY_COUNT = 30 # Number of history entries shown to LLM
 DEFAULT_ACTIONS_DISPLAY_COUNT = 40 # Number of recent actions shown to LLM
 DEFAULT_MOVEMENT_MEMORY_CLEAR_INTERVAL = 30  # Clear movement memory after N actions (0 = never clear)
 
-def configure_simple_agent_defaults(max_history_entries: int = None, max_recent_actions: int = None, 
+def configure_simple_agent_defaults(max_history_entries: int = None, max_recent_actions: int = None,
                                   history_display_count: int = None, actions_display_count: int = None,
                                   movement_memory_clear_interval: int = None):
     """Configure default parameters for all new SimpleAgent instances"""
     global DEFAULT_MAX_HISTORY_ENTRIES, DEFAULT_MAX_RECENT_ACTIONS
     global DEFAULT_HISTORY_DISPLAY_COUNT, DEFAULT_ACTIONS_DISPLAY_COUNT
     global DEFAULT_MOVEMENT_MEMORY_CLEAR_INTERVAL
-    
+
     if max_history_entries is not None:
         DEFAULT_MAX_HISTORY_ENTRIES = max_history_entries
     if max_recent_actions is not None:
@@ -73,7 +69,7 @@ def configure_simple_agent_defaults(max_history_entries: int = None, max_recent_
         DEFAULT_ACTIONS_DISPLAY_COUNT = actions_display_count
     if movement_memory_clear_interval is not None:
         DEFAULT_MOVEMENT_MEMORY_CLEAR_INTERVAL = movement_memory_clear_interval
-        
+
     logger.info(f"Updated SimpleAgent defaults: {DEFAULT_MAX_HISTORY_ENTRIES} history, {DEFAULT_MAX_RECENT_ACTIONS} actions, "
                f"display {DEFAULT_HISTORY_DISPLAY_COUNT}/{DEFAULT_ACTIONS_DISPLAY_COUNT}, "
                f"movement memory clear interval: {DEFAULT_MOVEMENT_MEMORY_CLEAR_INTERVAL}")
@@ -115,7 +111,7 @@ class SimpleAgentState:
     failed_movements: Dict[str, List[str]] = field(default_factory=dict)  # coord_key -> [failed_directions]
     npc_interactions: Dict[str, str] = field(default_factory=dict)  # coord_key -> interaction_notes
     movement_memory_action_counter: int = 0  # Counter for tracking actions since last memory clear
-    
+
     def __post_init__(self):
         """Initialize deques with current default values"""
         if self.history is None:
@@ -128,53 +124,32 @@ class SimpleAgent:
     Simple agent that processes frame + state -> action directly with history tracking
     """
 
-    def __init__(self, vlm, max_history_entries: int = None, max_recent_actions: int = None, 
+    def __init__(self, vlm, max_history_entries: int = None, max_recent_actions: int = None,
                  history_display_count: int = None, actions_display_count: int = None,
                  movement_memory_clear_interval: int = None):
         self.vlm = vlm
-        
+
         # Use current global defaults if not specified
         max_history_entries = max_history_entries or DEFAULT_MAX_HISTORY_ENTRIES
         max_recent_actions = max_recent_actions or DEFAULT_MAX_RECENT_ACTIONS
         history_display_count = history_display_count or DEFAULT_HISTORY_DISPLAY_COUNT
         actions_display_count = actions_display_count or DEFAULT_ACTIONS_DISPLAY_COUNT
         movement_memory_clear_interval = movement_memory_clear_interval if movement_memory_clear_interval is not None else DEFAULT_MOVEMENT_MEMORY_CLEAR_INTERVAL
-        
+
         self.state = SimpleAgentState()
         self.state.history = deque(maxlen=max_history_entries)
         self.state.recent_actions = deque(maxlen=max_recent_actions)
-        
+
         # Display parameters for LLM prompts
         self.history_display_count = history_display_count
         self.actions_display_count = actions_display_count
 
-        self.turn_summaries = []
-        
         # Movement memory clearing interval
         self.movement_memory_clear_interval = movement_memory_clear_interval
-        
+
         # Initialize storyline objectives for Emerald progression
         self._initialize_storyline_objectives()
 
-    def _save_debug_frame(self, frame, suffix: str) -> None:
-        """Persist the current frame for debugging without interrupting execution."""
-        try:
-            debug_dir = Path(".debug_frames")
-            debug_dir.mkdir(exist_ok=True)
-
-            if hasattr(frame, "save"):
-                image = frame
-            elif hasattr(frame, "shape"):
-                image = Image.fromarray(frame)
-            else:
-                return
-
-            filename = debug_dir / f"step_{self.state.step_counter:05d}_{suffix}.png"
-            image.save(filename)
-        except Exception as exc:
-            logger.debug(f"Failed to save debug frame ({suffix}): {exc}")
-
-        
     def _initialize_storyline_objectives(self):
         """Initialize the main storyline objectives for Pokémon Emerald progression"""
         storyline_objectives = [
@@ -201,14 +176,14 @@ class SimpleAgent:
             },
             {
                 "id": "story_player_bedroom",
-                "description": "Go upstairs to player's bedroom. Use the stairs, don't use the door.",
+                "description": "Go upstairs to player's bedroom",
                 "objective_type": "location",
                 "target_value": "Player's Bedroom",
                 "milestone_id": "PLAYER_BEDROOM"
             },
             {
                 "id": "story_clock_set",
-                "description": "Set the clock on the wall in the player's bedroom. After selecting YES, leave the house. This objective won't be marked complete until you leave the house.",
+                "description": "Set the clock on the wall in the player's bedroom. Interact with the clock (5,1) by pressing A while facing it. Then, leave the house.",
                 "objective_type": "location",
                 "target_value": "Clock Set",
                 "milestone_id": "CLOCK_SET"
@@ -354,7 +329,7 @@ class SimpleAgent:
                 "milestone_id": "FIRST_GYM_COMPLETE"
             }
         ]
-        
+
         # Add storyline objectives to the state
         for obj_data in storyline_objectives:
             objective = Objective(
@@ -370,7 +345,7 @@ class SimpleAgent:
             self.state.objectives.append(objective)
 
         logger.info(f"Initialized {len(storyline_objectives)} storyline objectives for Emerald progression (up to first gym)")
-        
+
     def get_game_context(self, game_state: Dict[str, Any]) -> str:
         """Determine current game context (overworld, battle, menu, dialogue)"""
         try:
@@ -378,41 +353,41 @@ class SimpleAgent:
             player_location = game_state.get("player", {}).get("location", "")
             if player_location == "TITLE_SEQUENCE":
                 return "title"
-            
+
             # Check game state for title/intro
             game_state_value = game_state.get("game", {}).get("game_state", "").lower()
             if "title" in game_state_value or "intro" in game_state_value:
                 return "title"
-            
+
             # Check if player name is not set (indicates title sequence)
             player_name = game_state.get("player", {}).get("name", "").strip()
             if not player_name or player_name == "????????":
                 return "title"
-            
+
             # Check if in battle
             is_in_battle = game_state.get("game", {}).get("is_in_battle", False)
             if is_in_battle:
                 logger.debug(f"Detected battle context")
                 return "battle"
-            
+
             # Check if dialogue is active
             dialogue_state = game_state.get("game", {}).get("dialogue", {})
             if dialogue_state.get("active", False) or dialogue_state.get("text", "").strip():
                 return "dialogue"
-            
+
             # Check if in menu (simplified detection)
             # Could be enhanced with more sophisticated menu detection
             player_state = game_state.get("player", {})
             if player_state.get("in_menu", False):
                 return "menu"
-            
+
             # Default to overworld
             return "overworld"
-            
+
         except Exception as e:
             logger.warning(f"Error determining game context: {e}")
             return "unknown"
-    
+
     def get_player_coords(self, game_state: Dict[str, Any]) -> Optional[Tuple[int, int]]:
         """Extract player coordinates from game state"""
         try:
@@ -424,7 +399,7 @@ class SimpleAgent:
                 y = position.get("y")
                 if x is not None and y is not None:
                     return (x, y)
-            
+
             # Fallback: try direct x/y on player
             x = player.get("x")
             y = player.get("y")
@@ -433,7 +408,7 @@ class SimpleAgent:
         except Exception as e:
             logger.warning(f"Error getting player coords: {e}")
         return None
-    
+
     def get_map_id(self, game_state: Dict[str, Any]) -> Optional[int]:
         """Extract map ID from game state"""
         try:
@@ -441,7 +416,7 @@ class SimpleAgent:
         except Exception as e:
             logger.warning(f"Error getting map ID: {e}")
         return None
-    
+
     def add_objective(self, description: str, objective_type: str, target_value: Any = None) -> str:
         """Add a new objective and return its ID"""
         obj_id = f"obj_{len(self.state.objectives)}_{int(datetime.now().timestamp())}"
@@ -455,7 +430,7 @@ class SimpleAgent:
         self.state.objectives_updated = True
         logger.info(f"Added objective: {description}")
         return obj_id
-    
+
     def complete_objective(self, obj_id: str, progress_notes: str = ""):
         """Mark an objective as completed (storyline objectives cannot be manually completed)"""
         for obj in self.state.objectives:
@@ -464,7 +439,7 @@ class SimpleAgent:
                 if obj.storyline:
                     logger.warning(f"Cannot manually complete storyline objective: {obj.description}. These are verified by emulator milestones.")
                     return False
-                
+
                 obj.completed = True
                 obj.completed_at = datetime.now()
                 obj.progress_notes = progress_notes
@@ -472,26 +447,26 @@ class SimpleAgent:
                 logger.info(f"Completed objective: {obj.description}")
                 return True
         return False
-    
+
     def get_active_objectives(self) -> List[Objective]:
         """Get list of uncompleted objectives"""
         return [obj for obj in self.state.objectives if not obj.completed]
-    
+
     def get_completed_objectives(self) -> List[Objective]:
         """Get list of completed objectives"""
         return [obj for obj in self.state.objectives if obj.completed]
-    
+
     def check_objective_completion(self, game_state: Dict[str, Any]) -> List[str]:
         """Check if any objectives should be marked as completed based on game state"""
         completed_ids = []
         coords = self.get_player_coords(game_state)
         context = self.get_game_context(game_state)
         map_id = self.get_map_id(game_state)
-        
+
         for obj in self.get_active_objectives():
             should_complete = False
             notes = ""
-            
+
             if obj.objective_type == "location" and coords and obj.target_value:
                 # Check if player reached target location
                 # Note: target_value is a string (location name) for storyline objectives
@@ -502,29 +477,29 @@ class SimpleAgent:
                     if abs(coords[0] - target_x) <= 2 and abs(coords[1] - target_y) <= 2:
                         should_complete = True
                         notes = f"Reached location ({coords[0]}, {coords[1]})"
-            
+
             elif obj.objective_type == "battle" and context == "battle":
                 # Objective completed when battle starts
                 should_complete = True
                 notes = "Entered battle"
-            
+
             elif obj.objective_type == "dialogue" and context == "dialogue":
                 # Objective completed when dialogue starts
                 should_complete = True
                 notes = "Started dialogue"
-            
+
             elif obj.objective_type == "map" and map_id and obj.target_value:
                 # Check if player reached target map
                 if map_id == obj.target_value:
                     should_complete = True
                     notes = f"Reached map {map_id}"
-            
+
             if should_complete:
                 self.complete_objective(obj.id, notes)
                 completed_ids.append(obj.id)
-        
+
         return completed_ids
-    
+
     def check_storyline_milestones(self, game_state: Dict[str, Any]) -> List[str]:
         """Check emulator milestones and auto-complete corresponding storyline objectives"""
         completed_ids = []
@@ -551,124 +526,53 @@ class SimpleAgent:
                     logger.info(f"Auto-completed storyline objective via milestone {obj.milestone_id}: {obj.description}")
 
         return completed_ids
-    
+
     def detect_stuck_pattern(self, coords: Optional[Tuple[int, int]], context: str, game_state: Dict[str, Any] = None) -> bool:
         """Detect if the agent appears to be stuck in a location/context"""
         # Don't trigger stuck detection during contexts where staying in place is expected
         if context in ["battle", "dialogue", "menu", "title"]:
             logger.debug(f"Skipping stuck detection - context: {context}")
             return False
-        
+
         # Need valid coordinates for stuck detection
         if not coords or coords[0] is None or coords[1] is None:
             return False
-        
+
         # Check for title sequence if game state is available
         if game_state:
             # Check if in title sequence (no player name or invalid coordinates)
             player_name = game_state.get("player", {}).get("name", "").strip()
             if not player_name or player_name == "????????":
                 return False
-                
+
             # Check if game state indicates title/intro
             game_state_value = game_state.get("game", {}).get("game_state", "").lower()
             if "title" in game_state_value or "intro" in game_state_value:
                 return False
-            
+
             # Check location for title sequence
             player_location = game_state.get("player", {}).get("location", "")
             if player_location == "TITLE_SEQUENCE":
                 return False
-            
+
         key = f"{coords[0]}_{coords[1]}_{context}"
         self.state.stuck_detection[key] = self.state.stuck_detection.get(key, 0) + 1
-        
+
         # Consider stuck if we've been in the same location/context for 8+ consecutive steps
         return self.state.stuck_detection[key] >= 8
 
-    def remove_movement_preview(self, state_text: str) -> str:
-        lines = state_text.splitlines()
-        cleaned, skip = [], False
-        for line in lines:
-            if line.startswith("MOVEMENT PREVIEW:"):
-                skip = True
-                continue
-            if skip:
-                if line.strip() == "" or not line[:2].strip():  # blank line ends the block
-                    skip = False
-                continue
-            stripped = line.strip().upper()
-            if (stripped.startswith("UP:") or stripped.startswith("UP :") or
-                stripped.startswith("DOWN:") or stripped.startswith("DOWN :") or
-                stripped.startswith("LEFT:") or stripped.startswith("LEFT :") or
-                stripped.startswith("RIGHT:") or stripped.startswith("RIGHT :")):
-                continue
-            cleaned.append(line)
-        return "\n".join(cleaned)
-
-    def remove_navigation_instructions(self, state_text: str) -> str:
-        filtered = []
-        for line in state_text.splitlines():
-            upper = line.upper()
-            if upper.startswith("PLAYER AT"):
-                continue
-            if upper.startswith("POSITION: X="):
-                continue
-            if "NAVIGATE_TO" in upper:
-                continue
-            if "MOVEMENT: UP=" in upper:
-                continue
-            filtered.append(line)
-        return "\n".join(filtered)
-
-    def build_absolute_map(self, map_info: Dict[str, Any], player_coords: Optional[Tuple[int, int]]) -> str:
-        tiles = map_info.get('tiles') if map_info else None
-        if not tiles or not player_coords:
-            return ""
-
-        rows = len(tiles)
-        cols = len(tiles[0]) if rows > 0 else 0
-        if rows == 0 or cols == 0:
-            return ""
-
-        radius_y = rows // 2
-        radius_x = cols // 2
-
-        try:
-            header_vals = [f"{player_coords[0] + (col - radius_x):02d}" for col in range(cols)]
-            header = "     " + " ".join(header_vals)
-
-            lines = [header, "     " + " ".join(["--"] * cols)]
-            for row_idx, row in enumerate(tiles):
-                y = player_coords[1] + (row_idx - radius_y)
-                symbols = []
-                for col_idx, tile in enumerate(row):
-                    try:
-                        symbol = format_tile_to_symbol(tile)
-                    except Exception:
-                        symbol = "?"
-                    if col_idx == radius_x and row_idx == radius_y:
-                        symbol = "P"
-                    symbols.append(symbol)
-                line = f"{y:02d} | " + " ".join(symbols)
-                lines.append(line)
-            return "\n".join(lines)
-        except Exception as exc:
-            logger.debug(f"Failed to build absolute map: {exc}")
-            return ""
-    
     def is_black_frame(self, frame) -> bool:
         """
         Check if the frame is mostly black (transition/loading screen).
-        
+
         Args:
             frame: PIL Image or numpy array
-            
+
         Returns:
             bool: True if frame is mostly black, False otherwise
         """
         try:
-            
+
             # Convert to PIL Image if needed
             if hasattr(frame, 'convert'):  # It's already a PIL Image
                 img = frame
@@ -676,80 +580,80 @@ class SimpleAgent:
                 img = Image.fromarray(frame)
             else:
                 return False  # Unknown type, assume not black
-            
+
             # Convert to numpy array for analysis
             img_array = np.array(img)
-            
+
             # Calculate the mean brightness
             # For RGB images, average across all channels
             if len(img_array.shape) == 3:
                 mean_brightness = np.mean(img_array)
             else:
                 mean_brightness = np.mean(img_array)
-            
+
             # Also check the standard deviation to catch completely uniform frames
             std_dev = np.std(img_array)
-            
+
             # A frame is considered "black" if:
             # 1. Mean brightness is very low (< 10 out of 255)
             # 2. OR standard deviation is very low (< 5) indicating uniform color
             is_black = mean_brightness < 10 or (mean_brightness < 30 and std_dev < 5)
-            
+
             if is_black:
                 logger.debug(f"Black frame detected: mean_brightness={mean_brightness:.2f}, std_dev={std_dev:.2f}")
-            
+
             return is_black
-            
+
         except Exception as e:
             logger.warning(f"Error checking for black frame: {e}")
             return False  # On error, assume not black to continue processing
-    
+
     def get_relevant_history_summary(self, current_context: str, coords: Optional[Tuple[int, int]]) -> str:
         """Get a concise summary of relevant recent history"""
         # current_context and coords could be used for more sophisticated filtering in the future
         _ = current_context, coords  # Acknowledge unused parameters for now
         if not self.state.history:
             return "No previous history."
-        
+
         # Get last N entries based on display count
         recent_entries = list(self.state.history)[-self.history_display_count:]
-        
+
         # Format for LLM consumption
         summary_lines = []
         for i, entry in enumerate(recent_entries, 1):
             coord_str = f"({entry.player_coords[0]},{entry.player_coords[1]})" if entry.player_coords else "(?)"
             summary_lines.append(f"{i}. {entry.context} at {coord_str}: {entry.action_taken}")
-        
+
         return "\n".join(summary_lines)
-    
+
     def get_stuck_warning(self, coords: Optional[Tuple[int, int]], context: str, game_state: Dict[str, Any] = None) -> str:
         """Generate warning text if stuck pattern detected"""
         # Never show stuck warning in title sequence
         if context == "title":
             return ""
-            
+
         if self.detect_stuck_pattern(coords, context, game_state):
             return "\n⚠️ WARNING: You appear to be stuck at this location/context. Try a different approach!\n" \
                    "💡 TIP: If you try an action like RIGHT but coordinates don't change from (X,Y) to (X+1,Y), there's likely an obstacle. Check the map around player P for walls (#) or other barriers blocking your path."
         return ""
-    
+
     def create_game_state_summary(self, game_state: Dict[str, Any]) -> str:
         """Create a concise summary of the current game state"""
         try:
             game_info = game_state.get("game", {})
-            
+
             summary_parts = []
-            
+
             # Player location
             coords = self.get_player_coords(game_state)
             if coords:
                 summary_parts.append(f"Player at ({coords[0]}, {coords[1]})")
-            
+
             # Map info
             map_id = self.get_map_id(game_state)
             if map_id:
                 summary_parts.append(f"Map {map_id}")
-            
+
             # Context-specific info
             context = self.get_game_context(game_state)
             if context == "battle":
@@ -758,20 +662,20 @@ class SimpleAgent:
                 dialogue_text = game_info.get("dialogue", {}).get("text", "")
                 if dialogue_text:
                     summary_parts.append(f"Dialogue: {dialogue_text}")
-            
+
             return " | ".join(summary_parts) if summary_parts else "Unknown state"
-            
+
         except Exception as e:
             logger.warning(f"Error creating game state summary: {e}")
             return "Error reading state"
-    
+
     def step(self, game_state: Dict[str, Any]) -> Dict[str, Any]:
         """
         Compatibility method for client that expects agent.step(game_state)
-        
+
         Args:
             game_state: Complete game state dictionary (should include 'frame')
-            
+
         Returns:
             Dictionary with 'action' and optional 'reasoning'
         """
@@ -779,18 +683,18 @@ class SimpleAgent:
         if frame is None:
             logger.error("🚫 No frame in game_state for SimpleAgent.step")
             return {"action": "WAIT", "reasoning": "No frame available"}
-        
+
         action = self.process_step(frame, game_state)
         return {"action": action, "reasoning": "Simple agent decision"}
-    
+
     def process_step(self, frame, game_state: Dict[str, Any]) -> str:
         """
         Main processing step for simple mode with history tracking
-        
+
         Args:
             frame: Current game frame (PIL Image or similar)
             game_state: Complete game state dictionary
-            
+
         Returns:
             Action string or list of actions
         """
@@ -798,247 +702,167 @@ class SimpleAgent:
         if frame is None:
             logger.error("🚫 CRITICAL: SimpleAgent.process_step called with None frame - cannot proceed")
             return "WAIT"
-        
+
         # Validate frame is a proper image
         if not (hasattr(frame, 'save') or hasattr(frame, 'shape')):
             logger.error(f"🚫 CRITICAL: SimpleAgent.process_step called with invalid frame type {type(frame)} - cannot proceed")
             return "WAIT"
-        
+
         # Additional PIL Image validation
         if hasattr(frame, 'size'):
             width, height = frame.size
             if width <= 0 or height <= 0:
                 logger.error(f"🚫 CRITICAL: SimpleAgent.process_step called with invalid frame size {width}x{height} - cannot proceed")
                 return "WAIT"
-        
+
         # Check for black frame (transition screen)
         if self.is_black_frame(frame):
             logger.info("⏳ Black frame detected (likely a transition), waiting for next frame...")
             return "WAIT"  # Return WAIT to skip this frame and wait for the next one
-        
+
         try:
             # Increment step counter
             self.state.step_counter += 1
-            
+
             # Get current state info
             coords = self.get_player_coords(game_state)
             context = self.get_game_context(game_state)
             map_id = self.get_map_id(game_state)
-            
+
             # Format the current state for LLM (includes movement preview)
-            map_info = game_state.get('map', {})
             formatted_state = format_state_for_llm(game_state)
-            absolute_map = self.build_absolute_map(map_info, coords)
-            if absolute_map:
-                map_only = absolute_map
-            else:
-                map_only = self.remove_navigation_instructions(
-                    self.remove_movement_preview(formatted_state)
-                )
-            
+
             # Get movement memory for the current area
             movement_memory = ""
             if coords:
                 movement_memory = self.get_area_movement_memory(coords)
-            
+
             # Check for objective completion first
             self.check_objective_completion(game_state)
-            
+
             # Check storyline milestones and auto-complete objectives
             self.check_storyline_milestones(game_state)
-            
+
             # Get relevant history and stuck detection
             history_summary = self.get_relevant_history_summary(context, coords)
             stuck_warning = self.get_stuck_warning(coords, context, game_state)
             recent_actions_str = ', '.join(list(self.state.recent_actions)[-self.actions_display_count:]) if self.state.recent_actions else 'None'
-            
+
             # Format objectives for LLM
             active_objectives = self.get_active_objectives()
             completed_objectives_list = self.get_completed_objectives()
             objectives_summary = self._format_objectives_for_llm(active_objectives, completed_objectives_list)
 
-            recent_turn_summaries_list = self.turn_summaries[-20:]
-            recent_turn_summaries = "\n".join(recent_turn_summaries_list) if recent_turn_summaries_list else "No recent summaries."
-            
             # Build pathfinding rules section (only if not in title sequence)
             pathfinding_rules = ""
+            if context != "title":
+                pathfinding_rules = """
+🚨 PATHFINDING RULES:
+1. **SINGLE STEP FIRST**: Always prefer single actions (UP, DOWN, LEFT, RIGHT, A, B) unless you're 100% certain about multi-step paths
+2. **CHECK EVERY STEP**: Before chaining movements, verify EACH step in your sequence using the MOVEMENT PREVIEW and map
+3. **BLOCKED = STOP**: If ANY step shows BLOCKED in the movement preview, the entire sequence will fail
+4. **NO BLIND CHAINS**: Never chain movements through areas you can't see or verify as walkable
+5. **PERFORM PATHFINDING**: Find a path to a target location (X',Y') from the player position (X,Y) on the map. DO NOT TRAVERSE THROUGH OBSTACLES (#) -- it will not work.
+
+💡 SMART MOVEMENT STRATEGY:
+- Use MOVEMENT PREVIEW to see exactly what happens with each direction
+- If your target requires multiple steps, plan ONE step at a time
+- Only chain 2-3 moves if ALL intermediate tiles are confirmed WALKABLE
+- When stuck, try a different direction rather than repeating the same blocked move
+- After moving in a direction, you will be facing that direction for interactions with NPCs, etc.
+
+EXAMPLE - DON'T DO THIS:
+❌ "I want to go right 5 tiles" → "RIGHT, RIGHT, RIGHT, RIGHT, RIGHT" (may hit wall on step 2!)
+
+EXAMPLE - DO THIS INSTEAD:
+✅ Check movement preview → "RIGHT shows (X+1,Y) WALKABLE" → "RIGHT" (single safe step)
+✅ Next turn, check again → "RIGHT shows (X+2,Y) WALKABLE" → "RIGHT" (another safe step)
+
+💡 SMART NAVIGATION:
+- The Player's sprite in the visual frame is located at the coordinates (X,Y) in the game state. Objects in the visual frame should be represented in relation to the Player's sprite.
+- Check the VISUAL FRAME for NPCs (people/trainers) and other objects like clocks before moving - they're not always on the map! NPCs may block movement even when the movement preview shows them as walkable.
+- Review MOVEMENT MEMORY for locations where you've failed to move before
+- Only explore areas marked with ? (these are confirmed explorable edges)
+- Avoid areas surrounded by # (walls) - they're fully blocked
+- Use doors (D), stairs (S), or walk around obstacles when pathfinding suggests it
+
+💡 NPC & OBSTACLE HANDLING:
+- If you see NPCs in the image, avoid walking into them or interact with A/B if needed
+- If a movement fails (coordinates don't change), that location likely has an NPC or obstacle
+- Use your MOVEMENT MEMORY to remember problem areas and plan around them
+- NPCs can trigger battles or dialogue, which may be useful for objectives
+"""
 
             # Create enhanced prompt with objectives, history context and chain of thought request
-            prompt = f"""You are playing as the Protagonist in Pokemon Emerald. Progress quickly to the milestones by balancing exploration and exploitation of things you know. 
-            Based on the current game frame and state information, think through your next move and choose the best button action. You are the planning module, which will be followed by the action module.
-            Your purpose is to provide action options for the action module. You will choose distinct and different three actions in order of confidence.
-            You will examine the current map, frame, and objectives to decide the best path forward.
+            prompt = f"""You are playing as the Protagonist in Pokemon Emerald. Progress quickly to the milestones by balancing exploration and exploitation of things you know, but have fun for the Twitch stream while you do it. 
+            Based on the current game frame and state information, think through your next move and choose the best button action. 
+            If you notice that you are repeating the same action sequences over and over again, you definitely need to try something different since what you are doing is wrong! Try exploring different new areas or interacting with different NPCs if you are stuck.
+            
 
+RECENT ACTION HISTORY (last {self.actions_display_count} actions):
+{recent_actions_str}
 
-Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
-*Important: If you see a dialogue in the frame, you should continue with the dialogue. Press A to move forward.
-If you see multiple options in the dialogue with a highlighted arrow, you can also select UP or DOWN to change your selection before moving forward.
+LOCATION/CONTEXT HISTORY (last {self.history_display_count} steps):
+{history_summary}
 
 CURRENT OBJECTIVES:
 {objectives_summary}
 
 CURRENT GAME STATE:
-{map_only}
+{formatted_state}
 
+{movement_memory}
 
-FORMAT YOUR RESPONSE AS FOLLOWS:
+{stuck_warning}
 
-FIRST:
-[Your most confident action based on the available information, and represents the main branch of your plan]
+Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
 
-SECOND:
-[A second option for the action module incase the first option is stuck or leads to a failure mode or dead end, this is the second branch of your plan]
+IMPORTANT: Please think step by step before choosing your action. Structure your response like this:
 
-THIRD:
-[The last backup option for the action module, this should be a different approach to be used if both the FIRST and SECOND actions are leading to dead ends]
+ANALYSIS:
+[Analyze what you see in the frame and current game state - what's happening? where are you? what should you be doing? 
+IMPORTANT: Look carefully at the game image for objects (clocks, pokeballs, bags) and NPCs (people, trainers) that might not be shown on the map. NPCs appear as sprite characters and can block movement or trigger battles/dialogue. When you see them try determine their location (X,Y) on the map relative to the player and any objects.]
 
-Important: Don't reference absolute coordinates in your action space
+OBJECTIVES:
+[Review your current objectives. You have main storyline objectives (story_*) that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them.  There may be sub-objectives that you need to complete before the main milestone. You can create your own sub-objectives to help achieve the main goals. Do any need to be updated, added, or marked as complete?
+- Add sub-objectives: ADD_OBJECTIVE: type:description:target_value (e.g., "ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)" or "ADD_OBJECTIVE: item:Buy Pokeballs:5")
+- Complete sub-objectives only: COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs")
+- NOTE: Do NOT try to complete storyline objectives (story_*) - they auto-complete when milestones are reached]
 
-Context: {context} """
+PLAN:
+[Think about your immediate goal - what do you want to accomplish in the next few actions? Consider your current objectives and recent history. 
+Check MOVEMENT MEMORY for areas you've had trouble with before and plan your route accordingly.]
 
-            planning_prompt =  prompt
-            is_stuck = False
-            #if stuck_warning:
-                #is_stuck = bool(stuck_warning)
+REASONING:
+[Explain why you're choosing this specific action. Reference the MOVEMENT PREVIEW and MOVEMENT MEMORY sections. Check the visual frame for NPCs before moving. If you see NPCs in the image, avoid walking into them. Consider any failed movements or known obstacles from your memory.]
 
-            if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
-                print("🔍 Making VLM call...")
-                try:
-                    response = self.vlm.get_query(frame, planning_prompt, "simple_mode", is_stuck)
-                    print(f"🔍 VLM response received: {response[:100]}..." if len(response) > 100 else f"🔍 VLM response: {response}")
-                except Exception as e:
-                    print(f"❌ VLM call failed: {e}")
-                    return "WAIT"
-            else:
-                logger.error("🚫 CRITICAL: About to call VLM but frame validation failed - this should never happen!")
-                return "WAIT"
+ACTION:
+[Your final action choice - PREFER SINGLE ACTIONS like 'RIGHT' or 'A'. Only use multiple actions like 'UP, UP, RIGHT' if you've verified each step is WALKABLE in the movement preview and map.]
 
-            actions, reasoning, turn_summary, prediction, planned_actions = self._parse_structured_response(response, game_state)
-            first, second, third = planned_actions
+{pathfinding_rules}
 
-            action_descriptions = f"""
-            IMPORTANT: the planning module will provide you with three potential actions, FIRST, SECOND, THIRD. You will examine this, look at the context and turn history, and decide which action is the best route forward.
-            You should check the TURN HISTORY, MOVEMENT PREVIEW, OBJECTIVES, and MAP to see if you are stuck in a loop or some other failure mode, and use this information to choose the action.
+Context: {context} | Coords: {coords} """
 
-            Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
-
-            PLANNING MODULE ACTIONS (Choose your final action from one of these, but specify the action itself and not the number in your output):
-
-            FIRST (this is the highest confidence action from the planning module):
-            {first}
-
-            SECOND (this is the second highest confidence, use this if you are stuck in a loop using the first action and not making any progress):
-            {second}
-
-            THIRD (this is the third most confident action from the planning module, this is available for you, but should be used when both FIRST and SECOND are leading to repeated failure modes):
-            {third}
-
-            CURRENT GAME STATE:
-            {formatted_state}
-
-            {movement_memory}
-
-            {stuck_warning}
-
-            YOUR RESPONSE SHOULD BE FORMATTED AS FOLLOWS:
-
-            ANALYSIS:
-            [Analyze what you see in the frame and current game state - what's happening? where are you? what should you be doing? 
-            IMPORTANT: Look carefully at the game image for objects (clocks, pokeballs, bags) and NPCs (people, trainers) that might not be shown on the map. NPCs appear as sprite characters and can block movement or trigger battles/dialogue. When you see them try determine their location (X,Y) on the map relative to the player and any objects.]
-
-            OBJECTIVES:
-            [Review your current objectives. You have main storyline objectives (story_*) that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them.  There may be sub-objectives that you need to complete before the main milestone. You can create your own sub-objectives to help achieve the main goals. Do any need to be updated, added, or marked as complete?
-            - Add sub-objectives: ADD_OBJECTIVE: type:description:target_value (e.g., "ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)" or "ADD_OBJECTIVE: item:Buy Pokeballs:5")
-            - Complete sub-objectives only: COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs")
-            - NOTE: Do NOT try to complete storyline objectives (story_*) - they auto-complete when milestones are reached]
-
-            PLAN:
-            [Think about your immediate goal - what do you want to accomplish in the next few actions? Consider your current objectives and recent history. 
-            Check MOVEMENT MEMORY for areas you've had trouble with before and plan your route accordingly. Think about the pros and cons from the provided actions from the planning module]
-
-            REASONING:
-            [Explain why you're choosing this specific action. Reference the MOVEMENT PREVIEW and MOVEMENT MEMORY sections. Check the visual frame for NPCs before moving. If you see NPCs in the image, avoid walking into them. Consider any failed movements or known obstacles from your memory.]
-
-            ACTION:
-            [Your final action choice - PREFER SINGLE ACTIONS like 'RIGHT' or 'A'. Only use multiple actions like 'UP, UP, RIGHT' if you've verified each step is WALKABLE in the movement preview and map.
-            This action should be one of the available action (A, B, START, SELECT, UP, DOWN, LEFT, RIGHT). Compare and contrast the available actions provided by the planning module to decide on the best one for this turn. Take into account turn history and context to avoid loops.]
-
-            """
-
-            if context != "title":
-                pathfinding_rules = f"""
-
-
-            🚨 PATHFINDING RULES:
-            0. **ALWAYS CONTINUE WITH DIALOGUE IF YOU SEE A DIALOGUE BOX** You will be prevented from issuing any other actions until you complete the dialogue. Press A to advance the dialogue. 
-            1. **SINGLE STEP FIRST**: Always prefer single actions (UP, DOWN, LEFT, RIGHT, A, B) unless you're 100% certain about multi-step paths
-            2. **CHECK EVERY STEP**: Before chaining movements, verify EACH step in your sequence using the MOVEMENT PREVIEW and map
-            3. **BLOCKED = STOP**: If ANY step shows BLOCKED in the movement preview, the entire sequence will fail
-            4. **NO BLIND CHAINS**: Never chain movements through areas you can't see or verify as walkable
-            5. **PERFORM PATHFINDING**: Find a path to a target location (X',Y') from the player position (X,Y) on the map. DO NOT TRAVERSE THROUGH OBSTACLES (#) -- it will not work.
-
-            💡 SMART MOVEMENT STRATEGY:
-            - Use MOVEMENT PREVIEW to see exactly what happens with each direction
-            - If your target requires multiple steps, plan ONE step at a time
-            - Only chain 2-3 moves if ALL intermediate tiles are confirmed WALKABLE
-            - When stuck, try a different direction rather than repeating the same blocked move
-            - After moving in a direction, you will be facing that direction for interactions with NPCs, etc.
-
-            EXAMPLE - DON'T DO THIS:
-            ❌ "I want to go right 5 tiles" → "RIGHT, RIGHT, RIGHT, RIGHT, RIGHT" (may hit wall on step 2!)
-
-            EXAMPLE - DO THIS INSTEAD:
-            ✅ Check movement preview → "RIGHT shows (X+1,Y) WALKABLE" → "RIGHT" (single safe step)
-            ✅ Next turn, check again → "RIGHT shows (X+2,Y) WALKABLE" → "RIGHT" (another safe step)
-
-            💡 SMART NAVIGATION:
-            - The Player's sprite in the visual frame is located at the coordinates (X,Y) in the game state. Objects in the visual frame should be represented in relation to the Player's sprite.
-            - Check the VISUAL FRAME for NPCs (people/trainers) and other objects like clocks before moving - they're not always on the map! NPCs may block movement even when the movement preview shows them as walkable.
-            - Review MOVEMENT MEMORY for locations where you've failed to move before
-            - Only explore areas marked with ? (these are confirmed explorable edges)
-            - Avoid areas surrounded by # (walls) - they're fully blocked
-            - Use doors (D), stairs (S), or walk around obstacles when pathfinding suggests it
-
-            💡 NPC & OBSTACLE HANDLING:
-            - If you see NPCs in the image, avoid walking into them or interact with A/B if needed
-            - If a movement fails (coordinates don't change), that location likely has an NPC or obstacle
-            - Use your MOVEMENT MEMORY to remember problem areas and plan around them
-            - NPCs can trigger battles or dialogue, which may be useful for objectives
-
-            Context: {context} | Coords: {coords}
-            """
-
-
-
-
-
-            action_prefix = "You are the action agent for the Protagonist in a Pokemon Emerald speedrun. Progress quickly to the milestones by balancing exploration and exploitation of things you know."
-            if context == "title":
-                action_prompt = action_prefix + prompt + action_descriptions
-            else:
-                action_prompt = action_prefix + action_descriptions +  pathfinding_rules
-            
             # Print complete prompt to terminal for debugging
             print("\n" + "="*120)
             print("🤖 SIMPLE AGENT PROMPT SENT TO VLM:")
             print("="*120)
-            
+
             # Print prompt in chunks to avoid terminal truncation
             sys.stdout.write(prompt)
             sys.stdout.write("\n")
             sys.stdout.flush()
-            
+
             print("="*120)
             print("🤖 END OF SIMPLE AGENT PROMPT")
             print("="*120 + "\n")
             sys.stdout.flush()
-            
+
             # Make VLM call - double-check frame validation before VLM
             if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
-                self._save_debug_frame(frame, "action")
                 print("🔍 Making VLM call...")
                 try:
-                    response = self.vlm.get_query(frame, action_prompt, "simple_mode")
+                    response = self.vlm.get_query(frame, prompt, "simple_mode")
                     print(f"🔍 VLM response received: {response[:100]}..." if len(response) > 100 else f"🔍 VLM response: {response}")
                 except Exception as e:
                     print(f"❌ VLM call failed: {e}")
@@ -1047,46 +871,20 @@ Context: {context} """
                 logger.error("🚫 CRITICAL: About to call VLM but frame validation failed - this should never happen!")
                 return "WAIT"
 
-
-                # Log prompt text to dedicated prompt log file (image data excluded)
-            try:
-                llm_logger = get_llm_logger()
-                if llm_logger:
-                    llm_logger.log_prompt_text(
-                        planning_prompt,
-                        interaction_type="simple_mode_prompt",
-                        metadata={"step": self.state.step_counter}
-                    )
-                    llm_logger.log_prompt_text(
-                        action_prompt,
-                        interaction_type="simple_mode_prompt",
-                        metadata={"step": self.state.step_counter}
-                    )
-            except Exception as log_error:
-                logger.debug(f"Failed to log prompt text: {log_error}")
-            
             # Extract action(s) from structured response
-            actions, reasoning, turn_summary, prediction, planned_actions = self._parse_structured_response(response, game_state)
+            actions, reasoning = self._parse_structured_response(response, game_state)
 
-            if turn_summary:
-                summary_text = turn_summary
-                if prediction:
-                    summary_text += f" PREDICTION: {prediction}"
-                self.turn_summaries.append(summary_text)
-                if len(self.turn_summaries) > 50:
-                    self.turn_summaries = self.turn_summaries[-50:]
-            
             # Check for failed movement by comparing previous coordinates
             if len(self.state.history) > 0:
                 prev_coords = self.state.history[-1].player_coords
                 if prev_coords and coords:
                     # If coordinates didn't change and we attempted a movement, record it as failed
-                    if (prev_coords == coords and 
-                        isinstance(actions, list) and len(actions) > 0 and 
+                    if (prev_coords == coords and
+                        isinstance(actions, list) and len(actions) > 0 and
                         actions[0] in ['UP', 'DOWN', 'LEFT', 'RIGHT']):
                         self.record_failed_movement(coords, actions[0], "movement_blocked")
-                    elif (prev_coords == coords and 
-                          isinstance(actions, str) and 
+                    elif (prev_coords == coords and
+                          isinstance(actions, str) and
                           actions in ['UP', 'DOWN', 'LEFT', 'RIGHT']):
                         self.record_failed_movement(coords, actions, "movement_blocked")
 
@@ -1102,7 +900,7 @@ Context: {context} """
                 game_state_summary=game_state_summary
             )
             self.state.history.append(history_entry)
-            
+
             # Update recent actions
             if isinstance(actions, list):
                 self.state.recent_actions.extend(actions)
@@ -1112,48 +910,48 @@ Context: {context} """
                 self.state.recent_actions.append(actions)
                 # Increment movement memory action counter
                 self.state.movement_memory_action_counter += 1
-            
+
             # Check if we should clear movement memory
-            if (self.movement_memory_clear_interval > 0 and 
+            if (self.movement_memory_clear_interval > 0 and
                 self.state.movement_memory_action_counter >= self.movement_memory_clear_interval):
                 logger.info(f"🧹 Movement memory clear triggered after {self.state.movement_memory_action_counter} actions")
                 # Use partial clear to keep some recent memory
                 self.clear_movement_memory(partial=True)
-            
+
             # Reset stuck detection for other locations when we move
             if coords:
-                keys_to_reset = [k for k in self.state.stuck_detection.keys() 
+                keys_to_reset = [k for k in self.state.stuck_detection.keys()
                                if not k.startswith(f"{coords[0]}_{coords[1]}")]
                 for key in keys_to_reset:
                     if self.state.stuck_detection[key] > 0:
                         self.state.stuck_detection[key] = max(0, self.state.stuck_detection[key] - 1)
-            
+
             # Update server with agent step and metrics (for agent thinking display)
-            #update_server_metrics()
-            
+            update_server_metrics()
+
             return actions
-            
+
         except Exception as e:
             logger.error(f"Error in simple agent processing: {e}")
             return ["A"]  # Default safe action as list
-    
+
     def _parse_actions(self, response: str, game_state: Dict[str, Any] = None) -> List[str]:
         """Parse action response from LLM into list of valid actions"""
         response_upper = response.upper().strip()
         valid_actions = ['A', 'B', 'START', 'SELECT', 'UP', 'DOWN', 'LEFT', 'RIGHT', 'WAIT']
-        
+
         # Parse multiple actions (could be comma or space separated)
         actions_found = []
         # Replace commas with spaces for consistent parsing
         response_clean = response_upper.replace(',', ' ').replace('.', ' ')
         tokens = response_clean.split()
-        
+
         for token in tokens:
             if token in valid_actions:
                 actions_found.append(token)
                 if len(actions_found) >= 10:  # Max 10 actions
                     break
-        
+
         # Validate movement sequences if we have game state
         if game_state and len(actions_found) > 1:
             # Check if this is a movement sequence
@@ -1167,17 +965,17 @@ Context: {context} """
                     if movement_actions:
                         actions_found = [movement_actions[0]]
                         logger.info(f"Reduced to single movement: {actions_found[0]}")
-        
+
         # If no valid actions found, use default
         if not actions_found:
             actions_found = ['A']
-        
+
         return actions_found
-    
+
     def _format_objectives_for_llm(self, active_objectives: List[Objective], completed_objectives: List[Objective]) -> str:
         """Format objectives for LLM consumption"""
         lines = []
-        
+
         if active_objectives:
             lines.append("🎯 ACTIVE OBJECTIVES:")
             for i, obj in enumerate(active_objectives[:5], 1):  # Show top 5 active
@@ -1185,37 +983,32 @@ Context: {context} """
                 lines.append(f"  {i}. [{obj.objective_type}] {obj.description}{target_str} [ID: {obj.id}]")
         else:
             lines.append("🎯 ACTIVE OBJECTIVES: None - Consider setting some goals!")
-        
+
         if completed_objectives:
             recent_completed = completed_objectives[-3:]  # Show last 3 completed
             lines.append("✅ RECENTLY COMPLETED:")
             for obj in recent_completed:
                 lines.append(f"  ✓ [{obj.objective_type}] {obj.description}")
-        
+
         return "\n".join(lines)
-    
-    def _parse_structured_response(self, response: str, game_state: Dict[str, Any] = None) -> Tuple[List[str], str, str, str]:
-        """Parse structured chain-of-thought response and extract actions, reasoning, summary, and prediction"""
+
+    def _parse_structured_response(self, response: str, game_state: Dict[str, Any] = None) -> Tuple[List[str], str]:
+        """Parse structured chain-of-thought response and extract actions and reasoning"""
         try:
             # Extract sections from structured response
             analysis = ""
             objectives_section = ""
             plan = ""
             reasoning = ""
-            summary = ""
-            prediction = ""
-            first = ""
-            second = ""
-            third = ""
             actions = []
-            
+
             # Split response into lines for processing
             lines = response.split('\n')
             current_section = None
-            
+
             for line in lines:
                 line = line.strip()
-                
+
                 # Identify section headers
                 if line.upper().startswith('ANALYSIS:'):
                     current_section = 'analysis'
@@ -1235,21 +1028,6 @@ Context: {context} """
                     action_text = line[7:].strip()  # Remove "ACTION:" prefix
                     if action_text:  # Only parse if there's content
                         actions = self._parse_actions(action_text, game_state)
-                elif line.upper().startswith('SUMMARY:'):
-                    current_section = 'summary'
-                    summary = line[10:].strip()
-                elif line.upper().startswith('PREDICT:'):
-                    current_section = 'prediction'
-                    prediction = line[8:].strip()
-                elif line.upper().startswith('FIRST:'):
-                    current_section = 'first'
-                    first = line[6:].strip()
-                elif line.upper().startswith('SECOND:'):
-                    current_section = 'second'
-                    second = line[7:].strip()
-                elif line.upper().startswith('THIRD:'):
-                    current_section = 'third'
-                    third = line[6:].strip()
                 elif line and current_section:
                     # Continue content of current section
                     if current_section == 'analysis':
@@ -1260,16 +1038,6 @@ Context: {context} """
                         plan += " " + line
                     elif current_section == 'reasoning':
                         reasoning += " " + line
-                    elif current_section == 'summary':
-                        summary += " " + line
-                    elif current_section == 'prediction':
-                        prediction += " " + line
-                    elif current_section == 'first':
-                        first += " " + line
-                    elif current_section == 'second':
-                        second += " " + line
-                    elif current_section == 'third':
-                        third += " " + line
                     elif current_section == 'action':
                         # Additional action parsing from action section content
                         if line.strip():  # Only process non-empty lines
@@ -1278,15 +1046,15 @@ Context: {context} """
                             if len(actions) >= 10:  # Max 10 actions
                                 actions = actions[:10]
                                 break
-            
+
             # Process objectives if mentioned
             if objectives_section:
                 self._process_objectives_from_response(objectives_section)
-            
+
             # If no actions found in structured format, fall back to parsing entire response
             if not actions:
                 actions = self._parse_actions(response, game_state)
-            
+
             # Create concise reasoning summary
             reasoning_parts = []
             if analysis:
@@ -1297,23 +1065,16 @@ Context: {context} """
                 reasoning_parts.append(f"Plan: {plan}")
             if reasoning:
                 reasoning_parts.append(f"Reasoning: {reasoning}")
-            if summary:
-                reasoning_parts.append(f"Summary: {summary}")
-            if prediction:
-                reasoning_parts.append(f"Prediction: {prediction}")
 
-            planned_actions = (first, second, third)
-            
             full_reasoning = " | ".join(reasoning_parts) if reasoning_parts else "No reasoning provided"
-            
-            return actions, full_reasoning, summary, prediction, planned_actions
-            
+
+            return actions, full_reasoning
+
         except Exception as e:
             logger.warning(f"Error parsing structured response: {e}")
             # Fall back to basic action parsing
-            parsed_actions = self._parse_actions(response, game_state)
-            return parsed_actions, "Error parsing reasoning", "", "", ""
-    
+            return self._parse_actions(response, game_state), "Error parsing reasoning"
+
     def _process_objectives_from_response(self, objectives_text: str):
         """Process objective management commands from LLM response"""
         try:
@@ -1324,42 +1085,42 @@ Context: {context} """
                     # Parse format: ADD_OBJECTIVE: type:description:target_value
                     content = line[14:].strip()  # Remove "ADD_OBJECTIVE:" prefix
                     parts = content.split(':', 2)  # Split into max 3 parts
-                    
+
                     if len(parts) >= 2:
                         obj_type = parts[0].strip()
                         description = parts[1].strip()
                         target_value = parts[2].strip() if len(parts) > 2 else None
-                        
+
                         # Parse target_value based on type
                         parsed_target = self._parse_target_value(obj_type, target_value)
-                        
+
                         # Add the objective
                         self.add_objective(description, obj_type, parsed_target)
-                
+
                 elif line.upper().startswith('COMPLETE_OBJECTIVE:'):
                     # Parse format: COMPLETE_OBJECTIVE: objective_id:notes
                     content = line[19:].strip()  # Remove "COMPLETE_OBJECTIVE:" prefix
                     parts = content.split(':', 1)  # Split into max 2 parts
-                    
+
                     if len(parts) >= 1:
                         obj_id = parts[0].strip()
                         notes = parts[1].strip() if len(parts) > 1 else "Manually completed by LLM"
-                        
+
                         # Complete the objective
                         success = self.complete_objective(obj_id, notes)
                         if success:
                             logger.info(f"LLM manually completed objective: {obj_id}")
                         else:
                             logger.warning(f"LLM tried to complete non-existent or already completed objective: {obj_id}")
-                        
+
         except Exception as e:
             logger.warning(f"Error processing objectives from response: {e}")
-    
+
     def _parse_target_value(self, obj_type: str, target_str: Optional[str]) -> Any:
         """Parse target value based on objective type"""
         if not target_str:
             return None
-            
+
         try:
             if obj_type == "location":
                 # Try to parse coordinates like "(15,20)" or "15,20"
@@ -1376,23 +1137,23 @@ Context: {context} """
         except (ValueError, TypeError):
             # If parsing fails, return as string
             return target_str
-    
+
     def get_memory_usage_estimate(self) -> Dict[str, int]:
         """Estimate current memory usage for context management"""
         history_chars = sum(len(str(entry)) for entry in self.state.history)
         recent_actions_chars = sum(len(action) for action in self.state.recent_actions)
         objectives_chars = sum(len(f"{obj.description} {obj.target_value}") for obj in self.state.objectives)
-        
+
         return {
             "history_entries": len(self.state.history),
-            "history_chars": history_chars, 
+            "history_chars": history_chars,
             "recent_actions": len(self.state.recent_actions),
             "recent_actions_chars": recent_actions_chars,
             "objectives_count": len(self.state.objectives),
             "objectives_chars": objectives_chars,
             "estimated_total_chars": history_chars + recent_actions_chars + objectives_chars
         }
-    
+
     def get_objectives_state(self) -> Dict[str, Any]:
         """Get objectives formatted for forwarding in game state"""
         return {
@@ -1419,19 +1180,19 @@ Context: {context} """
             ],
             "updated": self.state.objectives_updated
         }
-    
+
     def trim_history_for_context(self, max_chars: int = 4000):
         """Trim history to fit within context limits"""
         # Preserve minimum history for context
         min_history = max(5, self.history_display_count // 2)
         min_actions = max(10, self.actions_display_count // 2)
-        
+
         while self.get_memory_usage_estimate()["estimated_total_chars"] > max_chars and len(self.state.history) > min_history:
             self.state.history.popleft()
-            
+
         while len(self.state.recent_actions) > min_actions and self.get_memory_usage_estimate()["estimated_total_chars"] > max_chars:
             self.state.recent_actions.popleft()
-    
+
     def reset_objectives_updated_flag(self):
         """Reset the objectives updated flag (call after forwarding state)"""
         self.state.objectives_updated = False
@@ -1444,26 +1205,26 @@ Context: {context} """
             # Create new deque with updated max length, preserving existing data
             existing_history = list(self.state.history)
             self.state.history = deque(existing_history, maxlen=max_history_entries)
-            
+
         if max_recent_actions is not None:
             # Create new deque with updated max length, preserving existing data
             existing_actions = list(self.state.recent_actions)
             self.state.recent_actions = deque(existing_actions, maxlen=max_recent_actions)
-            
+
         if history_display_count is not None:
             self.history_display_count = history_display_count
-            
+
         if actions_display_count is not None:
             self.actions_display_count = actions_display_count
-        
+
         if movement_memory_clear_interval is not None:
             self.movement_memory_clear_interval = movement_memory_clear_interval
-        
+
         logger.info(f"Updated history configuration: {len(self.state.history)}/{self.state.history.maxlen} history, "
                    f"{len(self.state.recent_actions)}/{self.state.recent_actions.maxlen} actions, "
                    f"display {self.history_display_count}/{self.actions_display_count}, "
                    f"movement memory clear interval: {self.movement_memory_clear_interval}")
-    
+
     def load_history_from_llm_checkpoint(self, checkpoint_file: str):
         """Load SimpleAgent history from LLM checkpoint file"""
         try:
@@ -1471,11 +1232,11 @@ Context: {context} """
             import json
             import re
             from datetime import datetime
-            
+
             if not os.path.exists(checkpoint_file):
                 logger.info(f"No checkpoint file found: {checkpoint_file}")
                 return False
-            
+
             # Use LLM logger to restore cumulative metrics first
             llm_logger = get_llm_logger()
             if llm_logger:
@@ -1484,13 +1245,13 @@ Context: {context} """
                     logger.info(f"✅ LLM logger restored checkpoint with {restored_step_count} steps")
                     # Update SimpleAgent step counter to match LLM logger
                     self.state.step_counter = restored_step_count
-            
+
             with open(checkpoint_file, 'r') as f:
                 checkpoint_data = json.load(f)
-            
+
             log_entries = checkpoint_data.get("log_entries", [])
             restored_count = 0
-            
+
             for entry in log_entries:
                 if entry.get("type") == "interaction" and "simple_mode" in entry.get("interaction_type", ""):
                     try:
@@ -1498,14 +1259,14 @@ Context: {context} """
                         prompt = entry.get("prompt", "")
                         response = entry.get("response", "")
                         timestamp_str = entry.get("timestamp", "")
-                        
+
                         # Parse coordinates from prompt
                         coords_match = re.search(r"Position: X=(\d+), Y=(\d+)", prompt)
                         coords = None
                         if coords_match:
                             coords = (int(coords_match.group(1)), int(coords_match.group(2)))
-                        
-                        # Parse context from prompt  
+
+                        # Parse context from prompt
                         context = "overworld"  # default
                         if "Game State: battle" in prompt:
                             context = "battle"
@@ -1513,14 +1274,14 @@ Context: {context} """
                             context = "dialogue"
                         elif "menu" in prompt.lower():
                             context = "menu"
-                        
+
                         # Extract action from response
                         action_taken = "UNKNOWN"
                         if "ACTION:" in response:
                             action_section = response.split("ACTION:")[-1].strip()
                             action_line = action_section.split('\n')[0].strip()
                             action_taken = action_line
-                        
+
                         # Parse timestamp
                         timestamp = datetime.now()
                         if timestamp_str:
@@ -1528,20 +1289,20 @@ Context: {context} """
                                 timestamp = datetime.fromisoformat(timestamp_str)
                             except:
                                 pass
-                        
+
                         # Create simplified game state summary
                         game_state_summary = f"Position: {coords}" if coords else "Position unknown"
                         if coords:
                             game_state_summary += f" | Context: {context}"
-                        
+
                         # Add reasoning summary
                         reasoning = ""
                         if "REASONING:" in response:
                             reasoning_section = response.split("REASONING:")[-1].split("ACTION:")[0].strip()
                             reasoning = reasoning_section
-                        
+
                         action_with_reasoning = f"{action_taken} | Reasoning: {reasoning}" if reasoning else action_taken
-                        
+
                         # Create history entry
                         history_entry = HistoryEntry(
                             timestamp=timestamp,
@@ -1551,9 +1312,9 @@ Context: {context} """
                             action_taken=action_with_reasoning,
                             game_state_summary=game_state_summary
                         )
-                        
+
                         self.state.history.append(history_entry)
-                        
+
                         # Also add to recent actions if it's a valid action
                         if action_taken and action_taken not in ["UNKNOWN", "WAIT"]:
                             # Parse multiple actions if comma-separated
@@ -1561,51 +1322,51 @@ Context: {context} """
                             for action in actions:
                                 if action in ['UP', 'DOWN', 'LEFT', 'RIGHT', 'A', 'B', 'START', 'SELECT']:
                                     self.state.recent_actions.append(action)
-                        
+
                         restored_count += 1
-                        
+
                     except Exception as e:
                         logger.warning(f"Error parsing checkpoint entry: {e}")
                         continue
-            
+
             # Update step counter to match checkpoint
             self.state.step_counter = restored_count
-            
+
             logger.info(f"✅ Restored {restored_count} history entries from {checkpoint_file}")
             logger.info(f"   History: {len(self.state.history)} entries")
             logger.info(f"   Recent actions: {len(self.state.recent_actions)} actions")
             logger.info(f"   Step counter: {self.state.step_counter}")
-            
+
             return True
-            
+
         except Exception as e:
             logger.error(f"❌ Failed to load history from checkpoint: {e}")
             import traceback
             traceback.print_exc()
             return False
-    
+
     def save_history_to_llm_checkpoint(self, checkpoint_file: str = None):
         """Save SimpleAgent history using LLM logger checkpoint system"""
         try:
             from utils.llm_logger import get_llm_logger
-            
+
             # Get the global LLM logger instance
             llm_logger = get_llm_logger()
             if llm_logger is None:
                 logger.warning("No LLM logger available for checkpoint saving")
                 return False
-            
+
             # Save checkpoint using LLM logger which includes cumulative metrics
             # The LLM logger will handle saving log_entries AND cumulative_metrics
             # If checkpoint_file is None, it will use the cache folder
             llm_logger.save_checkpoint(checkpoint_file, agent_step_count=self.state.step_counter)
-            
+
             logger.info(f"💾 Saved LLM checkpoint to {checkpoint_file}")
             logger.info(f"   Step counter: {self.state.step_counter}")
             logger.info(f"   History: {len(self.state.history)} entries")
             logger.info(f"   Recent actions: {len(self.state.recent_actions)} actions")
             return True
-            
+
         except Exception as e:
             logger.error(f"❌ Failed to save LLM checkpoint: {e}")
             import traceback
@@ -1617,64 +1378,64 @@ Context: {context} """
         coord_key = f"{coords[0]},{coords[1]}"
         if coord_key not in self.state.failed_movements:
             self.state.failed_movements[coord_key] = []
-        
+
         failed_entry = f"{direction}:{reason}"
         if failed_entry not in self.state.failed_movements[coord_key]:
             self.state.failed_movements[coord_key].append(failed_entry)
             logger.info(f"Recorded failed movement: {coord_key} -> {direction} ({reason})")
-    
+
     def record_npc_interaction(self, coords: Tuple[int, int], interaction_type: str, notes: str = ""):
         """Record an NPC interaction for future reference"""
         coord_key = f"{coords[0]},{coords[1]}"
         interaction_info = f"{interaction_type}: {notes}" if notes else interaction_type
         self.state.npc_interactions[coord_key] = interaction_info
         logger.info(f"Recorded NPC interaction: {coord_key} -> {interaction_info}")
-    
+
     def get_movement_memory(self, coords: Tuple[int, int]) -> str:
         """Get memory about failed movements and interactions at specific coordinates"""
         coord_key = f"{coords[0]},{coords[1]}"
         memory_parts = []
-        
+
         # Check for failed movements
         if coord_key in self.state.failed_movements:
             failed_list = self.state.failed_movements[coord_key]
             memory_parts.append(f"Failed moves: {', '.join(failed_list)}")
-        
+
         # Check for NPC interactions
         if coord_key in self.state.npc_interactions:
             interaction = self.state.npc_interactions[coord_key]
             memory_parts.append(f"NPC: {interaction}")
-        
+
         return " | ".join(memory_parts) if memory_parts else ""
-    
+
     def get_area_movement_memory(self, center_coords: Tuple[int, int], radius: int = 7) -> str:
         """Get movement memory for the area around the player"""
         cx, cy = center_coords
         memory_lines = []
-        
+
         # Check nearby coordinates for failed movements or NPC interactions
         nearby_memories = []
         for dx in range(-radius, radius + 1):
             for dy in range(-radius, radius + 1):
                 if dx == 0 and dy == 0:
                     continue  # Skip current position
-                
+
                 check_coords = (cx + dx, cy + dy)
                 memory = self.get_movement_memory(check_coords)
                 if memory:
                     nearby_memories.append(f"({check_coords[0]},{check_coords[1]}): {memory}")
-        
+
         if nearby_memories:
             memory_lines.append("🧠 MOVEMENT MEMORY (nearby area):")
             for memory in nearby_memories[:5]:  # Limit to 5 most relevant
                 memory_lines.append(f"  {memory}")
-        
+
         return "\n".join(memory_lines)
-    
+
     def clear_movement_memory(self, partial: bool = False):
         """
         Clear movement memory (failed movements and NPC interactions).
-        
+
         Args:
             partial: If True, only clear old entries (keep recent 5). If False, clear all.
         """
@@ -1686,7 +1447,7 @@ Context: {context} """
                 items = list(self.state.failed_movements.items())
                 self.state.failed_movements = dict(items[-5:])
                 logger.info(f"Partially cleared movement memory, kept {len(self.state.failed_movements)} recent failed movements")
-            
+
             if len(self.state.npc_interactions) > 5:
                 items = list(self.state.npc_interactions.items())
                 self.state.npc_interactions = dict(items[-5:])
@@ -1698,31 +1459,31 @@ Context: {context} """
             self.state.failed_movements.clear()
             self.state.npc_interactions.clear()
             logger.info(f"Cleared all movement memory: {cleared_movements} failed movements, {cleared_npcs} NPC interactions")
-        
+
         # Reset the action counter
         self.state.movement_memory_action_counter = 0
-    
+
     def analyze_movement_preview(self, game_state: Dict[str, Any]) -> Dict[str, Any]:
         """
         Analyze the movement preview data from game state to find valid moves.
-        
+
         Returns:
             Dict with 'walkable_directions', 'blocked_directions', and 'special_tiles'
         """
         walkable_directions = []
         blocked_directions = []
         special_tiles = {}
-        
+
         # Look for movement preview in the formatted state
         formatted_state = format_state_for_llm(game_state)
         lines = formatted_state.split('\n')
-        
+
         in_movement_preview = False
         for line in lines:
             if 'MOVEMENT PREVIEW:' in line:
                 in_movement_preview = True
                 continue
-            
+
             if in_movement_preview:
                 # Parse movement preview lines
                 # Format: "  UP   : ( 15, 10) [.] WALKABLE - Optional description"
@@ -1731,7 +1492,7 @@ Context: {context} """
                     if len(parts) >= 2:
                         direction = parts[0].strip()
                         rest = parts[1].strip()
-                        
+
                         if direction in ['UP', 'DOWN', 'LEFT', 'RIGHT']:
                             if 'WALKABLE' in rest:
                                 walkable_directions.append(direction)
@@ -1749,46 +1510,46 @@ Context: {context} """
                 elif not line.strip():
                     # Empty line typically ends the movement preview section
                     in_movement_preview = False
-        
+
         return {
             'walkable_directions': walkable_directions,
             'blocked_directions': blocked_directions,
             'special_tiles': special_tiles
         }
-    
+
     def validate_movement_sequence(self, movements: List[str], game_state: Dict[str, Any]) -> Tuple[bool, str]:
         """
         Validate if a sequence of movements is valid based on current state.
-        
+
         Args:
             movements: List of movement directions
             game_state: Current game state
-            
+
         Returns:
             Tuple of (is_valid, reason)
         """
         if not movements:
             return True, "No movements to validate"
-        
+
         # Analyze current movement options
         movement_info = self.analyze_movement_preview(game_state)
         walkable = movement_info['walkable_directions']
         blocked = movement_info['blocked_directions']
-        
+
         # Check first movement
         first_move = movements[0].upper()
         if first_move in blocked:
             return False, f"First movement {first_move} is BLOCKED"
-        
+
         if first_move not in walkable and first_move in ['UP', 'DOWN', 'LEFT', 'RIGHT']:
             return False, f"First movement {first_move} is not confirmed WALKABLE"
-        
+
         # For multiple movements, only allow if we're very confident
         if len(movements) > 1:
             # We can't predict beyond the first move accurately
             # So we should discourage chaining unless explicitly safe
             return False, "Cannot validate multi-step movements - use single steps instead"
-        
+
         return True, "Movement validated"
 
     def get_history_stats(self) -> Dict[str, int]:
@@ -1816,7 +1577,7 @@ def get_simple_agent(vlm) -> SimpleAgent:
     global _global_simple_agent
     if _global_simple_agent is None:
         _global_simple_agent = SimpleAgent(vlm)
-        
+
         # Check if we should load from checkpoint
         import os
         if os.environ.get("LOAD_CHECKPOINT_MODE") == "true":
@@ -1830,11 +1591,11 @@ def get_simple_agent(vlm) -> SimpleAgent:
                 _global_simple_agent.load_history_from_llm_checkpoint(checkpoint_file)
             else:
                 logger.info(f"⚠️ No checkpoint file found: {checkpoint_file}")
-                
+
     elif _global_simple_agent.vlm != vlm:
         # VLM changed, create new instance
         _global_simple_agent = SimpleAgent(vlm)
-        
+
         # Load checkpoint for new instance too if mode is set
         import os
         if os.environ.get("LOAD_CHECKPOINT_MODE") == "true":
@@ -1846,7 +1607,7 @@ def get_simple_agent(vlm) -> SimpleAgent:
             if os.path.exists(checkpoint_file):
                 logger.info(f"🔄 Loading SimpleAgent history from {checkpoint_file}")
                 _global_simple_agent.load_history_from_llm_checkpoint(checkpoint_file)
-                
+
     return _global_simple_agent
 
 def simple_mode_processing_multiprocess(vlm, game_state, args=None):
@@ -1855,10 +1616,10 @@ def simple_mode_processing_multiprocess(vlm, game_state, args=None):
     _ = args  # Acknowledge unused parameter
     agent = get_simple_agent(vlm)
     frame = game_state["visual"]["screenshot"]
-    
+
     # CRITICAL: Validate frame before processing
     if frame is None:
         logger.error("🚫 CRITICAL: simple_step called with None frame")
         return "WAIT"
-    
+
     return agent.process_step(frame, game_state)
