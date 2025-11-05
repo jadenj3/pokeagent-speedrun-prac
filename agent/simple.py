@@ -207,7 +207,7 @@ class SimpleAgent:
             },
             {
                 "id": "story_clock_set",
-                "description": "Set the clock on the wall in the player's bedroom. This objective won't be marked complete until you leave the house.",
+                "description": "Set the clock on the wall in the player's bedroom. After selecting YES, leave the house. This objective won't be marked complete until you leave the house.",
                 "objective_type": "location",
                 "target_value": "Clock Set",
                 "milestone_id": "CLOCK_SET"
