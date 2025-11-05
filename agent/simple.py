@@ -820,7 +820,7 @@ class SimpleAgent:
             
             SUMMARY:
             [Look at the current state, history, objective, and image. You will provide guidance to the planning module. Look for failure modes/loops, potential alternative routes and provide concrete suggestions for the subsequent action.
-            Do not reference specific coordinates or APIs in your suggestions, provide natural language guidance. You are here to help the agent.]
+            DO NOT reference specific coordinates or APIs in your suggestions, provide natural language guidance. You are here to help the agent.]
 
             """)
             
