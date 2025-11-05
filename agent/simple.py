@@ -893,6 +893,7 @@ SECOND:
 THIRD:
 [The last backup option for the action module, this should be a different approach to be used if both the FIRST and SECOND actions are leading to dead ends]
 
+Important: Don't reference absolute coordinates in your action space
 
 Context: {context} """
 
