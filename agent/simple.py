@@ -828,8 +828,7 @@ class SimpleAgent:
             # Format the current state for LLM (includes movement preview)
             map_info = game_state.get('map', {})
             formatted_state = format_state_for_llm(game_state)
-            #absolute_map = self.build_absolute_map(map_info, coords)
-            absolute_map = False
+            absolute_map = self.build_absolute_map(map_info, coords)
             if absolute_map:
                 map_only = absolute_map
             else:
@@ -879,7 +878,7 @@ CURRENT OBJECTIVES:
 {objectives_summary}
 
 CURRENT GAME STATE:
-{map_only}
+{absolute_map}
 
 
 FORMAT YOUR RESPONSE AS FOLLOWS:
