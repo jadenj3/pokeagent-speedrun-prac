@@ -41,7 +41,6 @@ import numpy as np
 from PIL import Image
 
 from utils.state_formatter import format_state_for_llm
-from utils.agent_helpers import update_server_metrics
 
 logger = logging.getLogger(__name__)
 
