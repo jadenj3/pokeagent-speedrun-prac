@@ -207,17 +207,10 @@ class SimpleAgent:
             },
             {
                 "id": "story_clock_set",
-                "description": "Set the clock on the wall in the player's bedroom. Interact with the clock (5,1) by pressing A while facing it. Then, leave the house.",
+                "description": "Set the clock on the wall in the player's bedroom. Interact with the clock (5,1) by pressing A while facing it. After setting it, leave the house.",
                 "objective_type": "location",
                 "target_value": "Clock Set",
                 "milestone_id": "CLOCK_SET"
-            },
-            {
-                "id": "leave_player_house",
-                "description": "After setting the clock, leave the player's house.",
-                "objective_type": "location",
-                "target_value": "Leave house",
-                "milestone_id": "LEAVE_HOUSE"
             },
             {
                 "id": "story_rival_house",
@@ -942,8 +935,8 @@ Context: {context} """
                                "For example: I can see that the door is 5 steps to the right on the map, and there is a clear path to the exit. We also have a goal to exit the house, as a result I suggest moving RIGHT.")
             planning_prompt = planning_prefix + prompt
             is_stuck = False
-            if stuck_warning:
-                is_stuck = bool(stuck_warning)
+            #if stuck_warning:
+                #is_stuck = bool(stuck_warning)
 
             if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                 print("🔍 Making VLM call...")
