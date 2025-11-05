@@ -927,7 +927,6 @@ Context: {context} | Coords: {coords} """
                         self.state.stuck_detection[key] = max(0, self.state.stuck_detection[key] - 1)
             
             # Update server with agent step and metrics (for agent thinking display)
-            update_server_metrics()
             
             return actions
             
