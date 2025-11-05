@@ -42,6 +42,7 @@ import numpy as np
 from PIL import Image
 
 from utils.state_formatter import format_state_for_llm
+from utils.map_formatter import format_tile_to_symbol
 from utils.llm_logger import get_llm_logger
 #from utils.agent_helpers import update_server_metrics
 
@@ -597,8 +598,10 @@ class SimpleAgent:
                     skip = False
                 continue
             stripped = line.strip().upper()
-            if stripped.startswith("UP :") or stripped.startswith("DOWN :") \
-                    or stripped.startswith("LEFT :") or stripped.startswith("RIGHT :"):
+            if (stripped.startswith("UP:") or stripped.startswith("UP :") or
+                stripped.startswith("DOWN:") or stripped.startswith("DOWN :") or
+                stripped.startswith("LEFT:") or stripped.startswith("LEFT :") or
+                stripped.startswith("RIGHT:") or stripped.startswith("RIGHT :")):
                 continue
             cleaned.append(line)
         return "\n".join(cleaned)
@@ -613,6 +616,42 @@ class SimpleAgent:
                 continue
             filtered.append(line)
         return "\n".join(filtered)
+
+    def build_absolute_map(self, map_info: Dict[str, Any], player_coords: Optional[Tuple[int, int]]) -> str:
+        tiles = map_info.get('tiles') if map_info else None
+        if not tiles or not player_coords:
+            return ""
+
+        rows = len(tiles)
+        cols = len(tiles[0]) if rows > 0 else 0
+        if rows == 0 or cols == 0:
+            return ""
+
+        radius_y = rows // 2
+        radius_x = cols // 2
+
+        try:
+            header_vals = [f"{player_coords[0] + (col - radius_x):02d}" for col in range(cols)]
+            header = "     " + " ".join(header_vals)
+
+            lines = [header, "     " + " ".join(["--"] * cols)]
+            for row_idx, row in enumerate(tiles):
+                y = player_coords[1] + (row_idx - radius_y)
+                symbols = []
+                for col_idx, tile in enumerate(row):
+                    try:
+                        symbol = format_tile_to_symbol(tile)
+                    except Exception:
+                        symbol = "?"
+                    if col_idx == radius_x and row_idx == radius_y:
+                        symbol = "P"
+                    symbols.append(symbol)
+                line = f"{y:02d} | " + " ".join(symbols)
+                lines.append(line)
+            return "\n".join(lines)
+        except Exception as exc:
+            logger.debug(f"Failed to build absolute map: {exc}")
+            return ""
     
     def is_black_frame(self, frame) -> bool:
         """
@@ -783,10 +822,15 @@ class SimpleAgent:
             map_id = self.get_map_id(game_state)
             
             # Format the current state for LLM (includes movement preview)
+            map_info = game_state.get('map', {})
             formatted_state = format_state_for_llm(game_state)
-            map_only = self.remove_navigation_instructions(
-                self.remove_movement_preview(formatted_state)
-            )
+            absolute_map = self.build_absolute_map(map_info, coords)
+            if absolute_map:
+                map_only = absolute_map
+            else:
+                map_only = self.remove_navigation_instructions(
+                    self.remove_movement_preview(formatted_state)
+                )
             
             # Get movement memory for the current area
             movement_memory = ""
