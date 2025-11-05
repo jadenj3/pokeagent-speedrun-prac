@@ -596,6 +596,10 @@ class SimpleAgent:
                 if line.strip() == "" or not line[:2].strip():  # blank line ends the block
                     skip = False
                 continue
+            stripped = line.strip().upper()
+            if stripped.startswith("UP :") or stripped.startswith("DOWN :") \
+                    or stripped.startswith("LEFT :") or stripped.startswith("RIGHT :"):
+                continue
             cleaned.append(line)
         return "\n".join(cleaned)
 
