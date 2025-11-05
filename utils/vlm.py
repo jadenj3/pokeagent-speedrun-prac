@@ -46,7 +46,7 @@ class VLMBackend(ABC):
     """Abstract base class for VLM backends"""
     
     @abstractmethod
-    def get_query(self, img: Union[Image.Image, np.ndarray], text: str, module_name: str = "Unknown", is_stuck = False) -> str:
+    def get_query(self, img: Union[Image.Image, np.ndarray], text: str, module_name: str = "Unknown") -> str:
         """Process an image and text prompt"""
         pass
     
@@ -82,7 +82,7 @@ class OpenAIBackend(VLMBackend):
             messages=messages
         )
     
-    def get_query(self, img: Union[Image.Image, np.ndarray], text: str, module_name: str = "Unknown", stuck = False) -> str:
+    def get_query(self, img: Union[Image.Image, np.ndarray], text: str, module_name: str = "Unknown") -> str:
         """Process an image and text prompt using OpenAI API"""
         start_time = time.time()
         
@@ -109,18 +109,6 @@ class OpenAIBackend(VLMBackend):
         try:
             response = self._call_completion(messages)
             result = response.choices[0].message.content
-            if stuck:
-                messages.append({"role": "assistant", "content": [
-                    {"type": "text", "text": result},
-                ]})
-                messages.append({
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": "Are you sure?"},
-                    {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{image_base64}"}}
-                ]})
-                response = self._call_completion(messages)
-                result = response.choices[0].message.content
             duration = time.time() - start_time
             
             # Extract token usage if available
@@ -877,11 +865,11 @@ class VLM:
             # Default to OpenAI for unknown models
             return 'openai'
     
-    def get_query(self, img: Union[Image.Image, np.ndarray], text: str, module_name: str = "Unknown", is_stuck=False) -> str:
+    def get_query(self, img: Union[Image.Image, np.ndarray], text: str, module_name: str = "Unknown") -> str:
         """Process an image and text prompt"""
         try:
             # Backend handles its own logging, so we don't duplicate it here
-            result = self.backend.get_query(img, text, module_name, is_stuck)
+            result = self.backend.get_query(img, text, module_name)
             return result
         except Exception as e:
             # Only log errors that aren't already logged by the backend
