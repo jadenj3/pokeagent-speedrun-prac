@@ -824,7 +824,8 @@ class SimpleAgent:
             # Format the current state for LLM (includes movement preview)
             map_info = game_state.get('map', {})
             formatted_state = format_state_for_llm(game_state)
-            absolute_map = self.build_absolute_map(map_info, coords)
+            #absolute_map = self.build_absolute_map(map_info, coords)
+            absolute_map = False
             if absolute_map:
                 map_only = absolute_map
             else:
@@ -917,7 +918,7 @@ Context: {context} """
 
             Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
 
-            PLANNING MODULE ACTIONS (Choose your action from one of these):
+            PLANNING MODULE ACTIONS (Choose your final action from one of these, but specify the action itself and not the number in your output):
 
             FIRST (this is the highest confidence action from the planning module):
             {first}
@@ -956,7 +957,7 @@ Context: {context} """
 
             ACTION:
             [Your final action choice - PREFER SINGLE ACTIONS like 'RIGHT' or 'A'. Only use multiple actions like 'UP, UP, RIGHT' if you've verified each step is WALKABLE in the movement preview and map.
-            This action should be one of FIRST, SECOND, or THIRD provided by the planning module. Compare and contrast the actions to decide on the best one for this turn. Take into account turn history and context to avoid loops.]
+            This action should be one of the available action (A, B, START, SELECT, UP, DOWN, LEFT, RIGHT). Compare and contrast the available actions provided by the planning module to decide on the best one for this turn. Take into account turn history and context to avoid loops.]
 
             """
 
