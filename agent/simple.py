@@ -803,21 +803,6 @@ class SimpleAgent:
             recent_turn_summaries = "\n".join(recent_turn_summaries_list) if recent_turn_summaries_list else "No recent summaries."
 
 
-
-            if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
-                print("🔍 Making VLM call...")
-                try:
-                    response = self.vlm.get_text_query(reflective_prompt, "simple_mode")
-                    print(f"🔍 VLM response received: {response[:100]}..." if len(response) > 100 else f"🔍 VLM response: {response}")
-                except Exception as e:
-                    print(f"❌ VLM call failed: {e}")
-                    return "WAIT"
-            else:
-                logger.error("🚫 CRITICAL: About to call VLM but frame validation failed - this should never happen!")
-                return "WAIT"
-
-            _, _, _, _ = self._parse_structured_response(response, game_state)
-
             reflective_prompt = (f"""You are an agent designed to assist other agents in a pokemon agent speedrun. Your objective is to look at the current 
                         turn, history, frame, and game state and decide if we need to update or add any new objectives to assist the other agents.
 
@@ -871,6 +856,20 @@ SUMMARY:
 [Summarize your current turn and explain briefly why you took that action. This response will persist in your context for multiple turns. Use this to pass on information to subsequent turns.]
 
 """
+
+            if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
+                print("🔍 Making VLM call...")
+                try:
+                    response = self.vlm.get_text_query(reflective_prompt, "simple_mode")
+                    print(f"🔍 VLM response received: {response[:100]}..." if len(response) > 100 else f"🔍 VLM response: {response}")
+                except Exception as e:
+                    print(f"❌ VLM call failed: {e}")
+                    return "WAIT"
+            else:
+                logger.error("🚫 CRITICAL: About to call VLM but frame validation failed - this should never happen!")
+                return "WAIT"
+
+            _, _, _, _ = self._parse_structured_response(response, game_state)
 
 
             if context != "title":
