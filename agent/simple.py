@@ -801,6 +801,44 @@ class SimpleAgent:
 
             recent_turn_summaries_list = self.turn_summaries[-20:]
             recent_turn_summaries = "\n".join(recent_turn_summaries_list) if recent_turn_summaries_list else "No recent summaries."
+
+
+
+            if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
+                print("🔍 Making VLM call...")
+                try:
+                    response = self.vlm.get_text_query(reflective_prompt, "simple_mode")
+                    print(f"🔍 VLM response received: {response[:100]}..." if len(response) > 100 else f"🔍 VLM response: {response}")
+                except Exception as e:
+                    print(f"❌ VLM call failed: {e}")
+                    return "WAIT"
+            else:
+                logger.error("🚫 CRITICAL: About to call VLM but frame validation failed - this should never happen!")
+                return "WAIT"
+
+            _, _, _, _ = self._parse_structured_response(response, game_state)
+
+            reflective_prompt = (f"""You are an agent designed to assist other agents in a pokemon agent speedrun. Your objective is to look at the current 
+                        turn, history, frame, and game state and decide if we need to update or add any new objectives to assist the other agents.
+
+            CURRENT OBJECTIVES:
+            {objectives_summary}
+
+            CURRENT GAME STATE:
+            {map_only}
+
+            CURRENT TURN SUMMARIES:
+            {recent_turn_summaries}
+
+            Your response should be structured like this:
+
+            OBJECTIVES:
+            [Review your current objectives. You have main storyline objectives (story_*) that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them.  There may be sub-objectives that you need to complete before the main milestone. You can create your own sub-objectives to help achieve the main goals. Do any need to be updated, added, or marked as complete?
+            - Add sub-objectives: ADD_OBJECTIVE: type:description:target_value (e.g., "ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)" or "ADD_OBJECTIVE: item:Buy Pokeballs:5")
+            - Complete sub-objectives only: COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs")
+            - NOTE: Do NOT try to complete storyline objectives (story_*) - they auto-complete when milestones are reached]
+
+            """)
             
             # Build pathfinding rules section (only if not in title sequence)
             pathfinding_rules = ""
@@ -901,14 +939,14 @@ Context: {context} """
 
             planning_prefix = ("You are the planning module for a pokemon agent, below is the current context. The current frame image is attached. You should examine the current context, look for any loops or patterns and synthesize a plan for the action module. The action module will be the one to output the specific action "
                                "Look at your objectives, game state, and the image to decide the best course of action. If you see dialogue in the image you should ALWAYS suggest finishing the dialogue before any other action. If the dialogue has multiple options you can select, reflect and choose the correct one to accomplish your current objectives. "
-                               "When giving directions to the action agent, suggest single actions like A, B, START, SELECT, UP, DOWN, LEFT, RIGHT. Don't reference coordinates or api calls. The action agent can also add objectives, so feel free to suggest new ones for the agent to add to persistent memory.")
+                               "When giving directions to the action agent, feel free to suggest simple actions like A, B, START, SELECT, UP, DOWN, LEFT, RIGHT. Don't reference coordinates or api calls. The action agent can also add objectives, so feel free to suggest new ones for the agent to add to persistent memory."
+                               "For example: I can see that the door is 5 steps to the right on the map, and there is a clear path to the exit. We also have a goal to exit the house, as a result I suggest moving RIGHT.")
             planning_prompt = planning_prefix + prompt
             is_stuck = False
             if stuck_warning:
                 is_stuck = bool(stuck_warning)
 
             if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
-                self._save_debug_frame(frame, "planning")
                 print("🔍 Making VLM call...")
                 try:
                     response = self.vlm.get_query(frame, planning_prompt, "simple_mode", is_stuck)
@@ -927,8 +965,6 @@ Context: {context} """
                 action_prompt = action_prefix + current_plan + prompt + action_descriptions
             else:
                 action_prompt = action_prefix + current_plan + pathfinding_rules
-
-
             
             # Print complete prompt to terminal for debugging
             print("\n" + "="*120)
@@ -959,10 +995,16 @@ Context: {context} """
                 logger.error("🚫 CRITICAL: About to call VLM but frame validation failed - this should never happen!")
                 return "WAIT"
 
+
                 # Log prompt text to dedicated prompt log file (image data excluded)
             try:
                 llm_logger = get_llm_logger()
                 if llm_logger:
+                    llm_logger.log_prompt_text(
+                        reflective_prompt,
+                        interaction_type="simple_mode_prompt",
+                        metadata={"step": self.state.step_counter}
+                    )
                     llm_logger.log_prompt_text(
                         planning_prompt,
                         interaction_type="simple_mode_prompt",
