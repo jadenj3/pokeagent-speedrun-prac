@@ -805,7 +805,7 @@ class SimpleAgent:
             {objectives_summary}
 
             CURRENT GAME STATE:
-            {map_only}
+            {formatted_state}
 
             CURRENT TURN SUMMARIES:
             {recent_turn_summaries}
@@ -934,7 +934,7 @@ CURRENT OBJECTIVES:
 {objectives_summary}
 
 CURRENT GAME STATE:
-{map_only}
+{formatted_state}
 
 Context: {context} """
 
