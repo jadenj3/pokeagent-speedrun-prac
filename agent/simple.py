@@ -598,6 +598,17 @@ class SimpleAgent:
                 continue
             cleaned.append(line)
         return "\n".join(cleaned)
+
+    def remove_navigation_instructions(self, state_text: str) -> str:
+        filtered = []
+        for line in state_text.splitlines():
+            upper = line.upper()
+            if "NAVIGATE_TO" in upper:
+                continue
+            if "MOVEMENT: UP=" in upper:
+                continue
+            filtered.append(line)
+        return "\n".join(filtered)
     
     def is_black_frame(self, frame) -> bool:
         """
@@ -769,7 +780,9 @@ class SimpleAgent:
             
             # Format the current state for LLM (includes movement preview)
             formatted_state = format_state_for_llm(game_state)
-            map_only = self.remove_movement_preview(formatted_state)
+            map_only = self.remove_navigation_instructions(
+                self.remove_movement_preview(formatted_state)
+            )
             
             # Get movement memory for the current area
             movement_memory = ""
