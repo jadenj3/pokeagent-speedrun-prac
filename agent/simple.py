@@ -878,7 +878,7 @@ CURRENT OBJECTIVES:
 {objectives_summary}
 
 CURRENT GAME STATE:
-{absolute_map}
+{map_only}
 
 
 FORMAT YOUR RESPONSE AS FOLLOWS:
