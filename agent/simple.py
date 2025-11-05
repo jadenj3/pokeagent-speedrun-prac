@@ -799,7 +799,7 @@ class SimpleAgent:
             reflective_prompt = (f"""You are an agent designed to assist other agents in a pokemon agent speedrun. Your objective is to look at the current 
                         turn, history, frame, and game state and decide if we need to update or add any new objectives to assist the other agents. You are also the main context manager for the agent system, and have access to the most historical context!
     
-            **IMPORTANT** Look for any loops or failure modes that indicate the agent is stuck. It is your job to spot those and suggest an alternative approach in the summary section!!
+            **IMPORTANT** Look for any loops or failure modes that indicate the agent is stuck. It is your job to spot those and suggest an alternative action in the summary section!!
             
             CURRENT OBJECTIVES:
             {objectives_summary}
@@ -818,9 +818,18 @@ class SimpleAgent:
             - Complete sub-objectives only: COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs")
             - NOTE: Do NOT try to complete storyline objectives (story_*) - they auto-complete when milestones are reached]
             
+            PLAN:
+            [Think about your immediate goal - what do you want to accomplish in the next few actions? Consider your current objectives and recent history. 
+            Check MOVEMENT MEMORY for areas you've had trouble with before and plan your route accordingly. Look for loops and in your current history, then avoid repeating those mistakes and come up with a new plan.]
+            
+            REASONING:
+            [Explain why you're choosing this specific action. Reference the MOVEMENT PREVIEW and MOVEMENT MEMORY sections. Check the visual frame for NPCs before moving. If you see NPCs in the image, avoid walking into them. Consider any failed movements or known obstacles from your memory.]
+
+            
             SUMMARY:
-            [Look at the current state, history, objective, and image. You will provide guidance to the planning module. Look for failure modes/loops, potential alternative routes and provide concrete suggestions for the subsequent action.
-            DO NOT reference specific coordinates or APIs in your suggestions, provide natural language guidance. You are here to help the agent.]
+            [Look at the current state, history, objective, and image. You will provide guidance to the planning module. Look for failure modes/loops, potential alternative routes and provide a brief suggestion for this turn.
+            DO NOT reference specific coordinates or APIs in your suggestions, provide natural language guidance. You are here to help the agent.
+            This summary should be relatively brief, just get the main point across.]
 
             """)
             
@@ -936,12 +945,14 @@ CURRENT OBJECTIVES:
 CURRENT GAME STATE:
 {formatted_state}
 
+You have the most information about the current game state. You should take into account the information provided by the relfection agent, but you should look at your available data
+and decide the best course of action by yourself. If the reflective agent gives a clearly wrong or invalid move, you should override their decision and ask the action agent to take a correct move.
+
 Context: {context} """
 
             planning_prefix = ("You are the planning module for a pokemon agent, below is the current context. The current frame image is attached. You should examine the current context, look for any loops or patterns and synthesize a plan for the action module. The action module will be the one to output the specific action "
                                "Look at your objectives, game state, and the image to decide the best course of action. If you see dialogue in the image you should ALWAYS suggest finishing the dialogue before any other action. If the dialogue has multiple options you can select, reflect and choose the correct one to accomplish your current objectives. "
-                               "When giving directions to the action agent, feel free to suggest simple actions like A, B, START, SELECT, UP, DOWN, LEFT, RIGHT. Don't reference coordinates or api calls. The action agent can also add objectives, so feel free to suggest new ones for the agent to add to persistent memory."
-                               "For example: I can see that the door is 5 steps to the right on the map, and there is a clear path to the exit. We also have a goal to exit the house, as a result I suggest moving RIGHT.")
+                               "When giving directions to the action agent, feel free to suggest simple actions like A, B, START, SELECT, UP, DOWN, LEFT, RIGHT. Don't reference coordinates or api calls.")
             planning_prompt = planning_prefix + prompt
             is_stuck = False
             #if stuck_warning:
