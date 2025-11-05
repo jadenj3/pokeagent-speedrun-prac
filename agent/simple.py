@@ -797,8 +797,10 @@ class SimpleAgent:
 
 
             reflective_prompt = (f"""You are an agent designed to assist other agents in a pokemon agent speedrun. Your objective is to look at the current 
-                        turn, history, frame, and game state and decide if we need to update or add any new objectives to assist the other agents.
-
+                        turn, history, frame, and game state and decide if we need to update or add any new objectives to assist the other agents. You are also the main context manager for the agent system, and have access to the most historical context!
+    
+            **IMPORTANT** Look for any loops or failure modes that indicate the agent is stuck. It is your job to spot those and suggest an alternative approach in the summary section!!
+            
             CURRENT OBJECTIVES:
             {objectives_summary}
 
@@ -817,7 +819,8 @@ class SimpleAgent:
             - NOTE: Do NOT try to complete storyline objectives (story_*) - they auto-complete when milestones are reached]
             
             SUMMARY:
-            [You can provide a summary of the current state, history, objective, and anything else that might be useful to the planning agent]
+            [You can provide a summary of the current state, history, objective, and anything else that might be useful to the planning agent
+            If you detect patterns/loops in the turn history, identify the failure modes and strongly suggest an alternative approach in this section]
 
             """)
             
