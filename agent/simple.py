@@ -878,6 +878,9 @@ CURRENT OBJECTIVES:
 CURRENT GAME STATE:
 {map_only}
 
+Look at your objectives, game state, and the image to decide the best course of action. If you see dialogue in the image you should ALWAYS suggest
+finishing the dialogue before any other action. If the dialogue has multiple options you can select, reflect and choose the correct one to accomplish your current objectives.
+
 Context: {context} """
 
             planning_prefix = "You are the planning module for a pokemon agent, below is the current context and recent turn summaries. The current frame image is attached. You should examine the current context, look for any loops or patterns and synthesize a plan for the action module. The action module will be the one to output the specific action."
