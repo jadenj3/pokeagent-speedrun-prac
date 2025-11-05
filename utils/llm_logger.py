@@ -29,6 +29,7 @@ class LLMLogger:
         self.session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
         self.log_file = os.path.join(log_dir, f"llm_log_{self.session_id}.jsonl")
         self.prompt_log_file = os.path.join(log_dir, f"llm_prompts_{self.session_id}.txt")
+        self.response_log_file = os.path.join(log_dir, f"llm_responses_{self.session_id}.txt")
         
         # Ensure log directory exists
         os.makedirs(log_dir, exist_ok=True)
@@ -87,6 +88,7 @@ class LLMLogger:
             model_info: Information about the model used
         """
         self._write_prompt_log(prompt)
+        self._write_response_log(response)
 
         log_entry = {
             "timestamp": datetime.now().isoformat(),
@@ -308,6 +310,20 @@ class LLMLogger:
                 f.write("\n\n")
         except Exception as e:
             logger.warning(f"Failed to write prompt log: {e}")
+    
+    def _write_response_log(self, response: str):
+        """Append a readable copy of the response to the response log."""
+        if not response:
+            return
+        
+        separator_line = "=" * 80
+        try:
+            with open(self.response_log_file, 'a', encoding='utf-8') as f:
+                f.write(separator_line + "\n")
+                f.write(response.rstrip())
+                f.write("\n\n")
+        except Exception as e:
+            logger.warning(f"Failed to write response log: {e}")
     
     def get_cumulative_metrics(self) -> Dict[str, Any]:
         """Get cumulative metrics for the session
