@@ -899,9 +899,6 @@ Context: {context} """
             [Your final action choice - PREFER SINGLE ACTIONS like 'RIGHT' or 'A'. Only use multiple actions like 'UP, UP, RIGHT' if you've verified each step is WALKABLE in the movement preview and map.
             This action should be one of FIRST, SECOND, or THIRD provided by the planning module.]
 
-            SUMMARY:
-            [Summarize your current turn and explain briefly why you took that action. This response will persist in your context for multiple turns. Use this to pass on information to subsequent turns.]
-
             """
 
             if context != "title":
@@ -955,7 +952,7 @@ Context: {context} """
             if context == "title":
                 action_prompt = action_prefix + prompt + action_descriptions
             else:
-                action_prompt = action_prefix + pathfinding_rules
+                action_prompt = action_prefix + action_descriptions +  pathfinding_rules
             
             # Print complete prompt to terminal for debugging
             print("\n" + "="*120)
