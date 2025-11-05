@@ -897,7 +897,7 @@ Context: {context} """
 
             ACTION:
             [Your final action choice - PREFER SINGLE ACTIONS like 'RIGHT' or 'A'. Only use multiple actions like 'UP, UP, RIGHT' if you've verified each step is WALKABLE in the movement preview and map.
-            This action should be one of FIRST, SECOND, or THIRD provided by the planning module.]
+            This action should be one of FIRST, SECOND, or THIRD provided by the planning module. Compare and contrast the actions to decide on the best one for this turn. Take into account turn history and context to avoid loops.]
 
             """
 
