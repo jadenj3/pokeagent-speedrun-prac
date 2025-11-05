@@ -28,6 +28,7 @@ class LLMLogger:
         self.log_dir = log_dir
         self.session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
         self.log_file = os.path.join(log_dir, f"llm_log_{self.session_id}.jsonl")
+        self.prompt_log_file = os.path.join(log_dir, f"llm_prompts_{self.session_id}.txt")
         
         # Ensure log directory exists
         os.makedirs(log_dir, exist_ok=True)
@@ -85,6 +86,8 @@ class LLMLogger:
             duration: Time taken for the interaction in seconds
             model_info: Information about the model used
         """
+        self._write_prompt_log(prompt)
+
         log_entry = {
             "timestamp": datetime.now().isoformat(),
             "type": "interaction",
@@ -174,6 +177,8 @@ class LLMLogger:
             error: The error message
             metadata: Additional metadata about the error
         """
+        self._write_prompt_log(prompt)
+
         log_entry = {
             "timestamp": datetime.now().isoformat(),
             "type": "error",
@@ -289,6 +294,20 @@ class LLMLogger:
                 f.write(json.dumps(log_entry, ensure_ascii=False) + '\n')
         except Exception as e:
             logger.error(f"Failed to write log entry: {e}")
+    
+    def _write_prompt_log(self, prompt: str):
+        """Append a readable copy of the prompt to the prompt log."""
+        if not prompt:
+            return
+        
+        separator_line = "=" * 80
+        try:
+            with open(self.prompt_log_file, 'a', encoding='utf-8') as f:
+                f.write(separator_line + "\n")
+                f.write(prompt.rstrip())
+                f.write("\n\n")
+        except Exception as e:
+            logger.warning(f"Failed to write prompt log: {e}")
     
     def get_cumulative_metrics(self) -> Dict[str, Any]:
         """Get cumulative metrics for the session
