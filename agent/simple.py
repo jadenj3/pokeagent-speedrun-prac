@@ -998,7 +998,7 @@ Context: {context} """
                 self._save_debug_frame(frame, "action")
                 print("🔍 Making VLM call...")
                 try:
-                    response = self.vlm.get_text_query(action_prompt, "simple_mode")
+                    response = self.vlm.get_query(action_prompt, "simple_mode")
                     print(f"🔍 VLM response received: {response[:100]}..." if len(response) > 100 else f"🔍 VLM response: {response}")
                 except Exception as e:
                     print(f"❌ VLM call failed: {e}")
