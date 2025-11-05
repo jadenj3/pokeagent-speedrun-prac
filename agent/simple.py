@@ -36,6 +36,7 @@ import sys
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
 import numpy as np
 from PIL import Image
@@ -125,7 +126,7 @@ class SimpleAgent:
     """
     Simple agent that processes frame + state -> action directly with history tracking
     """
-    
+
     def __init__(self, vlm, max_history_entries: int = None, max_recent_actions: int = None, 
                  history_display_count: int = None, actions_display_count: int = None,
                  movement_memory_clear_interval: int = None):
@@ -153,6 +154,24 @@ class SimpleAgent:
         
         # Initialize storyline objectives for Emerald progression
         self._initialize_storyline_objectives()
+
+    def _save_debug_frame(self, frame, suffix: str) -> None:
+        """Persist the current frame for debugging without interrupting execution."""
+        try:
+            debug_dir = Path(".debug_frames")
+            debug_dir.mkdir(exist_ok=True)
+
+            if hasattr(frame, "save"):
+                image = frame
+            elif hasattr(frame, "shape"):
+                image = Image.fromarray(frame)
+            else:
+                return
+
+            filename = debug_dir / f"step_{self.state.step_counter:05d}_{suffix}.png"
+            image.save(filename)
+        except Exception as exc:
+            logger.debug(f"Failed to save debug frame ({suffix}): {exc}")
 
         
     def _initialize_storyline_objectives(self):
@@ -889,6 +908,7 @@ Context: {context} """
                 is_stuck = bool(stuck_warning)
 
             if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
+                self._save_debug_frame(frame, "planning")
                 print("🔍 Making VLM call...")
                 try:
                     response = self.vlm.get_query(frame, planning_prompt, "simple_mode", is_stuck)
@@ -927,6 +947,7 @@ Context: {context} """
             
             # Make VLM call - double-check frame validation before VLM
             if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
+                self._save_debug_frame(frame, "action")
                 print("🔍 Making VLM call...")
                 try:
                     response = self.vlm.get_text_query(action_prompt, "simple_mode")
