@@ -819,8 +819,8 @@ class SimpleAgent:
             - NOTE: Do NOT try to complete storyline objectives (story_*) - they auto-complete when milestones are reached]
             
             SUMMARY:
-            [You can provide a summary of the current state, history, objective, and anything else that might be useful to the planning agent
-            If you detect patterns/loops in the turn history, identify the failure modes and strongly suggest an alternative approach in this section]
+            [Look at the current state, history, objective, and image. You will provide guidance to the planning module. Look for failure modes/loops, potential alternative routes and provide concrete suggestions for the subsequent action.
+            Do not reference specific coordinates or APIs in your suggestions, provide natural language guidance. You are here to help the agent.]
 
             """)
             
