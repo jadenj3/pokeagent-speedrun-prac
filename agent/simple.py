@@ -176,14 +176,14 @@ class SimpleAgent:
             },
             {
                 "id": "story_player_bedroom",
-                "description": "Go upstairs to player's bedroom",
+                "description": "Go upstairs to player's bedroom. Don't use the door",
                 "objective_type": "location",
                 "target_value": "Player's Bedroom",
                 "milestone_id": "PLAYER_BEDROOM"
             },
             {
                 "id": "story_clock_set",
-                "description": "Set the clock on the wall in the player's bedroom. Interact with the clock (5,1) by pressing A while facing it. Then, leave the house.",
+                "description": "Set the clock on the wall in the player's bedroom. After selecting YES, leave the house. This objective won't be marked complete until you leave the house.",
                 "objective_type": "location",
                 "target_value": "Clock Set",
                 "milestone_id": "CLOCK_SET"
