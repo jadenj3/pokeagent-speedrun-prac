@@ -111,7 +111,7 @@ class SimpleAgentState:
     failed_movements: Dict[str, List[str]] = field(default_factory=dict)  # coord_key -> [failed_directions]
     npc_interactions: Dict[str, str] = field(default_factory=dict)  # coord_key -> interaction_notes
     movement_memory_action_counter: int = 0  # Counter for tracking actions since last memory clear
-    
+
     def __post_init__(self):
         """Initialize deques with current default values"""
         if self.history is None:
@@ -139,6 +139,8 @@ class SimpleAgent:
         self.state = SimpleAgentState()
         self.state.history = deque(maxlen=max_history_entries)
         self.state.recent_actions = deque(maxlen=max_recent_actions)
+
+        self.reasoning_effort: Optional[str] = "low"
         
         # Display parameters for LLM prompts
         self.history_display_count = history_display_count
@@ -149,6 +151,15 @@ class SimpleAgent:
         
         # Initialize storyline objectives for Emerald progression
         self._initialize_storyline_objectives()
+    
+    def set_reasoning_effort(self, effort: Optional[str]):
+        """Adjust reasoning effort for subsequent model calls."""
+        valid_values = {None, "low", "medium", "high"}
+        normalized = effort.lower() if isinstance(effort, str) else effort
+        if normalized not in valid_values:
+            logger.warning(f"Ignoring unsupported reasoning effort '{effort}'. Valid options: low, medium, high, or None.")
+            return
+        self.reasoning_effort = normalized
         
     def _initialize_storyline_objectives(self):
         """Initialize the main storyline objectives for Pokémon Emerald progression"""
@@ -862,7 +873,7 @@ Context: {context} | Coords: {coords} """
             if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                 print("🔍 Making VLM call...")
                 try:
-                    response = self.vlm.get_query(frame, prompt, "simple_mode")
+                    response = self.vlm.get_query(frame, prompt, "simple_mode", reasoning_effort=self.reasoning_effort)
                     print(f"🔍 VLM response received: {response[:100]}..." if len(response) > 100 else f"🔍 VLM response: {response}")
                 except Exception as e:
                     print(f"❌ VLM call failed: {e}")
