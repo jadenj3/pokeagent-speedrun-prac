@@ -28,7 +28,8 @@ class LLMLogger:
         self.log_dir = log_dir
         self.session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
         self.log_file = os.path.join(log_dir, f"llm_log_{self.session_id}.jsonl")
-        self.prompt_log_file = os.path.join(log_dir, f"llm_prompts_{self.session_id}.jsonl")
+        self.prompt_log_file = os.path.join(log_dir, f"llm_prompts_{self.session_id}.txt")
+        self.response_log_file = os.path.join(log_dir, f"llm_responses_{self.session_id}.txt")
         
         # Ensure log directory exists
         os.makedirs(log_dir, exist_ok=True)
@@ -56,19 +57,8 @@ class LLMLogger:
         
         # Initialize log file with session info
         self._log_session_start()
-        self._log_prompt_session_start()
         
         logger.info(f"LLM Logger initialized: {self.log_file}")
-    
-    def _log_prompt_session_start(self):
-        """Log session start information for prompt log"""
-        session_info = {
-            "timestamp": datetime.now().isoformat(),
-            "type": "prompt_session_start",
-            "session_id": self.session_id,
-            "log_file": self.prompt_log_file
-        }
-        self._write_prompt_entry(session_info)
     
     def _log_session_start(self):
         """Log session start information"""
@@ -97,6 +87,9 @@ class LLMLogger:
             duration: Time taken for the interaction in seconds
             model_info: Information about the model used
         """
+        self._write_prompt_log(prompt)
+        self._write_response_log(response)
+
         log_entry = {
             "timestamp": datetime.now().isoformat(),
             "type": "interaction",
@@ -186,6 +179,8 @@ class LLMLogger:
             error: The error message
             metadata: Additional metadata about the error
         """
+        self._write_prompt_log(prompt)
+
         log_entry = {
             "timestamp": datetime.now().isoformat(),
             "type": "error",
@@ -197,32 +192,6 @@ class LLMLogger:
         
         self._write_log_entry(log_entry)
         logger.error(f"LLM {interaction_type.upper()} ERROR: {error}")
-    
-    def log_prompt_text(self,
-                        prompt: str,
-                        interaction_type: str = "prompt",
-                        metadata: Optional[Dict[str, Any]] = None):
-        """Log raw prompt text to dedicated prompt log file.
-        
-        Args:
-            prompt: The full prompt text sent to the model (without image data).
-            interaction_type: Identifier for the prompt source.
-            metadata: Optional metadata related to the prompt.
-        """
-        section_header = f"===== PROMPT START ({interaction_type}) at {datetime.now().isoformat()} ====="
-        section_footer = f"===== PROMPT END ({interaction_type}) ====="
-        
-        lines = [
-            section_header,
-            f"Metadata: {json.dumps(metadata) if metadata else '{}'}",
-            "",
-            prompt,
-            "",
-            section_footer,
-            ""
-        ]
-        self._write_prompt_entry("\n".join(lines))
-        logger.debug(f"Logged prompt for interaction {interaction_type}")
     
     def log_step_start(self, step: int, step_type: str = "agent_step"):
         """Log the start of an agent step
@@ -328,13 +297,33 @@ class LLMLogger:
         except Exception as e:
             logger.error(f"Failed to write log entry: {e}")
     
-    def _write_prompt_entry(self, entry_text: str):
-        """Write an entry to the prompt log file."""
+    def _write_prompt_log(self, prompt: str):
+        """Append a readable copy of the prompt to the prompt log."""
+        if not prompt:
+            return
+        
+        separator_line = "=" * 80
         try:
             with open(self.prompt_log_file, 'a', encoding='utf-8') as f:
-                f.write(entry_text + '\n')
+                f.write(separator_line + "\n")
+                f.write(prompt.rstrip())
+                f.write("\n\n")
         except Exception as e:
-            logger.error(f"Failed to write prompt log entry: {e}")
+            logger.warning(f"Failed to write prompt log: {e}")
+    
+    def _write_response_log(self, response: str):
+        """Append a readable copy of the response to the response log."""
+        if not response:
+            return
+        
+        separator_line = "=" * 80
+        try:
+            with open(self.response_log_file, 'a', encoding='utf-8') as f:
+                f.write(separator_line + "\n")
+                f.write(response.rstrip())
+                f.write("\n\n")
+        except Exception as e:
+            logger.warning(f"Failed to write response log: {e}")
     
     def get_cumulative_metrics(self) -> Dict[str, Any]:
         """Get cumulative metrics for the session
