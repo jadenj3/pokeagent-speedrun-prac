@@ -140,7 +140,7 @@ class SimpleAgent:
         self.state.history = deque(maxlen=max_history_entries)
         self.state.recent_actions = deque(maxlen=max_recent_actions)
 
-        self.reasoning_effort: Optional[str] = "low"
+        self.reasoning_effort: Optional[str] = "high"
         
         # Display parameters for LLM prompts
         self.history_display_count = history_display_count
@@ -808,16 +808,17 @@ EXAMPLE - DO THIS INSTEAD:
             prompt = f"""You are playing as the Protagonist in Pokemon Emerald. Progress quickly to the milestones by balancing exploration and exploitation of things you know, but have fun for the Twitch stream while you do it. 
             Based on the current game frame and state information, think through your next move and choose the best button action. 
             If you notice that you are repeating the same action sequences over and over again, you definitely need to try something different since what you are doing is wrong! Try exploring different new areas or interacting with different NPCs if you are stuck.
-            
+
+** IMPORTANT ** If your map and image disagree, follow the map! Also check your objectives for directions before deciding on your action!
+
+CURRENT OBJECTIVES:
+{objectives_summary}            
 
 RECENT ACTION HISTORY (last {self.actions_display_count} actions):
 {recent_actions_str}
 
 LOCATION/CONTEXT HISTORY (last {self.history_display_count} steps):
 {history_summary}
-
-CURRENT OBJECTIVES:
-{objectives_summary}
 
 CURRENT GAME STATE:
 {formatted_state}
