@@ -147,12 +147,6 @@ class OpenAIBackend(VLMBackend):
             
             # Extract token usage if available
             token_usage = {}
-            if hasattr(response, 'usage') and response.usage is not None:
-                token_usage = {
-                    "prompt_tokens": response.usage.prompt_tokens,
-                    "completion_tokens": response.usage.completion_tokens,
-                    "total_tokens": response.usage.total_tokens
-                }
             
             # Log the interaction
             log_llm_interaction(
@@ -206,12 +200,6 @@ class OpenAIBackend(VLMBackend):
             
             # Extract token usage if available
             token_usage = {}
-            if hasattr(response, 'usage') and response.usage is not None:
-                token_usage = {
-                    "prompt_tokens": response.usage.prompt_tokens,
-                    "completion_tokens": response.usage.completion_tokens,
-                    "total_tokens": response.usage.total_tokens
-                }
             
             # Log the interaction
             log_llm_interaction(
@@ -788,11 +776,6 @@ class GeminiBackend(VLMBackend):
             token_usage = {}
             if hasattr(response, 'usage_metadata'):
                 usage = response.usage_metadata
-                token_usage = {
-                    "prompt_tokens": getattr(usage, 'prompt_token_count', 0),
-                    "completion_tokens": getattr(usage, 'candidates_token_count', 0),
-                    "total_tokens": getattr(usage, 'total_token_count', 0)
-                }
             
             # Log the interaction
             log_llm_interaction(
@@ -846,13 +829,6 @@ class GeminiBackend(VLMBackend):
             
             # Extract token usage if available
             token_usage = {}
-            if hasattr(response, 'usage_metadata'):
-                usage = response.usage_metadata
-                token_usage = {
-                    "prompt_tokens": getattr(usage, 'prompt_token_count', 0),
-                    "completion_tokens": getattr(usage, 'candidates_token_count', 0),
-                    "total_tokens": getattr(usage, 'total_token_count', 0)
-                }
             
             # Log the interaction
             log_llm_interaction(
