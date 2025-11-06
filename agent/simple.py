@@ -50,6 +50,7 @@ DEFAULT_MAX_RECENT_ACTIONS = 50    # Recent button presses
 DEFAULT_HISTORY_DISPLAY_COUNT = 30 # Number of history entries shown to LLM
 DEFAULT_ACTIONS_DISPLAY_COUNT = 40 # Number of recent actions shown to LLM
 DEFAULT_MOVEMENT_MEMORY_CLEAR_INTERVAL = 30  # Clear movement memory after N actions (0 = never clear)
+DEFAULT_TURN_SUMMARY_DISPLAY_COUNT = 10  # Number of prior turn summaries to show
 
 def configure_simple_agent_defaults(max_history_entries: int = None, max_recent_actions: int = None, 
                                   history_display_count: int = None, actions_display_count: int = None,
@@ -145,12 +146,15 @@ class SimpleAgent:
         # Display parameters for LLM prompts
         self.history_display_count = history_display_count
         self.actions_display_count = actions_display_count
+        self.turn_summary_display_count = DEFAULT_TURN_SUMMARY_DISPLAY_COUNT
         
         # Movement memory clearing interval
         self.movement_memory_clear_interval = movement_memory_clear_interval
         
         # Initialize storyline objectives for Emerald progression
         self._initialize_storyline_objectives()
+
+        self.turn_summaries: List[Dict[str, Any]] = []
     
     def set_reasoning_effort(self, effort: Optional[str]):
         """Adjust reasoning effort for subsequent model calls."""
@@ -637,6 +641,36 @@ class SimpleAgent:
         
         return "\n".join(summary_lines)
     
+    def get_turn_summary_history_text(self, max_entries: Optional[int] = None) -> str:
+        """Format turn summaries into natural language history."""
+        if not self.turn_summaries:
+            return "No turn summaries recorded yet."
+        
+        max_entries = max_entries or self.turn_summary_display_count
+        recent_entries = self.turn_summaries[-max_entries:]
+        
+        formatted_lines = []
+        for entry in recent_entries:
+            if isinstance(entry, dict):
+                step = entry.get("step")
+                summary_text = entry.get("summary", "")
+            elif isinstance(entry, tuple) and len(entry) == 2:
+                step, summary_text = entry
+            else:
+                step = None
+                summary_text = str(entry)
+            
+            summary_text = summary_text.strip()
+            if not summary_text:
+                continue
+            
+            if step is not None:
+                formatted_lines.append(f"Turn {step}: {summary_text}")
+            else:
+                formatted_lines.append(summary_text)
+        
+        return "\n".join(formatted_lines) if formatted_lines else "No turn summaries recorded yet."
+    
     def get_stuck_warning(self, coords: Optional[Tuple[int, int]], context: str, game_state: Dict[str, Any] = None) -> str:
         """Generate warning text if stuck pattern detected"""
         # Never show stuck warning in title sequence
@@ -756,6 +790,7 @@ class SimpleAgent:
             
             # Get relevant history and stuck detection
             history_summary = self.get_relevant_history_summary(context, coords)
+            turn_summary_history = self.get_turn_summary_history_text()
             stuck_warning = self.get_stuck_warning(coords, context, game_state)
             recent_actions_str = ', '.join(list(self.state.recent_actions)[-self.actions_display_count:]) if self.state.recent_actions else 'None'
             
@@ -811,14 +846,12 @@ EXAMPLE - DO THIS INSTEAD:
 
 ** IMPORTANT ** If your map and image disagree, follow the map! Also check your objectives for directions before deciding on your action!
 
+
 CURRENT OBJECTIVES:
 {objectives_summary}            
 
-RECENT ACTION HISTORY (last {self.actions_display_count} actions):
-{recent_actions_str}
-
-LOCATION/CONTEXT HISTORY (last {self.history_display_count} steps):
-{history_summary}
+TURN SUMMARY HISTORY:
+{turn_summary_history}
 
 CURRENT GAME STATE:
 {formatted_state}
@@ -850,6 +883,9 @@ REASONING:
 
 ACTION:
 [Your final action choice - PREFER SINGLE ACTIONS like 'RIGHT' or 'A'. Only use multiple actions like 'UP, UP, RIGHT' if you've verified each step is WALKABLE in the movement preview and map.]
+
+SUMMARY:
+[Summarize your current turn and what you accomplished. This will be passed to subsequent turns, so use this as a scratchpad!]
 
 {pathfinding_rules}
 
@@ -884,7 +920,14 @@ Context: {context} | Coords: {coords} """
                 return "WAIT"
             
             # Extract action(s) from structured response
-            actions, reasoning = self._parse_structured_response(response, game_state)
+            actions, reasoning, turn_summary = self._parse_structured_response(response, game_state)
+            if turn_summary:
+                self.turn_summaries.append({
+                    "step": self.state.step_counter,
+                    "summary": turn_summary.strip()
+                })
+                if len(self.turn_summaries) > 50:
+                    self.turn_summaries = self.turn_summaries[-50:]
             
             # Check for failed movement by comparing previous coordinates
             if len(self.state.history) > 0:
@@ -1011,6 +1054,7 @@ Context: {context} | Coords: {coords} """
             objectives_section = ""
             plan = ""
             reasoning = ""
+            summary = ""
             actions = []
             
             # Split response into lines for processing
@@ -1039,6 +1083,9 @@ Context: {context} | Coords: {coords} """
                     action_text = line[7:].strip()  # Remove "ACTION:" prefix
                     if action_text:  # Only parse if there's content
                         actions = self._parse_actions(action_text, game_state)
+                elif line.upper().startswith('SUMMARY:'):
+                    current_section = 'summary'
+                    summary = line[8:].strip()
                 elif line and current_section:
                     # Continue content of current section
                     if current_section == 'analysis':
@@ -1079,12 +1126,12 @@ Context: {context} | Coords: {coords} """
             
             full_reasoning = " | ".join(reasoning_parts) if reasoning_parts else "No reasoning provided"
             
-            return actions, full_reasoning
+            return actions, full_reasoning, summary
             
         except Exception as e:
             logger.warning(f"Error parsing structured response: {e}")
             # Fall back to basic action parsing
-            return self._parse_actions(response, game_state), "Error parsing reasoning"
+            return self._parse_actions(response, game_state), "Error parsing reasoning", ""
     
     def _process_objectives_from_response(self, objectives_text: str):
         """Process objective management commands from LLM response"""
