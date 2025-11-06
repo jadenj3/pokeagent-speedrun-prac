@@ -887,8 +887,7 @@ Context: {context} | Coords: {coords}
 CURRENT OBJECTIVES:
 {objectives_summary}
 
-CURRENT GAME STATE:
-{map_only}
+INSPECT THE ATTACHED IMAGE FOR THE CURRENT GAME STATE
 
 Note: when interacting with objects you have to face them. To face them try to move into them.
 
