@@ -134,10 +134,10 @@ class OpenAIBackend(VLMBackend):
         image_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
         
         content_blocks = [
-            {"type": "text", "text": text},
+            {"type": "input_text", "text": text},
             {
                 "type": "input_image",
-                "image_url": f"data:image/png;base64,{image_base64}"
+                "image_url": {"url": f"data:image/png;base64,{image_base64}"}
             }
         ]
         
@@ -196,7 +196,7 @@ class OpenAIBackend(VLMBackend):
         """Process a text-only prompt using OpenAI API"""
         start_time = time.time()
         
-        content_blocks = [{"type": "text", "text": text}]
+        content_blocks = [{"type": "input_text", "text": text}]
         
         applied_effort = reasoning_effort or self.reasoning_effort
         
