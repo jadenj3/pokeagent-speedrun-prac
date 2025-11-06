@@ -207,17 +207,10 @@ class SimpleAgent:
             },
             {
                 "id": "story_clock_set",
-                "description": "Set the clock on the wall in the player's bedroom, select YES for the current time. Interact with the clock (5,1) by pressing A while facing it and confirm the time.",
+                "description": "Set the clock on the wall in the player's bedroom. Interact with the clock (5,1) by pressing A while facing it and confirm the time. Then leave the house",
                 "objective_type": "location",
                 "target_value": "Clock Set",
                 "milestone_id": "CLOCK_SET"
-            },
-            {
-                "id": "leave_player_house",
-                "description": "After setting the clock, leave the player's house.",
-                "objective_type": "location",
-                "target_value": "Leave house",
-                "milestone_id": "LEAVE_HOUSE"
             },
             {
                 "id": "story_rival_house",
@@ -896,6 +889,8 @@ CURRENT OBJECTIVES:
 
 CURRENT GAME STATE:
 {map_only}
+
+Note: when interacting with objects you have to face them. To face them try to move into them.
 
 Context: {context} """
 
