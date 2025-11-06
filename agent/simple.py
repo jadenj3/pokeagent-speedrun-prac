@@ -140,7 +140,7 @@ class SimpleAgent:
         self.state.history = deque(maxlen=max_history_entries)
         self.state.recent_actions = deque(maxlen=max_recent_actions)
 
-        self.reasoning_effort: Optional[str] = "high"
+        self.reasoning_effort: Optional[str] = "low"
         
         # Display parameters for LLM prompts
         self.history_display_count = history_display_count
