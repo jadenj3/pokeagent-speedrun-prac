@@ -109,8 +109,6 @@ def main():
                        help="Agent scaffold: simple (default) or react")
     parser.add_argument("--simple", action="store_true", 
                        help="DEPRECATED: Use --scaffold simple instead")
-    parser.add_argument("--reasoning-effort", type=str, choices=["low", "medium", "high"],
-                       help="Set OpenAI reasoning effort when using reasoning-capable models")
     
     # Operation modes
     parser.add_argument("--headless", action="store_true", 

@@ -36,11 +36,8 @@ class Agent:
         else:
             scaffold = "fourmodule"
         
-        reasoning_effort = getattr(args, 'reasoning_effort', None) if args else None
-        vlm_kwargs = {"reasoning_effort": reasoning_effort} if reasoning_effort else {}
-        
         # Initialize VLM
-        self.vlm = VLM(backend=backend, model_name=model_name, **vlm_kwargs)
+        self.vlm = VLM(backend=backend, model_name=model_name)
         print(f"   VLM: {backend}/{model_name}")
         
         # Initialize agent based on scaffold
@@ -49,9 +46,10 @@ class Agent:
             # Use global SimpleAgent instance to enable checkpoint persistence
             self.agent_impl = get_simple_agent(self.vlm)
             print(f"   Scaffold: Simple (direct frame->action)")
+            
         elif scaffold == "react":
             # Create ReAct agent
-            vlm_client = VLM(backend=backend, model_name=model_name, **vlm_kwargs)
+            vlm_client = VLM(backend=backend, model_name=model_name)
             self.agent_impl = create_react_agent(vlm_client=vlm_client, verbose=True)
             print(f"   Scaffold: ReAct (Thought->Action->Observation)")
 

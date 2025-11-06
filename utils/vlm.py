@@ -46,14 +46,12 @@ class VLMBackend(ABC):
     """Abstract base class for VLM backends"""
     
     @abstractmethod
-    def get_query(self, img: Union[Image.Image, np.ndarray], text: str, module_name: str = "Unknown",
-                  reasoning_effort: Optional[str] = None) -> str:
+    def get_query(self, img: Union[Image.Image, np.ndarray], text: str, module_name: str = "Unknown", is_stuck = False) -> str:
         """Process an image and text prompt"""
         pass
     
     @abstractmethod
-    def get_text_query(self, text: str, module_name: str = "Unknown",
-                       reasoning_effort: Optional[str] = None) -> str:
+    def get_text_query(self, text: str, module_name: str = "Unknown") -> str:
         """Process a text-only prompt"""
         pass
 
@@ -75,49 +73,16 @@ class OpenAIBackend(VLMBackend):
         
         self.client = OpenAI(api_key=self.api_key)
         self.errors = (openai.RateLimitError,)
-        self.reasoning_effort: Optional[str] = kwargs.get("reasoning_effort")
     
     @retry_with_exponential_backoff
-    def _create_response(self, content_blocks, has_image: bool, reasoning_effort_override: Optional[str] = None):
-        """Call the Responses API with exponential backoff."""
-        applied_effort = reasoning_effort_override or self.reasoning_effort
-
-        request_payload: Dict[str, Any] = {
-            "model": self.model_name,
-            "input": [{
-                "role": "user",
-                "content": content_blocks
-            }]
-        }
-        
-        if applied_effort:
-            request_payload["reasoning"] = {"effort": applied_effort}
-        
-        return self.client.responses.create(**request_payload)
+    def _call_completion(self, messages):
+        """Calls the completions.create method with exponential backoff."""
+        return self.client.chat.completions.create(
+            model=self.model_name,
+            messages=messages
+        )
     
-    @staticmethod
-    def _extract_response_text(response) -> str:
-        """Extract concatenated text from a Responses API result."""
-        # Prefer the convenience attribute when available
-        result_text = getattr(response, "output_text", None)
-        if result_text:
-            return result_text
-        
-        text_parts: List[str] = []
-        
-        for item in getattr(response, "output", []):
-            content_list = getattr(item, "content", [])
-            # Handle OpenAIObject instances and plain dicts uniformly
-            for segment in content_list:
-                if hasattr(segment, "text") and segment.text:
-                    text_parts.append(segment.text)
-                elif isinstance(segment, dict) and segment.get("text"):
-                    text_parts.append(segment["text"])
-        
-        return "".join(text_parts)
-    
-    def get_query(self, img: Union[Image.Image, np.ndarray], text: str, module_name: str = "Unknown",
-                  reasoning_effort: Optional[str] = None) -> str:
+    def get_query(self, img: Union[Image.Image, np.ndarray], text: str, module_name: str = "Unknown", stuck = False) -> str:
         """Process an image and text prompt using OpenAI API"""
         start_time = time.time()
         
@@ -132,21 +97,40 @@ class OpenAIBackend(VLMBackend):
         buffered = BytesIO()
         image.save(buffered, format="PNG")
         image_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
-
-        content_blocks = [
-            {"type": "input_text", "text": text},
-            {"type": "input_image", "image_url": f"data:image/png;base64,{image_base64}"}
-        ]
         
-        applied_effort = reasoning_effort or self.reasoning_effort
+        messages = [{
+            "role": "user",
+            "content": [
+                {"type": "text", "text": text},
+                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{image_base64}"}}
+            ]
+        }]
         
         try:
-            response = self._create_response(content_blocks, has_image=True, reasoning_effort_override=reasoning_effort)
-            result = self._extract_response_text(response)
+            response = self._call_completion(messages)
+            result = response.choices[0].message.content
+            if stuck:
+                messages.append({"role": "assistant", "content": [
+                    {"type": "text", "text": result},
+                ]})
+                messages.append({
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "Are you sure?"},
+                    {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{image_base64}"}}
+                ]})
+                response = self._call_completion(messages)
+                result = response.choices[0].message.content
             duration = time.time() - start_time
             
             # Extract token usage if available
             token_usage = {}
+            if hasattr(response, 'usage'):
+                token_usage = {
+                    "prompt_tokens": response.usage.prompt_tokens,
+                    "completion_tokens": response.usage.completion_tokens,
+                    "total_tokens": response.usage.total_tokens
+                }
             
             # Log the interaction
             log_llm_interaction(
@@ -154,13 +138,7 @@ class OpenAIBackend(VLMBackend):
                 prompt=text,
                 response=result,
                 duration=duration,
-                metadata={
-                    "model": self.model_name,
-                    "backend": "openai",
-                    "has_image": True,
-                    "token_usage": token_usage,
-                    "reasoning_effort": applied_effort
-                },
+                metadata={"model": self.model_name, "backend": "openai", "has_image": True, "token_usage": token_usage},
                 model_info={"model": self.model_name, "backend": "openai"}
             )
             
@@ -171,35 +149,33 @@ class OpenAIBackend(VLMBackend):
                 interaction_type=f"openai_{module_name}",
                 prompt=text,
                 error=str(e),
-                metadata={
-                    "model": self.model_name,
-                    "backend": "openai",
-                    "duration": duration,
-                    "has_image": True,
-                    "reasoning_effort": applied_effort
-                }
+                metadata={"model": self.model_name, "backend": "openai", "duration": duration, "has_image": True}
             )
             logger.error(f"OpenAI API error: {e}")
             raise
     
-    def get_text_query(self, text: str, module_name: str = "Unknown",
-                       reasoning_effort: Optional[str] = None) -> str:
+    def get_text_query(self, text: str, module_name: str = "Unknown") -> str:
         """Process a text-only prompt using OpenAI API"""
         start_time = time.time()
-
-        content_blocks = [
-            {"type": "input_text", "text": text},
-        ]
         
-        applied_effort = reasoning_effort or self.reasoning_effort
+        messages = [{
+            "role": "user",
+            "content": [{"type": "text", "text": text}]
+        }]
         
         try:
-            response = self._create_response(content_blocks, has_image=False, reasoning_effort_override=reasoning_effort)
-            result = self._extract_response_text(response)
+            response = self._call_completion(messages)
+            result = response.choices[0].message.content
             duration = time.time() - start_time
             
             # Extract token usage if available
             token_usage = {}
+            if hasattr(response, 'usage'):
+                token_usage = {
+                    "prompt_tokens": response.usage.prompt_tokens,
+                    "completion_tokens": response.usage.completion_tokens,
+                    "total_tokens": response.usage.total_tokens
+                }
             
             # Log the interaction
             log_llm_interaction(
@@ -207,13 +183,7 @@ class OpenAIBackend(VLMBackend):
                 prompt=text,
                 response=result,
                 duration=duration,
-                metadata={
-                    "model": self.model_name,
-                    "backend": "openai",
-                    "has_image": False,
-                    "token_usage": token_usage,
-                    "reasoning_effort": applied_effort
-                },
+                metadata={"model": self.model_name, "backend": "openai", "has_image": False, "token_usage": token_usage},
                 model_info={"model": self.model_name, "backend": "openai"}
             )
             
@@ -224,13 +194,7 @@ class OpenAIBackend(VLMBackend):
                 interaction_type=f"openai_{module_name}",
                 prompt=text,
                 error=str(e),
-                metadata={
-                    "model": self.model_name,
-                    "backend": "openai",
-                    "duration": duration,
-                    "has_image": False,
-                    "reasoning_effort": applied_effort
-                }
+                metadata={"model": self.model_name, "backend": "openai", "duration": duration, "has_image": False}
             )
             logger.error(f"OpenAI API error: {e}")
             raise
@@ -263,8 +227,7 @@ class OpenRouterBackend(VLMBackend):
             messages=messages
         )
     
-    def get_query(self, img: Union[Image.Image, np.ndarray], text: str, module_name: str = "Unknown",
-                  reasoning_effort: Optional[str] = None) -> str:
+    def get_query(self, img: Union[Image.Image, np.ndarray], text: str, module_name: str = "Unknown") -> str:
         """Process an image and text prompt using OpenRouter API"""
         # Handle both PIL Images and numpy arrays
         if hasattr(img, 'convert'):  # It's a PIL Image
@@ -301,8 +264,7 @@ class OpenRouterBackend(VLMBackend):
         
         return result
     
-    def get_text_query(self, text: str, module_name: str = "Unknown",
-                       reasoning_effort: Optional[str] = None) -> str:
+    def get_text_query(self, text: str, module_name: str = "Unknown") -> str:
         """Process a text-only prompt using OpenRouter API"""
         messages = [{
             "role": "user",
@@ -438,8 +400,7 @@ class LocalHuggingFaceBackend(VLMBackend):
             logger.error(f"Error generating response: {e}")
             raise
     
-    def get_query(self, img: Union[Image.Image, np.ndarray], text: str, module_name: str = "Unknown",
-                  reasoning_effort: Optional[str] = None) -> str:
+    def get_query(self, img: Union[Image.Image, np.ndarray], text: str, module_name: str = "Unknown") -> str:
         """Process an image and text prompt using local HuggingFace model"""
         # Handle both PIL Images and numpy arrays
         if hasattr(img, 'convert'):  # It's a PIL Image
@@ -463,8 +424,7 @@ class LocalHuggingFaceBackend(VLMBackend):
         
         return self._generate_response(inputs, text, module_name)
     
-    def get_text_query(self, text: str, module_name: str = "Unknown",
-                       reasoning_effort: Optional[str] = None) -> str:
+    def get_text_query(self, text: str, module_name: str = "Unknown") -> str:
         """Process a text-only prompt using local HuggingFace model"""
         # For text-only queries, use simple text format without image
         messages = [
@@ -497,8 +457,7 @@ class LegacyOllamaBackend(VLMBackend):
             messages=messages
         )
     
-    def get_query(self, img: Union[Image.Image, np.ndarray], text: str, module_name: str = "Unknown",
-                  reasoning_effort: Optional[str] = None) -> str:
+    def get_query(self, img: Union[Image.Image, np.ndarray], text: str, module_name: str = "Unknown") -> str:
         """Process an image and text prompt using legacy Ollama backend"""
         # Handle both PIL Images and numpy arrays
         if hasattr(img, 'convert'):  # It's a PIL Image
@@ -535,8 +494,7 @@ class LegacyOllamaBackend(VLMBackend):
         
         return result
     
-    def get_text_query(self, text: str, module_name: str = "Unknown",
-                       reasoning_effort: Optional[str] = None) -> str:
+    def get_text_query(self, text: str, module_name: str = "Unknown") -> str:
         """Process a text-only prompt using legacy Ollama backend"""
         messages = [{
             "role": "user",
@@ -598,8 +556,7 @@ class VertexBackend(VLMBackend):
         )
         return response
     
-    def get_query(self, img: Union[Image.Image, np.ndarray], text: str, module_name: str = "Unknown",
-                  reasoning_effort: Optional[str] = None) -> str:
+    def get_query(self, img: Union[Image.Image, np.ndarray], text: str, module_name: str = "Unknown") -> str:
         """Process an image and text prompt using Gemini API"""
         try:
             start_time = time.time()
@@ -655,8 +612,7 @@ class VertexBackend(VLMBackend):
                 logger.error(f"[{module_name}] Text-only fallback also failed: {fallback_error}")
                 raise e
     
-    def get_text_query(self, text: str, module_name: str = "Unknown",
-                       reasoning_effort: Optional[str] = None) -> str:
+    def get_text_query(self, text: str, module_name: str = "Unknown") -> str:
         """Process a text-only prompt using Gemini API"""
         try:
             start_time = time.time()
@@ -776,6 +732,11 @@ class GeminiBackend(VLMBackend):
             token_usage = {}
             if hasattr(response, 'usage_metadata'):
                 usage = response.usage_metadata
+                token_usage = {
+                    "prompt_tokens": getattr(usage, 'prompt_token_count', 0),
+                    "completion_tokens": getattr(usage, 'candidates_token_count', 0),
+                    "total_tokens": getattr(usage, 'total_token_count', 0)
+                }
             
             # Log the interaction
             log_llm_interaction(
@@ -804,8 +765,7 @@ class GeminiBackend(VLMBackend):
                 logger.error(f"[{module_name}] Text-only fallback also failed: {fallback_error}")
                 raise e
     
-    def get_text_query(self, text: str, module_name: str = "Unknown",
-                       reasoning_effort: Optional[str] = None) -> str:
+    def get_text_query(self, text: str, module_name: str = "Unknown") -> str:
         """Process a text-only prompt using Gemini API"""
         start_time = time.time()
         try:
@@ -829,6 +789,13 @@ class GeminiBackend(VLMBackend):
             
             # Extract token usage if available
             token_usage = {}
+            if hasattr(response, 'usage_metadata'):
+                usage = response.usage_metadata
+                token_usage = {
+                    "prompt_tokens": getattr(usage, 'prompt_token_count', 0),
+                    "completion_tokens": getattr(usage, 'candidates_token_count', 0),
+                    "total_tokens": getattr(usage, 'total_token_count', 0)
+                }
             
             # Log the interaction
             log_llm_interaction(
@@ -887,20 +854,12 @@ class VLM:
         
         # Initialize the appropriate backend
         backend_class = self.BACKENDS[self.backend_type]
-        backend_kwargs = dict(kwargs)
-        
-        if self.backend_type == 'openai':
-            reasoning_effort = backend_kwargs.pop("reasoning_effort", None)
-            if not reasoning_effort:
-                reasoning_effort = os.getenv("OPENAI_REASONING_EFFORT")
-            if reasoning_effort:
-                backend_kwargs["reasoning_effort"] = reasoning_effort
         
         # Pass port parameter for legacy Ollama backend
         if self.backend_type == 'ollama':
-            self.backend = backend_class(model_name, port=port, **backend_kwargs)
+            self.backend = backend_class(model_name, port=port, **kwargs)
         else:
-            self.backend = backend_class(model_name, **backend_kwargs)
+            self.backend = backend_class(model_name, **kwargs)
         
         logger.info(f"VLM initialized with {self.backend_type} backend using model: {model_name}")
     
@@ -918,12 +877,11 @@ class VLM:
             # Default to OpenAI for unknown models
             return 'openai'
     
-    def get_query(self, img: Union[Image.Image, np.ndarray], text: str, module_name: str = "Unknown",
-                  reasoning_effort: Optional[str] = None) -> str:
+    def get_query(self, img: Union[Image.Image, np.ndarray], text: str, module_name: str = "Unknown", is_stuck=False) -> str:
         """Process an image and text prompt"""
         try:
             # Backend handles its own logging, so we don't duplicate it here
-            result = self.backend.get_query(img, text, module_name, reasoning_effort=reasoning_effort)
+            result = self.backend.get_query(img, text, module_name, is_stuck)
             return result
         except Exception as e:
             # Only log errors that aren't already logged by the backend
@@ -932,22 +890,15 @@ class VLM:
                 interaction_type=f"{self.backend.__class__.__name__.lower()}_{module_name}",
                 prompt=text,
                 error=str(e),
-                metadata={
-                    "model": self.model_name,
-                    "backend": self.backend.__class__.__name__,
-                    "duration": duration,
-                    "has_image": True,
-                    "reasoning_effort": reasoning_effort
-                }
+                metadata={"model": self.model_name, "backend": self.backend.__class__.__name__, "duration": duration, "has_image": True}
             )
             raise
     
-    def get_text_query(self, text: str, module_name: str = "Unknown",
-                       reasoning_effort: Optional[str] = None) -> str:
+    def get_text_query(self, text: str, module_name: str = "Unknown") -> str:
         """Process a text-only prompt"""
         try:
             # Backend handles its own logging, so we don't duplicate it here
-            result = self.backend.get_text_query(text, module_name, reasoning_effort=reasoning_effort)
+            result = self.backend.get_text_query(text, module_name)
             return result
         except Exception as e:
             # Only log errors that aren't already logged by the backend
@@ -956,12 +907,6 @@ class VLM:
                 interaction_type=f"{self.backend.__class__.__name__.lower()}_{module_name}",
                 prompt=text,
                 error=str(e),
-                metadata={
-                    "model": self.model_name,
-                    "backend": self.backend.__class__.__name__,
-                    "duration": duration,
-                    "has_image": False,
-                    "reasoning_effort": reasoning_effort
-                }
+                metadata={"model": self.model_name, "backend": self.backend.__class__.__name__, "duration": duration, "has_image": False}
             )
             raise
