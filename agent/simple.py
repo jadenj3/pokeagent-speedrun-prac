@@ -929,7 +929,7 @@ Context: {context} """
         lines = []
         
         if active_objectives:
-            lines.append("YOUR ADDED OBJECTIVES:")
+            lines.append("🎯 ACTIVE STORY OBJECTIVES:")
             count = 0
             for i, obj in enumerate(active_objectives, 1):  # Show top 5 active
                 if obj.storyline == False or (count > 5):
@@ -938,11 +938,11 @@ Context: {context} """
                 lines.append(f"  {count+1}. [{obj.objective_type}] {obj.description}{target_str} [ID: {obj.id}]")
                 count += 1
         else:
-            lines.append("YOUR ADDED OBJECTIVES: None - Consider setting some goals!")
+            lines.append("YOUR STORY OBJECTIVES: None - Consider setting some goals!")
         
         if completed_objectives:
             recent_completed = completed_objectives[-3:]  # Show last 3 completed
-            lines.append("✅ RECENTLY COMPLETED ADDED OBJECTIVES:")
+            lines.append("✅ RECENTLY COMPLETED STORY OBJECTIVES:")
             count = 0
             for obj in recent_completed:
                 if obj.storyline == False or (count > 3):
@@ -957,7 +957,7 @@ Context: {context} """
         """Format objectives for LLM consumption"""
         lines = []
         if active_objectives:
-            lines.append("🎯 ACTIVE OBJECTIVES:")
+            lines.append("🎯 ACTIVE ADDED OBJECTIVES:")
             count = 0
             for i, obj in enumerate(active_objectives, 1):  # Show top 5 active
                 if obj.storyline == True or (count > 5):
@@ -966,11 +966,11 @@ Context: {context} """
                 lines.append(f"  {count+1}. [{obj.objective_type}] {obj.description}{target_str} [ID: {obj.id}]")
                 count += 1
         else:
-            lines.append("🎯 ACTIVE OBJECTIVES: None - Consider setting some goals!")
+            lines.append("🎯 ACTIVE ADDED OBJECTIVES: None - Consider adding some objectives!")
 
         if completed_objectives:
             recent_completed = completed_objectives[-3:]  # Show last 3 completed
-            lines.append("✅ RECENTLY COMPLETED:")
+            lines.append("✅ RECENTLY COMPLETED ADDED OBJECTIVES:")
             count = 0
             for obj in recent_completed:
                 if obj.storyline == True or (count > 5):
