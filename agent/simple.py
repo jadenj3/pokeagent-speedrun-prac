@@ -779,6 +779,9 @@ Your current objectives are:
 The objectives you added are:
 {added_objectives_summary}
 
+Map and game state:
+{formatted_state}
+
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
 
 In your response include the following sections:
