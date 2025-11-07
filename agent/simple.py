@@ -928,14 +928,14 @@ Context: {context} """
         
         if active_objectives:
             lines.append("🎯 ACTIVE OBJECTIVES:")
-            for i, obj in enumerate(active_objectives[:20], 1):  # Show top 5 active
+            for i, obj in enumerate(active_objectives[:5], 1):  # Show top 5 active
                 target_str = f" (Target: {obj.target_value})" if obj.target_value else ""
                 lines.append(f"  {i}. [{obj.objective_type}] {obj.description}{target_str} [ID: {obj.id}]")
         else:
             lines.append("🎯 ACTIVE OBJECTIVES: None - Consider setting some goals!")
         
         if completed_objectives:
-            recent_completed = completed_objectives[-5:]  # Show last 3 completed
+            recent_completed = completed_objectives[-3:]  # Show last 3 completed
             lines.append("✅ RECENTLY COMPLETED:")
             for obj in recent_completed:
                 lines.append(f"  ✓ [{obj.objective_type}] {obj.description}")
