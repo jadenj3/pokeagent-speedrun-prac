@@ -779,9 +779,6 @@ Your current objectives are:
 The objectives you added are:
 {added_objectives_summary}
 
-Map and game state:
-{formatted_state}
-
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
 
 In your response include the following sections:
@@ -818,7 +815,7 @@ Context: {context} """
             if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                 print("🔍 Making VLM call...")
                 try:
-                    response = self.vlm.get_text_query(prompt, "simple_mode", reasoning_effort=self.reasoning_effort)
+                    response = self.vlm.get_query(frame, prompt, "simple_mode", reasoning_effort=self.reasoning_effort)
                     print(f"🔍 VLM response received: {response[:100]}..." if len(response) > 100 else f"🔍 VLM response: {response}")
                 except Exception as e:
                     print(f"❌ VLM call failed: {e}")
