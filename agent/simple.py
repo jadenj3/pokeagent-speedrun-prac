@@ -763,7 +763,7 @@ class SimpleAgent:
             active_objectives = self.get_active_objectives()
             completed_objectives_list = self.get_completed_objectives()
             objectives_summary = self._format_objectives_for_llm(active_objectives, completed_objectives_list)
-            
+            added_objectives_summary = self._format_added_objectives_for_llm(active_objectives, completed_objectives_list)
             # Build pathfinding rules section (only if not in title sequence)
             pathfinding_rules = ""
             if context != "title":
@@ -772,12 +772,12 @@ class SimpleAgent:
             # Create enhanced prompt with objectives, history context and chain of thought request
             prompt = f"""You are playing as the Protagonist in Pokemon Emerald. 
             Based on the current game frame and state information, think through your next move and choose the best action.
-            
-Your location/context history is (last {self.history_display_count} steps):
-{history_summary}
 
 Your current objectives are:
 {objectives_summary}
+
+The objectives you added are:
+{added_objectives_summary}
 
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
 
@@ -929,19 +929,55 @@ Context: {context} """
         lines = []
         
         if active_objectives:
-            lines.append("🎯 ACTIVE OBJECTIVES:")
-            for i, obj in enumerate(active_objectives[:5], 1):  # Show top 5 active
+            lines.append("YOUR ADDED OBJECTIVES:")
+            count = 0
+            for i, obj in enumerate(active_objectives, 1):  # Show top 5 active
+                if obj.storyline == False or (count > 5):
+                    continue
                 target_str = f" (Target: {obj.target_value})" if obj.target_value else ""
-                lines.append(f"  {i}. [{obj.objective_type}] {obj.description}{target_str} [ID: {obj.id}]")
+                lines.append(f"  {count+1}. [{obj.objective_type}] {obj.description}{target_str} [ID: {obj.id}]")
+                count += 1
         else:
-            lines.append("🎯 ACTIVE OBJECTIVES: None - Consider setting some goals!")
+            lines.append("YOUR ADDED OBJECTIVES: None - Consider setting some goals!")
         
         if completed_objectives:
             recent_completed = completed_objectives[-3:]  # Show last 3 completed
-            lines.append("✅ RECENTLY COMPLETED:")
+            lines.append("✅ RECENTLY COMPLETED ADDED OBJECTIVES:")
+            count = 0
             for obj in recent_completed:
+                if obj.storyline == False or (count > 3):
+                    continue
                 lines.append(f"  ✓ [{obj.objective_type}] {obj.description}")
+                count += 1
         
+        return "\n".join(lines)
+
+    def _format_added_objectives_for_llm(self, active_objectives: List[Objective],
+                                   completed_objectives: List[Objective]) -> str:
+        """Format objectives for LLM consumption"""
+        lines = []
+        if active_objectives:
+            lines.append("🎯 ACTIVE OBJECTIVES:")
+            count = 0
+            for i, obj in enumerate(active_objectives, 1):  # Show top 5 active
+                if obj.storyline == True or (count > 5):
+                    continue
+                target_str = f" (Target: {obj.target_value})" if obj.target_value else ""
+                lines.append(f"  {count+1}. [{obj.objective_type}] {obj.description}{target_str} [ID: {obj.id}]")
+                count += 1
+        else:
+            lines.append("🎯 ACTIVE OBJECTIVES: None - Consider setting some goals!")
+
+        if completed_objectives:
+            recent_completed = completed_objectives[-3:]  # Show last 3 completed
+            lines.append("✅ RECENTLY COMPLETED:")
+            count = 0
+            for obj in recent_completed:
+                if obj.storyline == True or (count > 5):
+                    continue
+                lines.append(f"  ✓ [{obj.objective_type}] {obj.description}")
+                count += 1
+
         return "\n".join(lines)
     
     def _parse_structured_response(self, response: str, game_state: Dict[str, Any] = None) -> Tuple[List[str], str]:
