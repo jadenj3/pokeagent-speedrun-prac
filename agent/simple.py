@@ -773,6 +773,8 @@ class SimpleAgent:
             prompt = f"""You are playing as the Protagonist in Pokemon Emerald. 
             Based on the current game frame and state information, think through your next move and choose the best action.
             
+Your location/context history is (last {self.history_display_count} steps):
+{history_summary}
 
 Your current objectives are:
 {objectives_summary}
