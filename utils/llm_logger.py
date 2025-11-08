@@ -259,7 +259,8 @@ class LLMLogger:
             "timestamp": datetime.now().isoformat(),
             "type": "state_snapshot",
             "step": step,
-            "state_summary": state_summary
+            "state_summary": state_summary,
+            "state_data": state_data
         }
         
         self._write_log_entry(log_entry)
