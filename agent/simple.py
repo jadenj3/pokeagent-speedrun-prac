@@ -770,6 +770,13 @@ class SimpleAgent:
             added_objectives_summary = self._format_added_objectives_for_llm(active_objectives, completed_objectives_list)
             # Build pathfinding rules section (only if not in title sequence)
             map_preview = format_movement_preview_for_llm(game_state)
+            player_coords = coords or self.get_player_coords(game_state)
+            if player_coords:
+                coord_str = f"(X={player_coords[0]}, Y={player_coords[1]})"
+                map_preview = map_preview.replace(
+                    "This is also a movement preview showing you a summary of your immediately available movements:\n",
+                    ""
+                )
             map_info = game_state.get('map', {}) or {}
             player_data = game_state.get('player', {}) or {}
             map_only_sections = _format_map_info(map_info, player_data, include_npcs=True, full_state_data=game_state)
