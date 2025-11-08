@@ -40,7 +40,7 @@ from typing import List, Dict, Any, Optional, Tuple
 import numpy as np
 from PIL import Image
 
-from utils.state_formatter import format_state_for_llm
+from utils.state_formatter import format_state_for_llm, format_movement_preview_for_llm
 
 logger = logging.getLogger(__name__)
 
@@ -765,6 +765,7 @@ class SimpleAgent:
             objectives_summary = self._format_objectives_for_llm(active_objectives, completed_objectives_list)
             added_objectives_summary = self._format_added_objectives_for_llm(active_objectives, completed_objectives_list)
             # Build pathfinding rules section (only if not in title sequence)
+            map_preview = format_movement_preview_for_llm(game_state)
             pathfinding_rules = ""
             if context != "title":
                 pathfinding_rules = ""
@@ -780,6 +781,9 @@ The objectives you added are:
 {added_objectives_summary}
 
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
+
+This is also a movement preview showing you a summary of your immediately available movements:
+
 
 In your response include the following sections:
 
