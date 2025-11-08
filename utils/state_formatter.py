@@ -1753,7 +1753,7 @@ def format_movement_preview_for_llm(state_data):
             symbol = info['tile_symbol']
             status = "BLOCKED" if info['blocked'] else "WALKABLE"
 
-            lines.append(f"  {direction:5}: ({new_x:3},{new_y:3}) [{symbol}] {status}")
+            lines.append(f"  {direction:5}: [{symbol}] {status}")
             # Add brief description for tiles
             desc = info['tile_description']
             if info['blocked']:
