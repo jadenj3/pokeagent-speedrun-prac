@@ -30,6 +30,7 @@ class LLMLogger:
         self.log_file = os.path.join(log_dir, f"llm_log_{self.session_id}.jsonl")
         self.prompt_log_file = os.path.join(log_dir, f"llm_prompts_{self.session_id}.txt")
         self.response_log_file = os.path.join(log_dir, f"llm_responses_{self.session_id}.txt")
+        self.state_log_file = os.path.join(log_dir, f"llm_state_{self.session_id}.jsonl")
         
         # Ensure log directory exists
         os.makedirs(log_dir, exist_ok=True)
@@ -259,11 +260,21 @@ class LLMLogger:
             "timestamp": datetime.now().isoformat(),
             "type": "state_snapshot",
             "step": step,
-            "state_summary": state_summary,
-            "state_data": state_data
+            "state_summary": state_summary
         }
-        
+
         self._write_log_entry(log_entry)
+
+        # Also write the full state to a dedicated state log file
+        try:
+            with open(self.state_log_file, 'a', encoding='utf-8') as f:
+                f.write(json.dumps({
+                    "timestamp": datetime.now().isoformat(),
+                    "step": step,
+                    "state_data": state_data
+                }, ensure_ascii=False) + '\n')
+        except Exception as e:
+            logger.error(f"Failed to write state log entry: {e}")
     
     def log_action(self, action: str, step: int, reasoning: Optional[str] = None):
         """Log an action taken by the agent
