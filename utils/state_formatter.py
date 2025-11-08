@@ -1453,52 +1453,98 @@ def get_movement_options(state_data):
 
 
 def _build_portal_lookup(state_data):
-    """Map absolute coordinates to known portal destinations for quick lookup."""
+    """
+    Map absolute coordinates to known portal destinations using live and cached map connections.
+    """
     lookup = {}
     if not state_data:
         return lookup
 
     player_location = state_data.get('player', {}).get('location')
     if not player_location:
-        return lookup
+        player_location = state_data.get('map', {}).get('location_name')
 
-    def _normalize_key(connections):
-        if not connections:
+    def _add_entry(from_pos, dest_name, dest_pos=None):
+        if (isinstance(from_pos, (list, tuple)) and len(from_pos) >= 2 and
+                isinstance(from_pos[0], (int, float)) and isinstance(from_pos[1], (int, float))):
+            coord_key = (int(from_pos[0]), int(from_pos[1]))
+            if coord_key not in lookup:
+                lookup[coord_key] = {
+                    'to_name': dest_name or 'Unknown location',
+                    'to_pos': (int(dest_pos[0]), int(dest_pos[1])) if (
+                        isinstance(dest_pos, (list, tuple)) and len(dest_pos) >= 2 and
+                        isinstance(dest_pos[0], (int, float)) and isinstance(dest_pos[1], (int, float))
+                    ) else None
+                }
+
+    def _ingest_location_connections(connections):
+        if not isinstance(connections, dict) or not player_location:
+            return
+        for loc_name, conn_list in connections.items():
+            if not loc_name or not conn_list:
+                continue
+            if loc_name.lower() != player_location.lower():
+                continue
+            for conn in conn_list:
+                if isinstance(conn, (list, tuple)) and len(conn) >= 2:
+                    dest_name = conn[0] if len(conn) > 0 else "Unknown location"
+                    from_pos = conn[1]
+                    to_pos = conn[2] if len(conn) > 2 else None
+                    _add_entry(from_pos, dest_name, to_pos)
+
+    def _normalize_map_id(map_id_value):
+        if map_id_value is None:
             return None
-        for key in connections.keys():
-            if key and isinstance(key, str) and key.lower() == player_location.lower():
-                return key
-        return player_location if player_location in connections else None
+        if isinstance(map_id_value, int):
+            return map_id_value
+        if isinstance(map_id_value, str):
+            try:
+                return int(map_id_value, 16) if map_id_value.startswith(("0x", "0X")) else int(map_id_value)
+            except ValueError:
+                return None
+        return None
 
-    def _ingest_connections(connections):
+    def _get_current_map_id():
+        map_info = state_data.get('map', {})
+        if isinstance(map_info, dict):
+            if 'map_id' in map_info:
+                normalized = _normalize_map_id(map_info.get('map_id'))
+                if normalized is not None:
+                    return normalized
+            stitched = map_info.get('stitched_map_info', {})
+            if isinstance(stitched, dict):
+                current_area = stitched.get('current_area', {})
+                area_id = current_area.get('id')
+                normalized = _normalize_map_id(area_id)
+                if normalized is not None:
+                    return normalized
+        return _normalize_map_id(state_data.get('current_map_id'))
+
+    def _ingest_portal_connections(connections):
         if not isinstance(connections, dict):
             return
-        match_key = _normalize_key(connections)
-        if not match_key or match_key not in connections:
+        current_map_id = _get_current_map_id()
+        if current_map_id is None:
             return
-        for conn in connections.get(match_key, []):
-            if not isinstance(conn, (list, tuple)) or len(conn) < 2:
+        for map_key, conn_list in connections.items():
+            map_id_candidate = _normalize_map_id(map_key)
+            if map_id_candidate != current_map_id or not conn_list:
                 continue
-            dest_name = conn[0] if len(conn) > 0 else "Unknown location"
-            from_pos = conn[1]
-            to_pos = conn[2] if len(conn) > 2 else None
-            if (isinstance(from_pos, (list, tuple)) and len(from_pos) >= 2 and
-                    isinstance(from_pos[0], (int, float)) and isinstance(from_pos[1], (int, float))):
-                coord_key = (int(from_pos[0]), int(from_pos[1]))
-                if coord_key not in lookup:
-                    lookup[coord_key] = {
-                        'to_name': dest_name,
-                        'to_pos': (int(to_pos[0]), int(to_pos[1])) if (
-                            isinstance(to_pos, (list, tuple)) and len(to_pos) >= 2 and
-                            isinstance(to_pos[0], (int, float)) and isinstance(to_pos[1], (int, float))
-                        ) else None
-                    }
+            for conn in conn_list:
+                if not isinstance(conn, dict):
+                    continue
+                dest_name = conn.get('to_name', 'Unknown location')
+                from_pos = conn.get('from_pos')
+                to_pos = conn.get('to_pos')
+                _add_entry(from_pos, dest_name, to_pos)
 
-    # Prefer live data from the current state, then fall back to cached connections.
-    _ingest_connections(state_data.get('location_connections'))
-    cached_connections = _get_location_connections_from_cache()
-    if cached_connections:
-        _ingest_connections(cached_connections)
+    _ingest_location_connections(state_data.get('location_connections'))
+    _ingest_portal_connections(state_data.get('portal_connections'))
+
+    if not lookup:
+        cached_connections = _get_location_connections_from_cache()
+        if cached_connections:
+            _ingest_location_connections(cached_connections)
 
     return lookup
 
