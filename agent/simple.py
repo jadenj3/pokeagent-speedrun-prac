@@ -825,6 +825,9 @@ Your current objectives are:
 The objectives you added are:
 {added_objectives_summary}
 
+Movement preview (check this to make sure you aren't selecting a blocked action):
+{map_preview}
+
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
 
 Do not select a movement that is blocked. 
