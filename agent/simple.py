@@ -811,6 +811,7 @@ class SimpleAgent:
             player_data = game_state.get('player', {}) or {}
             map_only_sections = _format_map_info(map_info, player_data, include_npcs=True, full_state_data=game_state)
             map_only = "\n".join(map_only_sections) if map_only_sections else ""
+            player_location = game_state.get("player", {}).get("location", "Unknown Location")
             pathfinding_rules = ""
             if context != "title":
                 pathfinding_rules = ""
@@ -824,6 +825,9 @@ Your current objectives are:
 
 The objectives you added are:
 {added_objectives_summary}
+
+Your current location is:
+{player_location}
 
 Movement preview (check this to make sure you aren't selecting a blocked action):
 {map_preview}
