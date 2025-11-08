@@ -769,6 +769,15 @@ class SimpleAgent:
             # Increment step counter
             self.state.step_counter += 1
             
+            # Log full game state for debugging
+            try:
+                from utils.llm_logger import get_llm_logger
+                llm_logger = get_llm_logger()
+                if llm_logger:
+                    llm_logger.log_state_snapshot(game_state, self.state.step_counter)
+            except Exception as e:
+                logger.debug(f"Failed to log state snapshot: {e}")
+            
             # Get current state info
             coords = self.get_player_coords(game_state)
             context = self.get_game_context(game_state)
