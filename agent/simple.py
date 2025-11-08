@@ -783,7 +783,7 @@ The objectives you added are:
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
 
 This is also a movement preview showing you a summary of your immediately available movements:
-
+{map_preview}
 
 In your response include the following sections:
 
