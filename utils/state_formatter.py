@@ -1452,6 +1452,57 @@ def get_movement_options(state_data):
     return movement_options
 
 
+def _build_portal_lookup(state_data):
+    """Map absolute coordinates to known portal destinations for quick lookup."""
+    lookup = {}
+    if not state_data:
+        return lookup
+
+    player_location = state_data.get('player', {}).get('location')
+    if not player_location:
+        return lookup
+
+    def _normalize_key(connections):
+        if not connections:
+            return None
+        for key in connections.keys():
+            if key and isinstance(key, str) and key.lower() == player_location.lower():
+                return key
+        return player_location if player_location in connections else None
+
+    def _ingest_connections(connections):
+        if not isinstance(connections, dict):
+            return
+        match_key = _normalize_key(connections)
+        if not match_key or match_key not in connections:
+            return
+        for conn in connections.get(match_key, []):
+            if not isinstance(conn, (list, tuple)) or len(conn) < 2:
+                continue
+            dest_name = conn[0] if len(conn) > 0 else "Unknown location"
+            from_pos = conn[1]
+            to_pos = conn[2] if len(conn) > 2 else None
+            if (isinstance(from_pos, (list, tuple)) and len(from_pos) >= 2 and
+                    isinstance(from_pos[0], (int, float)) and isinstance(from_pos[1], (int, float))):
+                coord_key = (int(from_pos[0]), int(from_pos[1]))
+                if coord_key not in lookup:
+                    lookup[coord_key] = {
+                        'to_name': dest_name,
+                        'to_pos': (int(to_pos[0]), int(to_pos[1])) if (
+                            isinstance(to_pos, (list, tuple)) and len(to_pos) >= 2 and
+                            isinstance(to_pos[0], (int, float)) and isinstance(to_pos[1], (int, float))
+                        ) else None
+                    }
+
+    # Prefer live data from the current state, then fall back to cached connections.
+    _ingest_connections(state_data.get('location_connections'))
+    cached_connections = _get_location_connections_from_cache()
+    if cached_connections:
+        _ingest_connections(cached_connections)
+
+    return lookup
+
+
 def get_movement_preview(state_data):
     """
     Get detailed preview of what happens with each directional movement.
@@ -1646,6 +1697,7 @@ def format_movement_preview_for_llm(state_data):
     if not preview:
         return "Movement preview: Not available"
 
+    portal_lookup = _build_portal_lookup(state_data)
     lines = ["MOVEMENT PREVIEW:"]
 
     for direction in ['UP', 'DOWN', 'LEFT', 'RIGHT']:
@@ -1678,6 +1730,15 @@ def format_movement_preview_for_llm(state_data):
                     lines[-1] += " - Door/Entrance"
                 elif 'Jump ledge' in desc and 'correct direction' in desc:
                     lines[-1] += " - Jump ledge (can jump this way)"
+
+            destination = portal_lookup.get((new_x, new_y))
+            if destination:
+                dest_name = destination.get('to_name', 'Unknown location')
+                target_coords = destination.get('to_pos')
+                if target_coords:
+                    lines[-1] += f" → {dest_name} ({target_coords[0]},{target_coords[1]})"
+                else:
+                    lines[-1] += f" → {dest_name}"
 
     return "\n".join(lines)
 
