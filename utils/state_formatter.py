@@ -1478,12 +1478,20 @@ def _build_portal_lookup(state_data):
                 }
 
     def _ingest_location_connections(connections):
-        if not isinstance(connections, dict) or not player_location:
+        if not isinstance(connections, dict):
             return
+        target_keys = set()
+        if player_location:
+            target_keys.add(player_location.lower())
+        # Include last known overworld location if different
+        global LAST_LOCATION
+        if LAST_LOCATION:
+            target_keys.add(str(LAST_LOCATION).lower())
+
         for loc_name, conn_list in connections.items():
             if not loc_name or not conn_list:
                 continue
-            if loc_name.lower() != player_location.lower():
+            if target_keys and loc_name.lower() not in target_keys:
                 continue
             for conn in conn_list:
                 if isinstance(conn, (list, tuple)) and len(conn) >= 2:
