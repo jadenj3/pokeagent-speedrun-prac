@@ -790,8 +790,13 @@ The objectives you added are:
 
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
 
+Here is a current map of the area, this should be your primary and most reliable form of navigation:
+{map_only}
+
 This is also a movement preview showing you a summary of your immediately available movements:
 {map_preview}
+
+Do not select a movement that is blocked. 
 
 In your response include the following sections:
 
