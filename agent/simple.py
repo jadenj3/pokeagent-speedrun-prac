@@ -40,7 +40,11 @@ from typing import List, Dict, Any, Optional, Tuple
 import numpy as np
 from PIL import Image
 
-from utils.state_formatter import format_state_for_llm, format_movement_preview_for_llm
+from utils.state_formatter import (
+    format_state_for_llm,
+    format_movement_preview_for_llm,
+    _format_map_info,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -766,6 +770,10 @@ class SimpleAgent:
             added_objectives_summary = self._format_added_objectives_for_llm(active_objectives, completed_objectives_list)
             # Build pathfinding rules section (only if not in title sequence)
             map_preview = format_movement_preview_for_llm(game_state)
+            map_info = game_state.get('map', {}) or {}
+            player_data = game_state.get('player', {}) or {}
+            map_only_sections = _format_map_info(map_info, player_data, include_npcs=True, full_state_data=game_state, use_json_map=True)
+            map_only = "\n".join(map_only_sections) if map_only_sections else ""
             pathfinding_rules = ""
             if context != "title":
                 pathfinding_rules = ""
