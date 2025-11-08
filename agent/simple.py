@@ -34,6 +34,7 @@ import logging
 import os
 import sys
 import time
+import re
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -975,27 +976,20 @@ Context: {context} """
         """Format objectives for LLM consumption"""
         lines = []
         
-        if active_objectives:
+        storyline_active = [obj for obj in active_objectives if obj.storyline]
+        if storyline_active:
             lines.append("🎯 ACTIVE STORY OBJECTIVES:")
-            count = 0
-            for i, obj in enumerate(active_objectives, 1):  # Show top 5 active
-                if obj.storyline == False or (count > 5):
-                    continue
+            for idx, obj in enumerate(storyline_active[:5], 1):
                 target_str = f" (Target: {obj.target_value})" if obj.target_value else ""
-                lines.append(f"  {count+1}. [{obj.objective_type}] {obj.description}{target_str} [ID: {obj.id}]")
-                count += 1
+                lines.append(f"  {idx}. [{obj.objective_type}] {obj.description}{target_str} [ID: {obj.id}]")
         else:
             lines.append("YOUR STORY OBJECTIVES: None - Consider setting some goals!")
         
-        if completed_objectives:
-            recent_completed = completed_objectives[-3:]  # Show last 3 completed
+        storyline_completed = [obj for obj in completed_objectives if obj.storyline]
+        if storyline_completed:
             lines.append("✅ RECENTLY COMPLETED STORY OBJECTIVES:")
-            count = 0
-            for obj in recent_completed:
-                if obj.storyline == False or (count > 3):
-                    continue
+            for obj in storyline_completed[-3:]:
                 lines.append(f"  ✓ [{obj.objective_type}] {obj.description}")
-                count += 1
         
         return "\n".join(lines)
 
@@ -1003,27 +997,20 @@ Context: {context} """
                                    completed_objectives: List[Objective]) -> str:
         """Format objectives for LLM consumption"""
         lines = []
-        if active_objectives:
+        added_active = [obj for obj in active_objectives if not obj.storyline]
+        if added_active:
             lines.append("🎯 ACTIVE ADDED OBJECTIVES:")
-            count = 0
-            for i, obj in enumerate(active_objectives, 1):  # Show top 5 active
-                if obj.storyline == True or (count > 5):
-                    continue
+            for idx, obj in enumerate(added_active[:5], 1):
                 target_str = f" (Target: {obj.target_value})" if obj.target_value else ""
-                lines.append(f"  {count+1}. [{obj.objective_type}] {obj.description}{target_str} [ID: {obj.id}]")
-                count += 1
+                lines.append(f"  {idx}. [{obj.objective_type}] {obj.description}{target_str} [ID: {obj.id}]")
         else:
             lines.append("🎯 ACTIVE ADDED OBJECTIVES: None - Consider adding some objectives!")
 
-        if completed_objectives:
-            recent_completed = completed_objectives[-3:]  # Show last 3 completed
+        added_completed = [obj for obj in completed_objectives if not obj.storyline]
+        if added_completed:
             lines.append("✅ RECENTLY COMPLETED ADDED OBJECTIVES:")
-            count = 0
-            for obj in recent_completed:
-                if obj.storyline == True or (count > 5):
-                    continue
+            for obj in added_completed[-3:]:
                 lines.append(f"  ✓ [{obj.objective_type}] {obj.description}")
-                count += 1
 
         return "\n".join(lines)
     
@@ -1116,9 +1103,16 @@ Context: {context} """
             # Look for ADD_OBJECTIVE and COMPLETE_OBJECTIVE commands
             for line in objectives_text.split('\n'):
                 line = line.strip()
-                if line.upper().startswith('ADD_OBJECTIVE:'):
+                if not line:
+                    continue
+
+                # Remove common bullet/numbering prefixes (e.g., "- ", "1. ", "* ")
+                normalized_line = re.sub(r'^[\s\-\*\+\•\d\.\)\(>]+', '', line)
+                upper_line = normalized_line.upper()
+
+                if upper_line.startswith('ADD_OBJECTIVE:'):
                     # Parse format: ADD_OBJECTIVE: type:description:target_value
-                    content = line[14:].strip()  # Remove "ADD_OBJECTIVE:" prefix
+                    content = normalized_line[14:].strip()  # Remove prefix
                     parts = content.split(':', 2)  # Split into max 3 parts
                     
                     if len(parts) >= 2:
@@ -1132,9 +1126,9 @@ Context: {context} """
                         # Add the objective
                         self.add_objective(description, obj_type, parsed_target)
                 
-                elif line.upper().startswith('COMPLETE_OBJECTIVE:'):
+                elif upper_line.startswith('COMPLETE_OBJECTIVE:'):
                     # Parse format: COMPLETE_OBJECTIVE: objective_id:notes
-                    content = line[19:].strip()  # Remove "COMPLETE_OBJECTIVE:" prefix
+                    content = normalized_line[19:].strip()  # Remove prefix
                     parts = content.split(':', 1)  # Split into max 2 parts
                     
                     if len(parts) >= 1:
