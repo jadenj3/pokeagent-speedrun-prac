@@ -33,6 +33,7 @@ Configuration defaults (can be customized):
 import logging
 import os
 import sys
+import time
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -132,6 +133,10 @@ class SimpleAgent:
                  history_display_count: int = None, actions_display_count: int = None,
                  movement_memory_clear_interval: int = None):
         self.vlm = vlm
+        session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.frame_log_dir = os.path.join("frame_logs", session_id)
+        os.makedirs(self.frame_log_dir, exist_ok=True)
+        self._last_logged_frame_hash: Optional[str] = None
         
         # Use current global defaults if not specified
         max_history_entries = max_history_entries or DEFAULT_MAX_HISTORY_ENTRIES
@@ -622,6 +627,27 @@ class SimpleAgent:
         except Exception as e:
             logger.warning(f"Error checking for black frame: {e}")
             return False  # On error, assume not black to continue processing
+
+    def _log_frame(self, frame):
+        """Persist the current frame to disk for debugging."""
+        if not frame or not self.frame_log_dir:
+            return
+        try:
+            if hasattr(frame, 'save'):
+                img = frame
+            elif hasattr(frame, 'shape'):
+                img = Image.fromarray(frame)
+            else:
+                # Unsupported type
+                return
+
+            os.makedirs(self.frame_log_dir, exist_ok=True)
+            timestamp_ms = int(time.time() * 1000)
+            step_id = self.state.step_counter
+            filename = os.path.join(self.frame_log_dir, f"frame_{step_id:06d}_{timestamp_ms}.png")
+            img.save(filename)
+        except Exception as e:
+            logger.debug(f"Failed to log frame: {e}")
     
     def get_relevant_history_summary(self, current_context: str, coords: Optional[Tuple[int, int]]) -> str:
         """Get a concise summary of relevant recent history"""
@@ -734,6 +760,9 @@ class SimpleAgent:
         if self.is_black_frame(frame):
             logger.info("⏳ Black frame detected (likely a transition), waiting for next frame...")
             return "WAIT"  # Return WAIT to skip this frame and wait for the next one
+
+        # Save the current frame for debugging
+        self._log_frame(frame)
         
         try:
             # Increment step counter
