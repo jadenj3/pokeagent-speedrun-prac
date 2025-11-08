@@ -772,7 +772,7 @@ class SimpleAgent:
             map_preview = format_movement_preview_for_llm(game_state)
             map_info = game_state.get('map', {}) or {}
             player_data = game_state.get('player', {}) or {}
-            map_only_sections = _format_map_info(map_info, player_data, include_npcs=True, full_state_data=game_state, use_json_map=True)
+            map_only_sections = _format_map_info(map_info, player_data, include_npcs=True, full_state_data=game_state)
             map_only = "\n".join(map_only_sections) if map_only_sections else ""
             pathfinding_rules = ""
             if context != "title":
