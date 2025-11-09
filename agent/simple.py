@@ -986,6 +986,7 @@ Context: {context} """
                     break
         
         # Validate movement sequences if we have game state
+        '''
         if game_state and len(actions_found) > 1:
             # Check if this is a movement sequence
             movement_actions = [a for a in actions_found if a in ['UP', 'DOWN', 'LEFT', 'RIGHT']]
@@ -997,7 +998,7 @@ Context: {context} """
                     # Only take the first movement if sequence is invalid
                     if movement_actions:
                         actions_found = [movement_actions[0]]
-                        logger.info(f"Reduced to single movement: {actions_found[0]}")
+                        logger.info(f"Reduced to single movement: {actions_found[0]}")'''
         
         # If no valid actions found, use default
         if not actions_found:
