@@ -845,6 +845,9 @@ Your current objectives are:
 Your current location is:
 {player_location}
 
+Your current map:
+{map_only}
+
 Movement preview (check this to make sure you aren't selecting a blocked action):
 {map_preview}
 IMPORTANT: The movement preview doesn't show NPCs, so look for visual confirmation if you think an NPC is blocking your path. If you are blocked by an NPC you should move around them, they only block a single tile. If you need to complete a story segment to move an npc, it will show up in your objectives.
