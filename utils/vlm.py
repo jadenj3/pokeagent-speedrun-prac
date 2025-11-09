@@ -76,6 +76,7 @@ class OpenAIBackend(VLMBackend):
         self.client = OpenAI(api_key=self.api_key)
         self.errors = (openai.RateLimitError,)
         self.reasoning_effort: Optional[str] = kwargs.get("reasoning_effort")
+        self.supports_reasoning_effort = True
         temperature = kwargs.get("temperature")
         if temperature is None:
             env_temp = os.getenv("OPENAI_TEMPERATURE")
@@ -950,8 +951,11 @@ class VLM:
                   reasoning_effort: Optional[str] = None) -> str:
         """Process an image and text prompt"""
         try:
+            backend_kwargs = {}
+            if reasoning_effort and getattr(self.backend, "supports_reasoning_effort", False):
+                backend_kwargs["reasoning_effort"] = reasoning_effort
             # Backend handles its own logging, so we don't duplicate it here
-            result = self.backend.get_query(img, text, module_name, reasoning_effort=reasoning_effort)
+            result = self.backend.get_query(img, text, module_name, **backend_kwargs)
             return result
         except Exception as e:
             # Only log errors that aren't already logged by the backend
@@ -973,8 +977,11 @@ class VLM:
                        reasoning_effort: Optional[str] = None) -> str:
         """Process a text-only prompt"""
         try:
+            backend_kwargs = {}
+            if reasoning_effort and getattr(self.backend, "supports_reasoning_effort", False):
+                backend_kwargs["reasoning_effort"] = reasoning_effort
             # Backend handles its own logging, so we don't duplicate it here
-            result = self.backend.get_text_query(text, module_name, reasoning_effort=reasoning_effort)
+            result = self.backend.get_text_query(text, module_name, **backend_kwargs)
             return result
         except Exception as e:
             # Only log errors that aren't already logged by the backend
