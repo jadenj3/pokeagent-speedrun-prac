@@ -836,14 +836,6 @@ class SimpleAgent:
             prompt = f"""You are playing as the Protagonist in Pokemon Emerald. 
             Based on the current game frame and state information, think through your next move and choose the best action.
 
-For your current objectives, here's some strong hints from a powerful planning agent:
-HINTS:
-From Birch’s Lab, walk straight north toward the town’s only exit; Mom will stop you to give the Running Shoes—mash A, then continue north onto Route 101.
-On Route 101, head straight north to Oldale Town; stick to the right edge to minimize grass encounters.
-In Oldale Town, go directly left (west) past the Pokémon Center and exit to Route 102. Do NOT go north to Route 103.
-On Route 102, hug the bottom edge to avoid most trainers—pass below the first youngster, stay below the pond, cross the small bridge, and keep heading west to enter Petalburg City.
-Once in Petalburg City, move a little left and up to the large building with the “GYM” sign near the center-left; enter it to trigger the Dad/Wally scene.
-
 Your current objectives are:
 {objectives_summary}
 
