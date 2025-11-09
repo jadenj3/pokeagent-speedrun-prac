@@ -867,7 +867,6 @@ In your response include the following sections:
 OBJECTIVES:
 [Review your current objectives. You have main storyline objectives (story_*) that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them. These are your highest priority, everything you do should be in service of accomplishing these goals]
 
-
 ACTION:
 [Your final action choice - PREFER SINGLE ACTIONS like 'RIGHT' or 'A'. Only use multiple actions like 'UP, UP, RIGHT' if you're very confident it will work.]
 
