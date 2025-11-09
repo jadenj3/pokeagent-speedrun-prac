@@ -853,9 +853,6 @@ And your current coordinates:
 
 {loop_warning}
 
-This is your analysis/summary of your previous turn:
-{self.analysis}
-
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
 
 Do not select a movement that is blocked. 
@@ -873,10 +870,6 @@ OBJECTIVES:
 
 ACTION:
 [Your final action choice - PREFER SINGLE ACTIONS like 'RIGHT' or 'A'. Only use multiple actions like 'UP, UP, RIGHT' if you're very confident it will work.]
-
-
-ANALYSIS:
-[This should contain your plan and a quick summary of your turn. This will be passed onto to your next turns so this is how you can communicate with yourself in the future!]
 
 Context: {context} """
             
