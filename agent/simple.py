@@ -853,7 +853,7 @@ Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
 
 Do not select a movement that is blocked. 
 
-**IMPORTANT** Avoid moving to a location you have already been to in your coordinate history, unless you have an extremely good reason to. It will otherwise likely trigger a loop.
+**IMPORTANT** Avoid moving to a location you have already been to in your coordinate history. THEY ARE DEAD ENDS! YOU WILL GO INTO A LOOP! Those coordinates are totally off limits!
 
 Navigation tips: Avoid going into dead ends. Trees will block you. Brown ledges will block you unless you are going down. Tall grass tiles are fine, you can walk through them. 
 Try to think about your current location and think deeply about the right path to get to your next objective.
