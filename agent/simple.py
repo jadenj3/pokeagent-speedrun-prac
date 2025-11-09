@@ -161,6 +161,8 @@ class SimpleAgent:
         
         # Initialize storyline objectives for Emerald progression
         self._initialize_storyline_objectives()
+
+        self.analysis = ""
     
     def set_reasoning_effort(self, effort: Optional[str]):
         """Adjust reasoning effort for subsequent model calls."""
@@ -849,6 +851,9 @@ This is your recent coordinate history:
 And your current coordinates:
 {current_player_coords}
 
+This is your analysis/summary of your previous turn:
+{self.analysis}
+
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
 
 Do not select a movement that is blocked. 
@@ -866,6 +871,10 @@ OBJECTIVES:
 
 ACTION:
 [Your final action choice - PREFER SINGLE ACTIONS like 'RIGHT' or 'A'. Only use multiple actions like 'UP, UP, RIGHT' if you're very confident it will work.]
+
+
+ANALYSIS:
+[This should contain your plan and a quick summary of your turn. This will be passed onto to your next turns so this is how you can communicate with yourself in the future!]
 
 Context: {context} """
             
@@ -898,8 +907,8 @@ Context: {context} """
                 return "WAIT"
             
             # Extract action(s) from structured response
-            actions, reasoning = self._parse_structured_response(response, game_state)
-            
+            actions, reasoning, analysis = self._parse_structured_response(response, game_state)
+            self.analysis = analysis or self.analysis
             # Check for failed movement by comparing previous coordinates
             if len(self.state.history) > 0:
                 prev_coords = self.state.history[-1].player_coords
@@ -1115,12 +1124,12 @@ Context: {context} """
             
             full_reasoning = " | ".join(reasoning_parts) if reasoning_parts else "No reasoning provided"
             
-            return actions, full_reasoning
+            return actions, full_reasoning, analysis
             
         except Exception as e:
             logger.warning(f"Error parsing structured response: {e}")
             # Fall back to basic action parsing
-            return self._parse_actions(response, game_state), "Error parsing reasoning"
+            return self._parse_actions(response, game_state), "Error parsing reasoning", ""
     
     def _process_objectives_from_response(self, objectives_text: str):
         """Process objective management commands from LLM response"""
