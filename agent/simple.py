@@ -827,7 +827,10 @@ class SimpleAgent:
             pathfinding_rules = ""
             if context != "title":
                 pathfinding_rules = ""
-            recent_coords = [entry.player_coords for entry in list(self.state.history)[-5:]]
+            recent_coords = [entry.player_coords for entry in list(self.state.history)[-8:]]
+            loop_warning = ""
+            if len(set(recent_coords[-6:])) <= 3 and len(recent_coords) >= 6:
+                loop_warning = "⚠️ You are revisiting the same coordinates repeatedly. Pick a direction you haven't tried yet (use the map and movement preview)."
 
             # Create enhanced prompt with objectives, history context and chain of thought request
             prompt = f"""You are playing as the Protagonist in Pokemon Emerald. 
@@ -850,6 +853,8 @@ This is your recent coordinate history:
 
 And your current coordinates:
 {current_player_coords}
+
+{loop_warning}
 
 This is your analysis/summary of your previous turn:
 {self.analysis}
@@ -897,7 +902,7 @@ Context: {context} """
             if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                 print("🔍 Making VLM call...")
                 try:
-                    response = self.vlm.get_text_query(prompt, "simple_mode", reasoning_effort=self.reasoning_effort)
+                    response = self.vlm.get_query(frame, prompt, "simple_mode", reasoning_effort=self.reasoning_effort)
                     print(f"🔍 VLM response received: {response[:100]}..." if len(response) > 100 else f"🔍 VLM response: {response}")
                 except Exception as e:
                     print(f"❌ VLM call failed: {e}")
