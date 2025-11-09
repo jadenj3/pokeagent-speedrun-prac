@@ -816,6 +816,7 @@ class SimpleAgent:
                     "This is also a movement preview showing you a summary of your immediately available movements:\n",
                     ""
                 )
+            current_player_coords = f"(X={player_coords[0]}, Y={player_coords[1]})"
             map_info = game_state.get('map', {}) or {}
             player_data = game_state.get('player', {}) or {}
             map_only_sections = _format_map_info(map_info, player_data, include_npcs=True, full_state_data=game_state)
@@ -824,6 +825,7 @@ class SimpleAgent:
             pathfinding_rules = ""
             if context != "title":
                 pathfinding_rules = ""
+            recent_coords = [entry.player_coords for entry in list(self.state.history)[-5:]]
 
             # Create enhanced prompt with objectives, history context and chain of thought request
             prompt = f"""You are playing as the Protagonist in Pokemon Emerald. 
@@ -841,9 +843,17 @@ Your current location is:
 Movement preview (check this to make sure you aren't selecting a blocked action):
 {map_preview}
 
+This is your recent coordinate history:
+{recent_coords}
+
+And your current coordinates:
+{current_player_coords}
+
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
 
 Do not select a movement that is blocked. 
+
+**IMPORTANT** Avoid moving to a location you have already been to in your coordinate history, unless you have an extremely good reason to. It will otherwise likely trigger a loop.
 
 In your response include the following sections:
 
