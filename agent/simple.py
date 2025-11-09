@@ -847,7 +847,7 @@ Your current location is:
 
 Movement preview (check this to make sure you aren't selecting a blocked action):
 {map_preview}
-
+IMPORTANT: The movement preview doesn't show NPCs, so look for visual confirmation if you think an NPC is blocking your path. Your perception is not perfect either, so you might need to look at your history to see if you are blocked by an NPC.
 This is your recent coordinate history:
 {recent_coords}
 
