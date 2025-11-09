@@ -111,6 +111,8 @@ def main():
                        help="DEPRECATED: Use --scaffold simple instead")
     parser.add_argument("--reasoning-effort", type=str, choices=["low", "medium", "high"],
                        help="Set OpenAI reasoning effort when using reasoning-capable models")
+    parser.add_argument("--temperature", type=float,
+                       help="Sampling temperature for OpenAI backend (e.g., 0.2 for deterministic, 1.0 for creative)")
     
     # Operation modes
     parser.add_argument("--headless", action="store_true", 

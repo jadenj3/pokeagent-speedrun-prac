@@ -37,7 +37,12 @@ class Agent:
             scaffold = "fourmodule"
         
         reasoning_effort = getattr(args, 'reasoning_effort', None) if args else None
-        vlm_kwargs = {"reasoning_effort": reasoning_effort} if reasoning_effort else {}
+        temperature = getattr(args, 'temperature', None) if args else None
+        vlm_kwargs = {}
+        if reasoning_effort:
+            vlm_kwargs["reasoning_effort"] = reasoning_effort
+        if temperature is not None:
+            vlm_kwargs["temperature"] = temperature
         
         # Initialize VLM
         self.vlm = VLM(backend=backend, model_name=model_name, **vlm_kwargs)

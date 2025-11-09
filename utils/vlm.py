@@ -76,6 +76,16 @@ class OpenAIBackend(VLMBackend):
         self.client = OpenAI(api_key=self.api_key)
         self.errors = (openai.RateLimitError,)
         self.reasoning_effort: Optional[str] = kwargs.get("reasoning_effort")
+        temperature = kwargs.get("temperature")
+        if temperature is None:
+            env_temp = os.getenv("OPENAI_TEMPERATURE")
+            if env_temp:
+                try:
+                    temperature = float(env_temp)
+                except ValueError:
+                    logger.warning(f"Invalid OPENAI_TEMPERATURE value '{env_temp}'. Ignoring.")
+                    temperature = None
+        self.temperature: Optional[float] = temperature
     
     @retry_with_exponential_backoff
     def _create_response(self, content_blocks, has_image: bool, reasoning_effort_override: Optional[str] = None):
@@ -92,6 +102,9 @@ class OpenAIBackend(VLMBackend):
         
         if applied_effort:
             request_payload["reasoning"] = {"effort": applied_effort}
+        
+        if self.temperature is not None:
+            request_payload["temperature"] = self.temperature
         
         return self.client.responses.create(**request_payload)
     
@@ -888,6 +901,7 @@ class VLM:
         # Initialize the appropriate backend
         backend_class = self.BACKENDS[self.backend_type]
         backend_kwargs = dict(kwargs)
+        temperature = backend_kwargs.pop("temperature", None)
         
         if self.backend_type == 'openai':
             reasoning_effort = backend_kwargs.pop("reasoning_effort", None)
@@ -895,6 +909,20 @@ class VLM:
                 reasoning_effort = os.getenv("OPENAI_REASONING_EFFORT")
             if reasoning_effort:
                 backend_kwargs["reasoning_effort"] = reasoning_effort
+            
+            if temperature is None:
+                env_temp = os.getenv("OPENAI_TEMPERATURE")
+                if env_temp:
+                    try:
+                        temperature = float(env_temp)
+                    except ValueError:
+                        logger.warning(f"Invalid OPENAI_TEMPERATURE value '{env_temp}'. Ignoring.")
+                        temperature = None
+            if temperature is not None:
+                backend_kwargs["temperature"] = temperature
+        else:
+            if temperature is not None:
+                logger.info(f"Temperature parameter currently only applies to the OpenAI backend (ignoring value {temperature}).")
         
         # Pass port parameter for legacy Ollama backend
         if self.backend_type == 'ollama':
