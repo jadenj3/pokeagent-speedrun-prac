@@ -858,12 +858,10 @@ And your current coordinates:
 
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
 
+Remember: You can traverse tall grass.
 Do not select a movement that is blocked. 
 
 **IMPORTANT** Often you want to avoid moving to a location you have already been to in your coordinate history. Visiting these coordinates are discouraged unless you have a very good reason.
-
-Navigation tips: Avoid going into dead ends. Trees will block you. Brown ledges will block you unless you are going down. Tall grass tiles are fine, you can walk through them. In fact, there are scenarios where you will have to walk through the tall gras. 
-Try to think about your current location and think deeply about the right path to get to your next objective.
 
 In your response include the following sections:
 
