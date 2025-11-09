@@ -839,9 +839,6 @@ class SimpleAgent:
 Your current objectives are:
 {objectives_summary}
 
-The current map is:
-{map_only}
-
 Your current location is:
 {player_location}
 
