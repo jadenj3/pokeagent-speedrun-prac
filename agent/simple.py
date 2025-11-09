@@ -855,7 +855,7 @@ Do not select a movement that is blocked.
 
 **IMPORTANT** Avoid moving to a location you have already been to in your coordinate history, unless you have an extremely good reason to. It will otherwise likely trigger a loop.
 
-Navigation tips: Avoid going into dead ends. Tree's will block you. Brown ledges will block you unless you are going down. Tall grass tiles are fine, you can walk through them. 
+Navigation tips: Avoid going into dead ends. Trees will block you. Brown ledges will block you unless you are going down. Tall grass tiles are fine, you can walk through them. 
 
 In your response include the following sections:
 
