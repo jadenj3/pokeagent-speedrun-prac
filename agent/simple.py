@@ -860,7 +860,7 @@ Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
 
 Do not select a movement that is blocked. 
 
-**IMPORTANT** Avoid moving to a location you have already been to in your coordinate history. THEY ARE DEAD ENDS! YOU WILL GO INTO A LOOP! Those coordinates are totally off limits!
+**IMPORTANT** Often you want to avoid moving to a location you have already been to in your coordinate history. Visiting these coordinates are discouraged unless you have a very good reason.
 
 Navigation tips: Avoid going into dead ends. Trees will block you. Brown ledges will block you unless you are going down. Tall grass tiles are fine, you can walk through them. In fact, there are scenarios where you will have to walk through the tall gras. 
 Try to think about your current location and think deeply about the right path to get to your next objective.
@@ -874,7 +874,7 @@ ACTION:
 [Your final action choice - PREFER SINGLE ACTIONS like 'RIGHT' or 'A'. Only use multiple actions like 'UP, UP, RIGHT' if you're very confident it will work.]
 
 ANALYSIS:
-[Summarize your current situation. This will be passed onto you as context during your next turn. It's especially important to summarize any dead ends you found and potential alternate paths.]
+[Summarize your current situation. This will be passed onto you as context during your next turn. It's especially important to summarize any dead ends you found and potential alternate paths. This is the only information that gets passed forward in time, so note anything important here. You can be as verbose as you like.]
 Context: {context} """
             
             # Print complete prompt to terminal for debugging
