@@ -847,7 +847,7 @@ Your current location is:
 
 Movement preview (check this to make sure you aren't selecting a blocked action):
 {map_preview}
-IMPORTANT: The movement preview doesn't show NPCs, so look for visual confirmation if you think an NPC is blocking your path. Your perception is not perfect either, so you might need to look at your history to see if you are blocked by an NPC.
+IMPORTANT: The movement preview doesn't show NPCs, so look for visual confirmation if you think an NPC is blocking your path. If you are blocked by an NPC you should move around them, they only block a single tile. If you need to complete a story segment to move an npc, it will show up in your objectives.
 This is your recent coordinate history:
 {recent_coords}
 Your recent actions are:
