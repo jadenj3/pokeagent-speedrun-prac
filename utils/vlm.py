@@ -964,8 +964,7 @@ class VLM:
                     "model": self.model_name,
                     "backend": self.backend.__class__.__name__,
                     "duration": duration,
-                    "has_image": True,
-                    "reasoning_effort": reasoning_effort
+                    "has_image": True
                 }
             )
             raise
@@ -988,8 +987,7 @@ class VLM:
                     "model": self.model_name,
                     "backend": self.backend.__class__.__name__,
                     "duration": duration,
-                    "has_image": False,
-                    "reasoning_effort": reasoning_effort
+                    "has_image": False
                 }
             )
             raise
