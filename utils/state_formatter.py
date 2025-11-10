@@ -796,10 +796,14 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
             # Track interesting tiles for debug logging
             debug_tiles = {'stairs': [], 'door': [], 'tv': [], 'clock': [], 'computer': [], 'ledge': []}
 
+            grass_keywords = ["TALL_GRASS", "LONG_GRASS", "SHORT_GRASS", "ASHGRASS"]
+            indoor_walkable_keywords = ["INDOOR", "DECORATION", "HOLDS"]
+
             for y_idx, row in enumerate(raw_tiles):
                 for x_idx, tile_data in enumerate(row):
                     if tile_data:
                         # Tile format: (metatile_id, behavior, collision, ...)
+                        tile_id = tile_data[0] if isinstance(tile_data, (list, tuple)) and len(tile_data) > 0 else None
                         collision_flag = None
                         if isinstance(tile_data, (list, tuple)):
                             if len(tile_data) > 2:
@@ -814,9 +818,22 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
                                 behavior = behavior_obj
                         else:
                             behavior = 0
+                        behavior_name = ""
+                        behavior_enum = None
+                        if hasattr(behavior_obj, 'name'):
+                            behavior_name = behavior_obj.name
+                            behavior_enum = behavior_obj
+                        elif isinstance(behavior_obj, int):
+                            try:
+                                behavior_enum = MetatileBehavior(behavior_obj)
+                                behavior_name = behavior_enum.name
+                            except ValueError:
+                                behavior_name = ""
 
                         # Map behavior to type
-                        if behavior in [96, 105]:  # NON_ANIMATED_DOOR, ANIMATED_DOOR (actually stairs)
+                        if tile_id == 1023:
+                            tile_type = "blocked"
+                        elif behavior in [96, 105]:  # NON_ANIMATED_DOOR, ANIMATED_DOOR (actually stairs)
                             tile_type = "stairs"
                         elif behavior in [97, 98, 99, 100, 101]:  # LADDER, arrow warps (actually doors)
                             tile_type = "door"
@@ -826,6 +843,12 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
                             tile_type = "computer"
                         elif behavior in [56, 57, 58, 59, 60, 61, 62, 63]:  # JUMP_* (ledges)
                             tile_type = "ledge"
+                        elif behavior_name and any(keyword in behavior_name for keyword in grass_keywords):
+                            tile_type = "tall_grass"
+                        elif behavior_name and "WATER" in behavior_name:
+                            tile_type = "water"
+                        elif behavior_name and any(keyword in behavior_name for keyword in indoor_walkable_keywords):
+                            tile_type = "walkable"
                         elif behavior == 0:
                             tile_type = "walkable"
                         else:
@@ -847,7 +870,7 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
                             "x": game_x,
                             "y": game_y,
                             "type": tile_type,
-                            "walkable": tile_type in ["walkable", "door", "stairs", "tv", "computer"]
+                            "walkable": tile_type in ["walkable", "door", "stairs", "tv", "computer", "tall_grass"]
                         })
 
             # Add hardcoded special objects for BRENDANS HOUSE 2F
