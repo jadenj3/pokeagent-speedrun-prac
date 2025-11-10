@@ -916,6 +916,38 @@ class SimpleAgent:
             if len(set(recent_coords[-6:])) <= 3 and len(recent_coords) >= 6:
                 loop_warning = "⚠️ You are revisiting the same coordinates repeatedly. Pick a direction you haven't tried yet (use the map and movement preview)."
 
+
+            planning_prompt = f"""
+You are the planning module for a pokemon emerald agent speedrun scaffolding. 
+
+Your goal is to use your knowledge of pokemon emerald to add intermediary objectives with navigation tips that help the action agent accomplish its goals and finish the game. Make sure to only include objectives that directly help you accomplish the next goals!
+
+You will be called after completing major story milestones to add objectives that will assist the agent to get to the next one, you have the most crucial role in the entire scaffolding!
+
+Think about common failure modes for pokemon agents. Sometimes they need explicitly directional hints to avoid loops or missing the right path!
+
+🎯 ACTIVE STORY OBJECTIVES:
+  1. [location] Return through Route 102 toward Petalburg City (Target: Route 102) [ID: story_route_102]
+  2. [location] Navigate to Petalburg City and visit Dad's gym (Target: Petalburg City) [ID: story_petalburg_city]
+  3. [dialogue] Meet Dad at Petalburg City Gym (Target: Dad Meeting) [ID: story_dad_meeting]
+  4. [dialogue] Receive explanation about Gym challenges (Target: Gym Tutorial) [ID: story_gym_explanation]
+  5. [location] Travel through southern section of Route 104 (Target: Route 104 South) [ID: story_route_104_south]
+✅ RECENTLY COMPLETED STORY OBJECTIVES:
+  ✓ [location] Leave lab and continue journey north to Oldale Town
+  ✓ [location] Travel to Route 103 to meet rival
+  ✓ [item] Return to Birch's lab and receive the Pokédex
+
+
+You should format your response as follows.
+
+OBJECTIVES:
+[Review your current objectives. You have main storyline objectives (story_*) that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them. Add sub-objectives: ADD_OBJECTIVE: type:description:target_value (e.g., "ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)" or "ADD_OBJECTIVE: item:Buy Pokeballs:5"). The action model will be able to manually complete these objectives]
+
+"""
+
+
+
+
             # Create enhanced prompt with objectives, history context and chain of thought request
             prompt = f"""You are playing as the Protagonist in Pokemon Emerald. 
             Based on the current game frame and state information, think through your next move and choose the best action.
