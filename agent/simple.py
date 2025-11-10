@@ -999,7 +999,7 @@ Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
 Remember: You can traverse tall grass.
 Do not select a movement that is blocked. 
 
-**IMPORTANT** Often you want to avoid moving to a location you have already been to in your coordinate history. Selecting these coordinates for your next move is discouraged unless you have a very good reason.
+**IMPORTANT** To enter doors/stairs/warps CHECK THE MOVEMENT PREVIEW AND USE SINGLE ACTIONS. navigate_to is great for long distances, but it can struggle with entering locations if you are not perfectly aligned with the door or you are stuck on an NPC. The movement preview will have better information for you to use.
 
 In your response include the following sections:
 
