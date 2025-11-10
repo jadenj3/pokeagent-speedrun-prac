@@ -938,9 +938,9 @@ You also have access to the following command in this section to sub-objectives:
 """
 
             # Make VLM call for planning module - double-check frame validation before VLM
-            if self.state.step_counter % 20 == 0:
+            if self.state.step_counter:
                 if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
-                    print("🔍 Making VLM call...")
+                    print("🔍 Making VLM objectives call...")
                     try:
                         response = self.vlm.get_query(frame, planning_prompt, "simple_mode")
                         print(f"🔍 VLM response received: {response[:100]}..." if len(
