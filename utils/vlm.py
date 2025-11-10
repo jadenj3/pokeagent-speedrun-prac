@@ -754,7 +754,16 @@ class GeminiBackend(VLMBackend):
     @retry_with_exponential_backoff
     def _call_generate_content(self, content_parts):
         """Calls the generate_content method with exponential backoff."""
-        response = self.model.generate_content(content_parts)
+        code_execution_tool = types.Tool(
+            code_execution=types.ToolCodeExecution()
+        )
+
+        # 2. Create the configuration object
+        config = types.GenerateContentConfig(
+            tools=[code_execution_tool]
+        )
+
+        response = self.model.generate_content(contents = content_parts, config=config)
         response.resolve()
         return response
     
