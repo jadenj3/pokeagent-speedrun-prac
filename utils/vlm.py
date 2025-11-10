@@ -718,14 +718,17 @@ class VertexBackend(VLMBackend):
 
 
 class GeminiBackend(VLMBackend):
-    """Google Gemini API backend"""
+    """Google Gemini API backend (using modern google-genai SDK)"""
 
     def __init__(self, model_name: str, **kwargs):
+        # --- Imports for the NEW SDK ---
         try:
-            import google.generativeai as genai
-            from google.genai import types  # Import types
+            # The new SDK namespace is 'google.genai'
+            from google import genai
+            from google.genai import types
+            from google.genai.types import FinishReason
         except ImportError:
-            raise ImportError("Google Generative AI package not found. Install with: pip install google-generativeai")
+            raise ImportError("Google GenAI package not found. Install with: pip install google-genai")
 
         self.model_name = model_name
         self.api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
@@ -734,80 +737,73 @@ class GeminiBackend(VLMBackend):
             raise ValueError(
                 "Error: Gemini API key is missing! Set GEMINI_API_KEY or GOOGLE_API_KEY environment variable.")
 
+        # Configure the client
         genai.configure(api_key=self.api_key)
 
+        # Store imports on self to make them accessible to other methods
         self.genai = genai
+        self.types = types
+        self.FinishReason = FinishReason
 
-        # 1. Define the tool correctly
-        self.code_execution_tool = types.Tool(
-            code_execution=types.ToolCodeExecution()  # Use ToolCodeExecution
+        # 1. Define the tool correctly using the stored 'types'
+        self.code_execution_tool = self.types.Tool(
+            code_execution=self.types.ToolCodeExecution()
         )
 
-        # 2. You don't need tool_config for defaults
-
+        # 2. Initialize the model with the tool
         self.model = genai.GenerativeModel(
             model_name,
             tools=[self.code_execution_tool],
-            # No tool_config=... needed here!
         )
-        
-        logger.info(f"Gemini backend initialized with model: {model_name}")
-    
+
+        logger.info(f"Gemini (google-genai) backend initialized with model: {model_name}")
+
     def _prepare_image(self, img: Union[Image.Image, np.ndarray]) -> Image.Image:
         """Prepare image for Gemini API"""
-        # Handle both PIL Images and numpy arrays
         if hasattr(img, 'convert'):  # It's a PIL Image
             return img
         elif hasattr(img, 'shape'):  # It's a numpy array
             return Image.fromarray(img)
         else:
             raise ValueError(f"Unsupported image type: {type(img)}")
-    
+
     @retry_with_exponential_backoff
     def _call_generate_content(self, content_parts):
         """Calls the generate_content method with exponential backoff."""
+        # Tools are already configured in self.model from __init__
         response = self.model.generate_content(
-            contents=content_parts,
-            tools=[self.code_execution_tool],
-            tool_config=self.tool_config,
+            contents=content_parts
         )
-        response.resolve()
         return response
-    
+
     def get_query(self, img: Union[Image.Image, np.ndarray], text: str, module_name: str = "Unknown") -> str:
         """Process an image and text prompt using Gemini API"""
         start_time = time.time()
         try:
             image = self._prepare_image(img)
-            
-            # Prepare content for Gemini
             content_parts = [text, image]
-            
-            # Log the prompt
+
             prompt_preview = text[:2000] + "..." if len(text) > 2000 else text
             logger.info(f"[{module_name}] GEMINI VLM IMAGE QUERY:")
             logger.info(f"[{module_name}] PROMPT: {prompt_preview}")
-            
-            # Generate response
+
             response = self._call_generate_content(content_parts)
-            
-            # Check for safety filter or content policy issues
+
+            # Use the stored FinishReason enum for a robust safety check
             if hasattr(response, 'candidates') and response.candidates:
                 candidate = response.candidates[0]
-                if hasattr(candidate, 'finish_reason') and candidate.finish_reason == 12:
-                    logger.warning(f"[{module_name}] Gemini safety filter triggered (finish_reason=12). Trying text-only fallback.")
-                    # Fallback to text-only query
+                if hasattr(candidate, 'finish_reason') and candidate.finish_reason == self.FinishReason.SAFETY:
+                    logger.warning(
+                        f"[{module_name}] Gemini safety filter triggered (FinishReason.SAFETY). Trying text-only fallback.")
                     return self.get_text_query(text, module_name)
-            
+
             result = response.text
             duration = time.time() - start_time
-            
-            # Extract token usage if available
+
             token_usage = {}
             if hasattr(response, 'usage_metadata'):
                 usage = response.usage_metadata
-            
-            # Log the interaction
+
             log_llm_interaction(
                 interaction_type=f"gemini_{module_name}",
                 prompt=text,
@@ -816,73 +812,66 @@ class GeminiBackend(VLMBackend):
                 metadata={"model": self.model_name, "backend": "gemini", "has_image": True, "token_usage": token_usage},
                 model_info={"model": self.model_name, "backend": "gemini"}
             )
-            
-            # Log the response
+
             result_preview = result[:1000] + "..." if len(result) > 1000 else result
             logger.info(f"[{module_name}] RESPONSE: {result_preview}")
             logger.info(f"[{module_name}] ---")
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"Error in Gemini image query: {e}")
-            # Try text-only fallback for any Gemini error
             try:
                 logger.info(f"[{module_name}] Attempting text-only fallback due to error: {e}")
                 return self.get_text_query(text, module_name)
             except Exception as fallback_error:
                 logger.error(f"[{module_name}] Text-only fallback also failed: {fallback_error}")
                 raise e
-    
+
     def get_text_query(self, text: str, module_name: str = "Unknown",
                        reasoning_effort: Optional[str] = None) -> str:
         """Process a text-only prompt using Gemini API"""
         start_time = time.time()
         try:
-            # Log the prompt
             prompt_preview = text[:2000] + "..." if len(text) > 2000 else text
             logger.info(f"[{module_name}] GEMINI VLM TEXT QUERY:")
             logger.info(f"[{module_name}] PROMPT: {prompt_preview}")
-            
-            # Generate response
+
             response = self._call_generate_content([text])
-            
-            # Check for safety filter or content policy issues
+
+            # Use the stored FinishReason enum
             if hasattr(response, 'candidates') and response.candidates:
                 candidate = response.candidates[0]
-                if hasattr(candidate, 'finish_reason') and candidate.finish_reason == 12:
-                    logger.warning(f"[{module_name}] Gemini safety filter triggered (finish_reason=12). Returning default response.")
+                if hasattr(candidate, 'finish_reason') and candidate.finish_reason == self.FinishReason.SAFETY:
+                    logger.warning(
+                        f"[{module_name}] Gemini safety filter triggered (FinishReason.SAFETY). Returning default response.")
                     return "I cannot analyze this content due to safety restrictions. I'll proceed with a basic action: press 'A' to continue."
-            
+
             result = response.text
             duration = time.time() - start_time
-            
-            # Extract token usage if available
+
             token_usage = {}
-            
-            # Log the interaction
+
             log_llm_interaction(
                 interaction_type=f"gemini_{module_name}",
                 prompt=text,
                 response=result,
                 duration=duration,
-                metadata={"model": self.model_name, "backend": "gemini", "has_image": False, "token_usage": token_usage},
+                metadata={"model": self.model_name, "backend": "gemini", "has_image": False,
+                          "token_usage": token_usage},
                 model_info={"model": self.model_name, "backend": "gemini"}
             )
-            
-            # Log the response
+
             result_preview = result[:1000] + "..." if len(result) > 1000 else result
             logger.info(f"[{module_name}] RESPONSE: {result_preview}")
             logger.info(f"[{module_name}] ---")
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"Error in Gemini text query: {e}")
-            # Return a safe default response
             logger.warning(f"[{module_name}] Returning default response due to error: {e}")
             return "I encountered an error processing the request. I'll proceed with a basic action: press 'A' to continue."
-
 class VLM:
     """Main VLM class that supports multiple backends"""
     
