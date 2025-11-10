@@ -780,7 +780,7 @@ class GeminiBackend(VLMBackend):
         response = self.client.models.generate_content(
             model=self.model_name,
             contents=content_parts,
-            config=self.generation_config
+            #config=self.generation_config
         )
         return response
 
