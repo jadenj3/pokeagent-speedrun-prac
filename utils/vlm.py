@@ -719,39 +719,36 @@ class VertexBackend(VLMBackend):
 
 class GeminiBackend(VLMBackend):
     """Google Gemini API backend"""
-    
+
     def __init__(self, model_name: str, **kwargs):
         try:
             import google.generativeai as genai
-            from google.generativeai import protos as genai_protos
+            from google.genai import types  # Import types
         except ImportError:
             raise ImportError("Google Generative AI package not found. Install with: pip install google-generativeai")
-        
+
         self.model_name = model_name
         self.api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-        
+
         if not self.api_key:
-            raise ValueError("Error: Gemini API key is missing! Set GEMINI_API_KEY or GOOGLE_API_KEY environment variable.")
-        
-        # Configure the API
+            raise ValueError(
+                "Error: Gemini API key is missing! Set GEMINI_API_KEY or GOOGLE_API_KEY environment variable.")
+
         genai.configure(api_key=self.api_key)
-        
-        # Initialize the model with code execution tool support
+
         self.genai = genai
-        self.genai_protos = genai_protos
-        self.code_execution_tool = self.genai_protos.Tool(
-            code_execution=self.genai_protos.Tool.CodeExecution()
+
+        # 1. Define the tool correctly
+        self.code_execution_tool = types.Tool(
+            code_execution=types.ToolCodeExecution()  # Use ToolCodeExecution
         )
-        self.tool_config = self.genai_protos.ToolConfig(
-            code_execution=self.genai_protos.ToolConfig.CodeExecution(
-                max_output_characters=4096,
-                max_call_count=1,
-                timeout_milliseconds=20000,
-            )
-        )
+
+        # 2. You don't need tool_config for defaults
+
         self.model = genai.GenerativeModel(
             model_name,
             tools=[self.code_execution_tool],
+            # No tool_config=... needed here!
         )
         
         logger.info(f"Gemini backend initialized with model: {model_name}")
