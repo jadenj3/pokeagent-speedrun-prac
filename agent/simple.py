@@ -938,7 +938,7 @@ You also have access to the following command in this section to sub-objectives:
 """
 
             # Make VLM call for planning module - double-check frame validation before VLM
-            if self.state.step_counter:
+            if self.state.step_counter > 0:
                 if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                     print("🔍 Making VLM objectives call...")
                     try:
