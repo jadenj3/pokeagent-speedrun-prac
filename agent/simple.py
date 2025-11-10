@@ -836,7 +836,7 @@ class SimpleAgent:
             prompt = f"""You are playing as the Protagonist in Pokemon Emerald. 
             Based on the current game frame and state information, think through your next move and choose the best action.
 
-Hint: Hint: choose a coordinate you want to navigate to, then use code execution to run A* to reach your destination. This is a super powerful tool!!!! Use it as much as possible.
+Hint: Use the json map, map preview, and visual frame to determine which coordinate you want to go to, then use the navigate_to(x,y) action to find the optimal path to your destination.
 Remember that ledges are blocked.
 
 This is your analysis from your previous turn, it will likely contain helpful context about your current situation. Use this when planning your next move:
@@ -869,7 +869,7 @@ Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
 Remember: You can traverse tall grass.
 Do not select a movement that is blocked. 
 
-**IMPORTANT** Often you want to avoid moving to a location you have already been to in your coordinate history. Visiting these coordinates are discouraged unless you have a very good reason.
+**IMPORTANT** Often you want to avoid moving to a location you have already been to in your coordinate history. Selecting these coordinates for your next move is discouraged unless you have a very good reason.
 
 In your response include the following sections:
 
@@ -877,7 +877,9 @@ OBJECTIVES:
 [Review your current objectives. You have main storyline objectives (story_*) that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them. These are your highest priority, everything you do should be in service of accomplishing these goals]
 
 ACTION:
-[If you are in dialogue, prefer single actions like 'A'. Otherwise prefer as many actions as you can to reach your destination when you see a clear path. This results in a direct speedup to the speedrun!]
+[If you are in dialogue, prefer single actions like 'A'. If you are stuck in a loop also prefer single actions, it will give you space to think about each move.
+You also have access to the navigate_to(x,y) tool. This will automatically run A* on your selected coordinate to find the optimal way to reach your destination. This is a powerful tool that should be used
+liberally! Using it will also override any other actions you input, so don't include it with other actions.]
 
 ANALYSIS:
 [Summarize your current situation. This will be passed onto you as context during your next turn. It's especially important to summarize any dead ends you found and potential alternate paths. This is the only information that gets passed forward in time, so note anything important here. You can be as verbose as you like.]
