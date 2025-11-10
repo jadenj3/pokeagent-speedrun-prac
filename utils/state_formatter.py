@@ -791,62 +791,11 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
             # Track interesting tiles for debug logging
             debug_tiles = {'stairs': [], 'door': [], 'tv': [], 'clock': [], 'computer': [], 'ledge': []}
 
-            grass_behaviors = {"TALL_GRASS", "LONG_GRASS", "SHORT_GRASS", "ASHGRASS"}
-            natural_blockers = {"TREE", "BUSH", "ROCK", "MOUNTAIN", "LEDGE", "IMPASSABLE", "SEALED"}
-
             for y_idx, row in enumerate(raw_tiles):
                 for x_idx, tile_data in enumerate(row):
                     if tile_data:
-                        # Tile format: (metatile_id, behavior, collision, ...)
-                        collision_flag = None
-                        if isinstance(tile_data, (list, tuple)):
-                            if len(tile_data) > 2:
-                                collision_flag = tile_data[2]
-                        # Extract behavior value from index 1
-                        behavior_obj = None
-                        if isinstance(tile_data, (list, tuple)) and len(tile_data) > 1:
-                            behavior_obj = tile_data[1]
-                            # Get numeric value from behavior enum or int
-                            if hasattr(behavior_obj, 'value'):
-                                behavior = behavior_obj.value
-                            else:
-                                behavior = behavior_obj
-                        else:
-                            behavior_obj = None
-                            behavior = 0
-                        behavior_name = ""
-                        if behavior_obj is not None:
-                            if hasattr(behavior_obj, 'name'):
-                                behavior_name = behavior_obj.name
-                            elif isinstance(behavior_obj, int):
-                                try:
-                                    behavior_name = MetatileBehavior(behavior_obj).name
-                                except ValueError:
-                                    behavior_name = ""
-
-                        # Map behavior to type
-                        if behavior in [96, 105]:  # NON_ANIMATED_DOOR, ANIMATED_DOOR (actually stairs)
-                            tile_type = "stairs"
-                        elif behavior in [97, 98, 99, 100, 101]:  # LADDER, arrow warps (actually doors)
-                            tile_type = "door"
-                        elif behavior == 134:  # TELEVISION
-                            tile_type = "tv"
-                        elif behavior in [131, 197]:  # PC, PLAYER_ROOM_PC_ON
-                            tile_type = "computer"
-                        elif behavior in [56, 57, 58, 59, 60, 61, 62, 63]:  # JUMP_* (ledges)
-                            tile_type = "ledge"
-                        elif behavior_name and any(name in behavior_name for name in grass_behaviors):
-                            tile_type = "tall_grass"
-                        elif behavior_name and any(name in behavior_name for name in natural_blockers):
-                            tile_type = "blocked"
-                        elif behavior == 0:
-                            tile_type = "walkable"
-                        else:
-                            tile_type = "blocked"
-
-                        # Collision flag overrides walkability for generic tiles
-                        if tile_type == "walkable" and collision_flag not in (0, None, False):
-                            tile_type = "blocked"
+                        symbol = format_tile_to_symbol(tile_data, x=x_idx, y=y_idx, location_name=location_name)
+                        tile_type, tile_walkable = _symbol_to_tile_info(symbol)
 
                         # Convert array index to game coordinates
                         game_x = player_x + (x_idx - radius)
@@ -860,7 +809,7 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
                             "x": game_x,
                             "y": game_y,
                             "type": tile_type,
-                            "walkable": tile_type in ["walkable", "door", "stairs", "tv", "computer", "tall_grass"]
+                            "walkable": tile_walkable
                         })
 
             # Add hardcoded special objects for BRENDANS HOUSE 2F
@@ -997,6 +946,38 @@ def _add_local_map_fallback(context_parts, map_info, include_npcs, location_name
         grid = format_map_grid(raw_tiles, facing, npcs, player_coords, location_name=location_name)
         legend = generate_dynamic_legend(grid)
         context_parts.append(f"\n{legend}")
+
+
+def _symbol_to_tile_info(symbol):
+    """Map tile symbols from format_tile_to_symbol to JSON tile types and walkability."""
+    if not symbol:
+        return "blocked", False
+
+    symbol = str(symbol)
+    ledge_symbols = {"→", "←", "↑", "↓", "↗", "↖", "↘", "↙", "L", "J"}
+    tall_grass_symbols = {"~", "^"}
+
+    if symbol == "#":
+        return "blocked", False
+    if symbol in tall_grass_symbols:
+        return "tall_grass", True
+    if symbol == ".":
+        return "walkable", True
+    if symbol == "S":
+        return "stairs", True
+    if symbol == "D":
+        return "door", True
+    if symbol.upper() == "PC":
+        return "computer", True
+    if symbol == "T":
+        return "tv", True
+    if symbol == "W":
+        return "water", False
+    if symbol in ledge_symbols:
+        return "ledge", False
+
+    # Default: treat unknown/interactables as blocked to avoid collisions
+    return "blocked", False
 
 
 def _format_world_map_display(stitched_data, full_state_data=None):
