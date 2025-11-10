@@ -740,14 +740,10 @@ class GeminiBackend(VLMBackend):
         self.genai = genai
         self.genai_types = genai_types
         self.code_execution_tool = self.genai_types.Tool(
-            code_execution=self.genai_types.ToolCodeExecution()
+            code_execution=self.genai_types.Tool.CodeExecution()
         )
         self.tool_config = self.genai_types.ToolConfig(
-            code_execution=self.genai_types.CodeExecutionConfig(
-                max_output_characters=4096,
-                max_call_count=1,
-                timeout_milliseconds=20000,
-            )
+            code_execution=self.genai_types.ToolConfig.CodeExecution()
         )
         self.model = genai.GenerativeModel(
             model_name,
