@@ -723,6 +723,7 @@ class GeminiBackend(VLMBackend):
     def __init__(self, model_name: str, **kwargs):
         try:
             import google.generativeai as genai
+            from google.generativeai import types as genai_types
         except ImportError:
             raise ImportError("Google Generative AI package not found. Install with: pip install google-generativeai")
         
@@ -735,9 +736,23 @@ class GeminiBackend(VLMBackend):
         # Configure the API
         genai.configure(api_key=self.api_key)
         
-        # Initialize the model
-        self.model = genai.GenerativeModel(model_name)
+        # Initialize the model with code execution tool support
         self.genai = genai
+        self.genai_types = genai_types
+        self.code_execution_tool = self.genai_types.Tool(
+            code_execution=self.genai_types.ToolCodeExecution()
+        )
+        self.tool_config = self.genai_types.ToolConfig(
+            code_execution=self.genai_types.CodeExecutionConfig(
+                max_output_characters=4096,
+                max_call_count=1,
+                timeout_milliseconds=20000,
+            )
+        )
+        self.model = genai.GenerativeModel(
+            model_name,
+            tools=[self.code_execution_tool],
+        )
         
         logger.info(f"Gemini backend initialized with model: {model_name}")
     
@@ -754,16 +769,10 @@ class GeminiBackend(VLMBackend):
     @retry_with_exponential_backoff
     def _call_generate_content(self, content_parts):
         """Calls the generate_content method with exponential backoff."""
-        code_execution_tool = types.Tool(
-            code_execution=types.ToolCodeExecution()
+        response = self.model.generate_content(
+            contents=content_parts,
+            tool_config=self.tool_config,
         )
-
-        # 2. Create the configuration object
-        config = types.GenerateContentConfig(
-            tools=[code_execution_tool]
-        )
-
-        response = self.model.generate_content(contents = content_parts, config=config)
         response.resolve()
         return response
     
