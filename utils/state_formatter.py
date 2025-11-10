@@ -834,7 +834,7 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
                             "x": game_x,
                             "y": game_y,
                             "type": tile_type,
-                            "walkable": tile_type in ["walkable", "door", "stairs", "tv", "computer", "ledge"]
+                            "walkable": tile_type in ["walkable", "door", "stairs", "tv", "computer"]
                         })
 
             # Add hardcoded special objects for BRENDANS HOUSE 2F
