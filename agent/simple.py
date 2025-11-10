@@ -822,7 +822,7 @@ class SimpleAgent:
             map_info = game_state.get('map', {}) or {}
             player_data = game_state.get('player', {}) or {}
             map_only_sections = _format_map_info(map_info, player_data, include_npcs=True, full_state_data=game_state, use_json_map=True)
-            #map_only = "\n".join(map_only_sections) if map_only_sections else ""
+            map_only = "\n".join(map_only_sections) if map_only_sections else ""
             player_location = game_state.get("player", {}).get("location", "Unknown Location")
             pathfinding_rules = ""
             if context != "title":
@@ -846,7 +846,7 @@ Your current location is:
 {player_location}
 
 Current map json is:
-{map_only_sections}
+{map_only}
 
 Movement preview (check this to make sure you aren't selecting a blocked action):
 {map_preview}
