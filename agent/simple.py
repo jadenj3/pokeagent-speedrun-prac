@@ -926,16 +926,8 @@ You will be called after completing major story milestones to add objectives tha
 
 Think about common failure modes for pokemon agents. Sometimes they need explicitly directional hints to avoid loops or missing the right path!
 
-🎯 ACTIVE STORY OBJECTIVES:
-  1. [location] Return through Route 102 toward Petalburg City (Target: Route 102) [ID: story_route_102]
-  2. [location] Navigate to Petalburg City and visit Dad's gym (Target: Petalburg City) [ID: story_petalburg_city]
-  3. [dialogue] Meet Dad at Petalburg City Gym (Target: Dad Meeting) [ID: story_dad_meeting]
-  4. [dialogue] Receive explanation about Gym challenges (Target: Gym Tutorial) [ID: story_gym_explanation]
-  5. [location] Travel through southern section of Route 104 (Target: Route 104 South) [ID: story_route_104_south]
-✅ RECENTLY COMPLETED STORY OBJECTIVES:
-  ✓ [location] Leave lab and continue journey north to Oldale Town
-  ✓ [location] Travel to Route 103 to meet rival
-  ✓ [item] Return to Birch's lab and receive the Pokédex
+Current objectives:
+{objectives_summary}
 
 
 You should format your response as follows.
@@ -1153,7 +1145,7 @@ Context: {context} """
         storyline_active = [obj for obj in active_objectives if obj.storyline]
         if storyline_active:
             lines.append("🎯 ACTIVE STORY OBJECTIVES:")
-            for idx, obj in enumerate(storyline_active[:5], 1):
+            for idx, obj in enumerate(storyline_active[:2], 1):
                 target_str = f" (Target: {obj.target_value})" if obj.target_value else ""
                 lines.append(f"  {idx}. [{obj.objective_type}] {obj.description}{target_str} [ID: {obj.id}]")
         else:
