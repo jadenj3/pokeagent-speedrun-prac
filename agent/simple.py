@@ -915,7 +915,7 @@ Context: {context} """
                 return "WAIT"
             
             # Extract action(s) from structured response
-            actions, reasoning, analysis = self._parse_structured_response(response, game_state)
+            actions, reasoning, analysis = self._parse_structured_response(response, game_state, json_data = json_data)
             self.analysis = analysis or self.analysis
             # Check for failed movement by comparing previous coordinates
             if len(self.state.history) > 0:
@@ -977,7 +977,7 @@ Context: {context} """
             logger.error(f"Error in simple agent processing: {e}")
             return ["A"]  # Default safe action as list
 
-    def a_star(data, dest_x, dest_y):
+    def a_star(self, data, dest_x, dest_y):
         # Build tile map for quick lookup
         tile_map = {(tile['x'], tile['y']): tile for tile in data['tiles']}
 
@@ -1027,10 +1027,19 @@ Context: {context} """
                     counter += 1
                     heapq.heappush(pq, (f, counter, nx, ny, path + [direction]))
 
-        return None  # No path found
+        return ['A']  # No path found
     
-    def _parse_actions(self, response: str, game_state: Dict[str, Any] = None, json_file = None) -> List[str]:
+    def _parse_actions(self, response: str, game_state: Dict[str, Any] = None, json_data = None) -> List[str]:
         """Parse action response from LLM into list of valid actions"""
+
+        nav_match = re.search(r"navigate_to\s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)",
+                              response, flags=re.IGNORECASE)
+        if nav_match and json_data:
+            dest_x, dest_y = map(int, nav_match.groups())
+            path = self.a_star(json_data, dest_x, dest_y)
+            if path:
+                return path
+
         response_upper = response.upper().strip()
         valid_actions = ['A', 'B', 'START', 'SELECT', 'UP', 'DOWN', 'LEFT', 'RIGHT', 'WAIT']
         
@@ -1040,20 +1049,7 @@ Context: {context} """
         response_clean = response_upper.replace(',', ' ').replace('.', ' ')
         tokens = response_clean.split()
 
-
-        def parse_nav(token: str) -> tuple[int, int] | None:
-            match = re.fullmatch(r"\s*navigate_to\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)\s*", token)
-            if match:
-                return int(match.group(1)), int(match.group(2))
-            return None
-
         for token in tokens:
-            if token.startswith("navigate_to"):
-                dest_x, dest_y = parse_nav(token) # (x,y) tuple from string, the destination
-                path = a_star(json_file, dest_x, dest_y)
-                return path
-
-
             if token in valid_actions:
                 actions_found.append(token)
                 if len(actions_found) >= 10:  # Max 10 actions
@@ -1122,7 +1118,7 @@ Context: {context} """
 
         return "\n".join(lines)
     
-    def _parse_structured_response(self, response: str, game_state: Dict[str, Any] = None) -> Tuple[List[str], str]:
+    def _parse_structured_response(self, response: str, game_state: Dict[str, Any] = None, json_data = None) -> Tuple[List[str], str]:
         """Parse structured chain-of-thought response and extract actions and reasoning"""
         try:
             # Extract sections from structured response
@@ -1157,7 +1153,7 @@ Context: {context} """
                     # Extract actions from this line
                     action_text = line[7:].strip()  # Remove "ACTION:" prefix
                     if action_text:  # Only parse if there's content
-                        actions = self._parse_actions(action_text, game_state)
+                        actions = self._parse_actions(action_text, game_state, json_data = json_data)
                 elif line and current_section:
                     # Continue content of current section
                     if current_section == 'analysis':
@@ -1171,7 +1167,7 @@ Context: {context} """
                     elif current_section == 'action':
                         # Additional action parsing from action section content
                         if line.strip():  # Only process non-empty lines
-                            additional_actions = self._parse_actions(line, game_state)
+                            additional_actions = self._parse_actions(line, game_state, json_data = json_data)
                             actions.extend(additional_actions)
                             if len(actions) >= 10:  # Max 10 actions
                                 actions = actions[:10]
@@ -1183,7 +1179,7 @@ Context: {context} """
             
             # If no actions found in structured format, fall back to parsing entire response
             if not actions:
-                actions = self._parse_actions(response, game_state)
+                actions = self._parse_actions(response, game_state, json_data = json_data)
             
             # Create concise reasoning summary
             reasoning_parts = []
@@ -1203,7 +1199,7 @@ Context: {context} """
         except Exception as e:
             logger.warning(f"Error parsing structured response: {e}")
             # Fall back to basic action parsing
-            return self._parse_actions(response, game_state), "Error parsing reasoning", ""
+            return self._parse_actions(response, game_state, json_data), "Error parsing reasoning", ""
     
     def _process_objectives_from_response(self, objectives_text: str):
         """Process objective management commands from LLM response"""
