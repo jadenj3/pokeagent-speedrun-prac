@@ -875,7 +875,10 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
                     print(f"[MAP DEBUG] {tile_type.upper()}: {positions}")
 
             context_parts.append(f"\n--- MAP DATA (JSON from memory) ---")
-            context_parts.append(json_lib.dumps(json_output, indent=2))
+            json_str = json_lib.dumps(json_output, indent=2)
+            context_parts.append("```json")
+            context_parts.extend(json_str.splitlines())
+            context_parts.append("```")
             json_generated = True
 
         # Last resort: just show location info
