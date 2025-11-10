@@ -929,7 +929,6 @@ Think about common failure modes for pokemon agents. Sometimes they need explici
 Current objectives:
 {objectives_summary}
 
-
 You should format your response as follows.
 
 OBJECTIVES:
@@ -937,8 +936,23 @@ OBJECTIVES:
 
 """
 
-
-
+            # Make VLM call for planning module - double-check frame validation before VLM
+            if self.step_counter % 20 == 0:
+                if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
+                    print("🔍 Making VLM call...")
+                    try:
+                        response = self.vlm.get_query(frame, prompt, "simple_mode")
+                        print(f"🔍 VLM response received: {response[:100]}..." if len(
+                            response) > 100 else f"🔍 VLM response: {response}")
+                    except Exception as e:
+                        print(f"❌ VLM call failed: {e}")
+                        return "WAIT"
+                else:
+                    logger.error("🚫 CRITICAL: About to call VLM but frame validation failed - this should never happen!")
+                    return "WAIT"
+                # will automatically update objectives
+                actions, reasoning, analysis = self._parse_structured_response(response, game_state,
+                                                                               json_data=json_data)
 
             # Create enhanced prompt with objectives, history context and chain of thought request
             prompt = f"""You are playing as the Protagonist in Pokemon Emerald. 
