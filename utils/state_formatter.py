@@ -578,7 +578,7 @@ def _format_state_detailed(state_data, include_debug_info=False, include_npcs=Tr
         context_parts.extend(party_context)
 
         # Map/Location information with traversability (NOT shown in battle)
-        map_context = _format_map_info(state_data.get('map', {}), player_data, include_debug_info, include_npcs,
+        map_context, _ = _format_map_info(state_data.get('map', {}), player_data, include_debug_info, include_npcs,
                                        state_data, use_json_map)
         context_parts.extend(map_context)
 
@@ -943,8 +943,9 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
     stitched_info = _format_stitched_map_info(map_info)
     if stitched_info:
         context_parts.extend(stitched_info)
-
-    return context_parts
+    if use_json_map == True:
+        return context_parts, json_output
+    return context_parts, ""
 
 
 def _add_local_map_fallback(context_parts, map_info, include_npcs, location_name=None):
