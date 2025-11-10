@@ -922,7 +922,7 @@ class SimpleAgent:
 
 Hint: Use the json map, map preview, and visual frame to determine which coordinate you want to go to, then use the navigate_to(x,y) action to find the optimal path to your destination.
 Remember that ledges are blocked.
-**IMPORTANT**: navigate_to() doesn't have access to NPC data, so you have to use your visual information and manually step around the NPC, otherwise you risk being stuck in a loop walking into the NPC.
+**IMPORTANT**: navigate_to() doesn't have accurate NPC data, so you have to use your visual information and manually step around the NPC, otherwise you risk being stuck in a loop walking into the NPC.
 
 This is your analysis from your previous turn, it will likely contain helpful context about your current situation. Use this when planning your next move:
 {self.analysis}
