@@ -1416,11 +1416,22 @@ class MapStitcher:
             return []
         
         # For accumulated maps, show the full explored area
-        # Get the dimensions of the explored area
-        max_x = max(x for x, y in location_grid.keys()) if location_grid else 0
-        max_y = max(y for x, y in location_grid.keys()) if location_grid else 0
-        min_x = min(x for x, y in location_grid.keys()) if location_grid else 0
-        min_y = min(y for x, y in location_grid.keys()) if location_grid else 0
+        # Compute bounds using only known tiles (ignore unknown placeholders)
+        all_positions = list(location_grid.keys())
+        if not all_positions:
+            return []
+
+        def _is_known_tile(pos):
+            tile_val = location_grid.get(pos)
+            return tile_val not in (None, ' ', '?')
+
+        known_positions = [pos for pos in all_positions if _is_known_tile(pos)]
+
+        target_positions = known_positions if known_positions else all_positions
+        max_x = max(x for x, _ in target_positions)
+        max_y = max(y for _, y in target_positions)
+        min_x = min(x for x, _ in target_positions)
+        min_y = min(y for _, y in target_positions)
         
         explored_width = max_x - min_x + 1
         explored_height = max_y - min_y + 1
@@ -1440,8 +1451,6 @@ class MapStitcher:
         
         # For accumulated maps, just use the entire grid without focusing
         # This shows the full explored area
-        all_positions = list(location_grid.keys())
-        
         # Find player position in the grid if available
         local_player_pos = None
         if player_pos:
@@ -1486,13 +1495,7 @@ class MapStitcher:
                             else:
                                 logger.debug(f"Player at {player_pos} is outside displayed area of {location_name}")
         
-        if not all_positions:
-            return []
-        
-        min_x = min(pos[0] for pos in all_positions)
-        max_x = max(pos[0] for pos in all_positions)
-        min_y = min(pos[1] for pos in all_positions)
-        max_y = max(pos[1] for pos in all_positions)
+        # Bounds already computed above using target_positions
         
         # Minimal trimming - only remove completely empty space
         # Don't trim '?' as those are unexplored areas we want to show
