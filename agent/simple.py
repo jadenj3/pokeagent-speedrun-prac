@@ -926,7 +926,7 @@ You will be called after completing major story milestones to add objectives tha
 
 Think about common failure modes for pokemon agents. Sometimes they need explicitly directional hints to avoid loops or missing the right path!
 
-Current objectives:
+Current story objectives:
 {objectives_summary}
 
 You should format your response as follows.
@@ -970,6 +970,9 @@ This is your analysis from your previous turn, it will likely contain helpful co
 
 Your current objectives are:
 {objectives_summary}
+
+You also have access to intermediary objectives added by a separate planning agent. Look to these for guidance and hints. They will help you accomplish your main goal:
+{added_objectives_summary}
 
 Your current location is:
 {player_location}
