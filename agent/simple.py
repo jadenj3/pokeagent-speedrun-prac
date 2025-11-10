@@ -55,7 +55,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_MAX_HISTORY_ENTRIES = 100  # Previous states/locations with context
 DEFAULT_MAX_RECENT_ACTIONS = 50    # Recent button presses
 DEFAULT_HISTORY_DISPLAY_COUNT = 30 # Number of history entries shown to LLM
-DEFAULT_ACTIONS_DISPLAY_COUNT = 30 # Number of recent actions shown to LLM
+DEFAULT_ACTIONS_DISPLAY_COUNT = 10 # Number of recent actions shown to LLM
 DEFAULT_MOVEMENT_MEMORY_CLEAR_INTERVAL = 30  # Clear movement memory after N actions (0 = never clear)
 
 def configure_simple_agent_defaults(max_history_entries: int = None, max_recent_actions: int = None, 
@@ -945,6 +945,7 @@ IMPORTANT: The movement preview doesn't show NPCs, so look for visual confirmati
 
 This is your recent coordinate history:
 {recent_coords}
+
 Your recent actions are:
 {recent_actions_str}
 
