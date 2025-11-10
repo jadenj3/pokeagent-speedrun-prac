@@ -911,7 +911,7 @@ class SimpleAgent:
             pathfinding_rules = ""
             if context != "title":
                 pathfinding_rules = ""
-            recent_coords = [entry.player_coords for entry in list(self.state.history)[-30:]]
+            recent_coords = [entry.player_coords for entry in list(self.state.history)[-10:]]
             loop_warning = ""
             if len(set(recent_coords[-6:])) <= 3 and len(recent_coords) >= 6:
                 loop_warning = "⚠️ You are revisiting the same coordinates repeatedly. Pick a direction you haven't tried yet (use the map and movement preview)."
