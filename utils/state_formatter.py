@@ -791,6 +791,8 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
             # Track interesting tiles for debug logging
             debug_tiles = {'stairs': [], 'door': [], 'tv': [], 'clock': [], 'computer': [], 'ledge': []}
 
+            grass_behaviors = {"TALL_GRASS", "LONG_GRASS", "SHORT_GRASS", "ASHGRASS"}
+
             for y_idx, row in enumerate(raw_tiles):
                 for x_idx, tile_data in enumerate(row):
                     if tile_data:
@@ -800,6 +802,7 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
                             if len(tile_data) > 2:
                                 collision_flag = tile_data[2]
                         # Extract behavior value from index 1
+                        behavior_obj = None
                         if isinstance(tile_data, (list, tuple)) and len(tile_data) > 1:
                             behavior_obj = tile_data[1]
                             # Get numeric value from behavior enum or int
@@ -808,7 +811,17 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
                             else:
                                 behavior = behavior_obj
                         else:
+                            behavior_obj = None
                             behavior = 0
+                        behavior_name = ""
+                        if behavior_obj is not None:
+                            if hasattr(behavior_obj, 'name'):
+                                behavior_name = behavior_obj.name
+                            elif isinstance(behavior_obj, int):
+                                try:
+                                    behavior_name = MetatileBehavior(behavior_obj).name
+                                except ValueError:
+                                    behavior_name = ""
 
                         # Map behavior to type
                         if behavior in [96, 105]:  # NON_ANIMATED_DOOR, ANIMATED_DOOR (actually stairs)
@@ -821,6 +834,8 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
                             tile_type = "computer"
                         elif behavior in [56, 57, 58, 59, 60, 61, 62, 63]:  # JUMP_* (ledges)
                             tile_type = "ledge"
+                        elif behavior_name and any(name in behavior_name for name in grass_behaviors):
+                            tile_type = "tall_grass"
                         elif behavior == 0:
                             tile_type = "walkable"
                         else:
@@ -842,7 +857,7 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
                             "x": game_x,
                             "y": game_y,
                             "type": tile_type,
-                            "walkable": tile_type in ["walkable", "door", "stairs", "tv", "computer"]
+                            "walkable": tile_type in ["walkable", "door", "stairs", "tv", "computer", "tall_grass"]
                         })
 
             # Add hardcoded special objects for BRENDANS HOUSE 2F
