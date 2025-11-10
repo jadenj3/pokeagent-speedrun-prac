@@ -1671,7 +1671,7 @@ class MapStitcher:
             
             # Add spacing between characters for square aspect ratio
             # Most terminals have characters ~2x taller than wide, so spacing helps
-            spaced_row = " ".join(row)
+            spaced_row = "".join(row)
             # Prepend the Y-axis label (don't join it with the row to avoid extra space)
             lines.append(y_label + spaced_row)
         
