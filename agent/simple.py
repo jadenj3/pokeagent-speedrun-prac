@@ -41,6 +41,7 @@ from datetime import datetime
 from typing import List, Dict, Any, Optional, Tuple
 import numpy as np
 from PIL import Image
+import heapq
 
 from utils.state_formatter import (
     format_state_for_llm,
@@ -975,8 +976,60 @@ Context: {context} """
         except Exception as e:
             logger.error(f"Error in simple agent processing: {e}")
             return ["A"]  # Default safe action as list
+
+    def a_star(data, dest_x, dest_y):
+        # Build tile map for quick lookup
+        tile_map = {(tile['x'], tile['y']): tile for tile in data['tiles']}
+
+        start_x = data['player_position']['x']
+        start_y = data['player_position']['y']
+
+        # Check if destination is walkable
+        if (dest_x, dest_y) not in tile_map or not tile_map[(dest_x, dest_y)]['walkable']:
+            return None  # Can't reach non-walkable destination
+
+        # Heuristic: Manhattan distance
+        def heuristic(x, y):
+            return abs(x - dest_x) + abs(y - dest_y)
+
+        # Priority queue: (f_score, counter, x, y, path)
+        counter = 0
+        pq = [(heuristic(start_x, start_y), counter, start_x, start_y, [])]
+        visited = set()
+
+        directions = {
+            'UP': (0, -1),
+            'DOWN': (0, 1),
+            'LEFT': (-1, 0),
+            'RIGHT': (1, 0)
+        }
+
+        while pq:
+            f_score, _, x, y, path = heapq.heappop(pq)
+
+            if (x, y) in visited:
+                continue
+            visited.add((x, y))
+
+            # Reached destination
+            if x == dest_x and y == dest_y:
+                return path
+
+            # Explore neighbors
+            for direction, (dx, dy) in directions.items():
+                nx, ny = x + dx, y + dy
+
+                if (nx, ny) in tile_map and tile_map[(nx, ny)]['walkable'] and (nx, ny) not in visited:
+                    g_score = len(path) + 1
+                    h_score = heuristic(nx, ny)
+                    f = g_score + h_score
+
+                    counter += 1
+                    heapq.heappush(pq, (f, counter, nx, ny, path + [direction]))
+
+        return None  # No path found
     
-    def _parse_actions(self, response: str, game_state: Dict[str, Any] = None) -> List[str]:
+    def _parse_actions(self, response: str, game_state: Dict[str, Any] = None, json_file = None) -> List[str]:
         """Parse action response from LLM into list of valid actions"""
         response_upper = response.upper().strip()
         valid_actions = ['A', 'B', 'START', 'SELECT', 'UP', 'DOWN', 'LEFT', 'RIGHT', 'WAIT']
@@ -986,8 +1039,21 @@ Context: {context} """
         # Replace commas with spaces for consistent parsing
         response_clean = response_upper.replace(',', ' ').replace('.', ' ')
         tokens = response_clean.split()
-        
+
+
+        def parse_nav(token: str) -> tuple[int, int] | None:
+            match = re.fullmatch(r"\s*navigate_to\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)\s*", token)
+            if match:
+                return int(match.group(1)), int(match.group(2))
+            return None
+
         for token in tokens:
+            if token.startswith("navigate_to"):
+                dest_x, dest_y = parse_nav(token) # (x,y) tuple from string, the destination
+                path = a_star(json_file, dest_x, dest_y)
+                return path
+
+
             if token in valid_actions:
                 actions_found.append(token)
                 if len(actions_found) >= 10:  # Max 10 actions
