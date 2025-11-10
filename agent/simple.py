@@ -927,6 +927,9 @@ Remember that ledges are blocked.
 This is your analysis from your previous turn, it will likely contain helpful context about your current situation. Use this when planning your next move:
 {self.analysis}
 
+json map for debugging purposes:
+{map_only}
+
 Your current objectives are:
 {objectives_summary}
 
