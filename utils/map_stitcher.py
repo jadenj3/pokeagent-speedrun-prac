@@ -1665,9 +1665,9 @@ class MapStitcher:
                         row += tile
                         symbols_used_in_display.add(tile)
                 else:
-                    # Position not in grid - just show as space
-                    # The grid already has '?' symbols where needed from get_location_grid
-                    row += " "
+                    # Position not in grid - mark as unknown to keep alignment consistent
+                    row += "?"
+                    symbols_used_in_display.add("?")
             
             # Add spacing between characters for square aspect ratio
             # Most terminals have characters ~2x taller than wide, so spacing helps
