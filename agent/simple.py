@@ -872,7 +872,7 @@ class SimpleAgent:
                     ""
                 )
             current_player_coords = f"(X={player_coords[0]}, Y={player_coords[1]})"
-            map_info = game_state.get('map', {}) or {}
+            map_info = game_state.get('map', {}) or {} #
             player_data = game_state.get('player', {}) or {}
             map_only_sections, json_data = _format_map_info(map_info, player_data, include_npcs=True, full_state_data=game_state, use_json_map=True)
             map_only = "\n".join(map_only_sections) if map_only_sections else ""
