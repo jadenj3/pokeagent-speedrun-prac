@@ -723,7 +723,7 @@ class GeminiBackend(VLMBackend):
     def __init__(self, model_name: str, **kwargs):
         try:
             import google.generativeai as genai
-            from google.generativeai import types as genai_types
+            from google.generativeai import protos as genai_protos
         except ImportError:
             raise ImportError("Google Generative AI package not found. Install with: pip install google-generativeai")
         
@@ -738,12 +738,16 @@ class GeminiBackend(VLMBackend):
         
         # Initialize the model with code execution tool support
         self.genai = genai
-        self.genai_types = genai_types
-        self.code_execution_tool = self.genai_types.Tool(
-            code_execution=self.genai_types.Tool.CodeExecution()
+        self.genai_protos = genai_protos
+        self.code_execution_tool = self.genai_protos.Tool(
+            code_execution=self.genai_protos.Tool.CodeExecution()
         )
-        self.tool_config = self.genai_types.ToolConfig(
-            code_execution=self.genai_types.ToolConfig.CodeExecution()
+        self.tool_config = self.genai_protos.ToolConfig(
+            code_execution=self.genai_protos.ToolConfig.CodeExecution(
+                max_output_characters=4096,
+                max_call_count=1,
+                timeout_milliseconds=20000,
+            )
         )
         self.model = genai.GenerativeModel(
             model_name,
@@ -767,6 +771,7 @@ class GeminiBackend(VLMBackend):
         """Calls the generate_content method with exponential backoff."""
         response = self.model.generate_content(
             contents=content_parts,
+            tools=[self.code_execution_tool],
             tool_config=self.tool_config,
         )
         response.resolve()
