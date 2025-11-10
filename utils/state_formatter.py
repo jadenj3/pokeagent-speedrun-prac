@@ -792,6 +792,7 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
             debug_tiles = {'stairs': [], 'door': [], 'tv': [], 'clock': [], 'computer': [], 'ledge': []}
 
             grass_behaviors = {"TALL_GRASS", "LONG_GRASS", "SHORT_GRASS", "ASHGRASS"}
+            natural_blockers = {"TREE", "BUSH", "ROCK", "MOUNTAIN", "LEDGE", "IMPASSABLE", "SEALED"}
 
             for y_idx, row in enumerate(raw_tiles):
                 for x_idx, tile_data in enumerate(row):
@@ -836,6 +837,8 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
                             tile_type = "ledge"
                         elif behavior_name and any(name in behavior_name for name in grass_behaviors):
                             tile_type = "tall_grass"
+                        elif behavior_name and any(name in behavior_name for name in natural_blockers):
+                            tile_type = "blocked"
                         elif behavior == 0:
                             tile_type = "walkable"
                         else:
