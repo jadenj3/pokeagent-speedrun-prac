@@ -809,39 +809,41 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
                             if len(tile_data) > 2:
                                 collision_flag = tile_data[2]
                         # Extract behavior value from index 1
+                        behavior_value = 0
+                        behavior_name = ""
                         if isinstance(tile_data, (list, tuple)) and len(tile_data) > 1:
                             behavior_obj = tile_data[1]
-                            # Get numeric value from behavior enum or int
                             if hasattr(behavior_obj, 'value'):
-                                behavior = behavior_obj.value
+                                behavior_value = behavior_obj.value
+                                behavior_name = getattr(behavior_obj, 'name', "")
+                            elif isinstance(behavior_obj, int):
+                                behavior_value = behavior_obj
+                                try:
+                                    behavior_enum = MetatileBehavior(behavior_obj)
+                                    behavior_name = behavior_enum.name
+                                except ValueError:
+                                    behavior_name = ""
                             else:
-                                behavior = behavior_obj
-                        else:
-                            behavior = 0
-                        behavior_name = ""
-                        behavior_enum = None
-                        if hasattr(behavior_obj, 'name'):
-                            behavior_name = behavior_obj.name
-                            behavior_enum = behavior_obj
-                        elif isinstance(behavior_obj, int):
-                            try:
-                                behavior_enum = MetatileBehavior(behavior_obj)
-                                behavior_name = behavior_enum.name
-                            except ValueError:
+                                behavior_value = 0
                                 behavior_name = ""
+                        else:
+                            behavior_value = 0
+                            behavior_name = ""
 
                         # Map behavior to type
                         if tile_id == 1023:
                             tile_type = "blocked"
-                        elif behavior in [96, 105]:  # NON_ANIMATED_DOOR, ANIMATED_DOOR (actually stairs)
+                        elif behavior_value in [96, 105]:  # NON_ANIMATED_DOOR, ANIMATED_DOOR (actually stairs)
                             tile_type = "stairs"
-                        elif behavior in [97, 98, 99, 100, 101]:  # LADDER, arrow warps (actually doors)
+                        elif behavior_value in [97, 98, 99, 100, 101]:  # LADDER, arrow warps (actually doors)
                             tile_type = "door"
-                        elif behavior == 134:  # TELEVISION
+                        elif behavior_value == 134:  # TELEVISION
                             tile_type = "tv"
-                        elif behavior in [131, 197]:  # PC, PLAYER_ROOM_PC_ON
+                        elif behavior_value in [131, 197]:  # PC, PLAYER_ROOM_PC_ON
                             tile_type = "computer"
-                        elif behavior in [56, 57, 58, 59, 60, 61, 62, 63]:  # JUMP_* (ledges)
+                        elif behavior_value in [56, 57, 58, 59, 60, 61, 62, 63]:  # JUMP_* (ledges)
+                            tile_type = "ledge"
+                        elif behavior_name and ("JUMP" in behavior_name or "LEDGE" in behavior_name):
                             tile_type = "ledge"
                         elif behavior_name and any(keyword in behavior_name for keyword in grass_keywords):
                             tile_type = "tall_grass"
@@ -849,7 +851,7 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
                             tile_type = "water"
                         elif behavior_name and any(keyword in behavior_name for keyword in indoor_walkable_keywords):
                             tile_type = "walkable"
-                        elif behavior == 0:
+                        elif behavior_value == 0:
                             tile_type = "walkable"
                         else:
                             tile_type = "blocked"
