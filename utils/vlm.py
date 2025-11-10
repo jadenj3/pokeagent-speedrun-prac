@@ -737,9 +737,6 @@ class GeminiBackend(VLMBackend):
             raise ValueError(
                 "Error: Gemini API key is missing! Set GEMINI_API_KEY or GOOGLE_API_KEY environment variable.")
 
-        # Configure the client
-        genai.configure(api_key=self.api_key)
-
         # Store imports on self to make them accessible to other methods
         self.genai = genai
         self.types = types
