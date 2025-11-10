@@ -723,7 +723,6 @@ class GeminiBackend(VLMBackend):
     def __init__(self, model_name: str, **kwargs):
         # --- Imports for the NEW SDK ---
         try:
-            # The new SDK namespace is 'google.genai'
             from google import genai
             from google.genai import types
             from google.genai.types import FinishReason
@@ -737,23 +736,30 @@ class GeminiBackend(VLMBackend):
             raise ValueError(
                 "Error: Gemini API key is missing! Set GEMINI_API_KEY or GOOGLE_API_KEY environment variable.")
 
+        # NOTE: No genai.configure() needed. The client finds the env var automatically.
+
         # Store imports on self to make them accessible to other methods
         self.genai = genai
         self.types = types
         self.FinishReason = FinishReason
 
-        # 1. Define the tool correctly using the stored 'types'
-        self.code_execution_tool = self.types.Tool(
+        # --- NEW SDK LOGIC ---
+        # 1. Create a client. This is the new entry point.
+        self.client = genai.Client()
+
+        # 2. Define the tool
+        code_execution_tool = self.types.Tool(
             code_execution=self.types.ToolCodeExecution()
         )
 
-        # 2. Initialize the model with the tool
-        self.model = genai.GenerativeModel(
-            model_name,
-            tools=[self.code_execution_tool],
+        # 3. Define the generation config, including tools
+        # This will be passed to every generate_content call.
+        self.generation_config = self.types.GenerateContentConfig(
+            tools=[code_execution_tool]
         )
+        # ---------------------
 
-        logger.info(f"Gemini (google-genai) backend initialized with model: {model_name}")
+        logger.info(f"Gemini (google-genai) client initialized for model: {model_name}")
 
     def _prepare_image(self, img: Union[Image.Image, np.ndarray]) -> Image.Image:
         """Prepare image for Gemini API"""
@@ -767,9 +773,14 @@ class GeminiBackend(VLMBackend):
     @retry_with_exponential_backoff
     def _call_generate_content(self, content_parts):
         """Calls the generate_content method with exponential backoff."""
-        # Tools are already configured in self.model from __init__
-        response = self.model.generate_content(
-            contents=content_parts
+
+        # --- NEW SDK LOGIC ---
+        # Call generate_content on the client's 'models' service.
+        # Pass the model name string and the config here.
+        response = self.client.models.generate_content(
+            model=self.model_name,
+            contents=content_parts,
+            config=self.generation_config
         )
         return response
 
@@ -841,7 +852,7 @@ class GeminiBackend(VLMBackend):
                 candidate = response.candidates[0]
                 if hasattr(candidate, 'finish_reason') and candidate.finish_reason == self.FinishReason.SAFETY:
                     logger.warning(
-                        f"[{module_name}] Gemini safety filter triggered (FinishReason.SAFETY). Returning default response.")
+                        f"[{module_name}] Gemini safety-filter triggered (FinishReason.SAFETY). Returning default response.")
                     return "I cannot analyze this content due to safety restrictions. I'll proceed with a basic action: press 'A' to continue."
 
             result = response.text
