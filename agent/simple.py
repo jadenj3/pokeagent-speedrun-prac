@@ -836,6 +836,9 @@ class SimpleAgent:
             prompt = f"""You are playing as the Protagonist in Pokemon Emerald. 
             Based on the current game frame and state information, think through your next move and choose the best action.
 
+Hint: Hint: choose a coordinate you want to navigate to, then use code execution to run A* to reach your destination. This is a super powerful tool!!!! Use it as much as possible.
+Remember that ledges are blocked.
+
 This is your analysis from your previous turn, it will likely contain helpful context about your current situation. Use this when planning your next move:
 {self.analysis}
 
