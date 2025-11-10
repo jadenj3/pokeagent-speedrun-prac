@@ -937,7 +937,7 @@ OBJECTIVES:
 """
 
             # Make VLM call for planning module - double-check frame validation before VLM
-            if self.step_counter % 20 == 0:
+            if self.state.step_counter % 20 == 0:
                 if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                     print("🔍 Making VLM call...")
                     try:
