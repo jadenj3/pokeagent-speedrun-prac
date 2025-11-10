@@ -750,10 +750,7 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
         map_stitcher = _get_map_stitcher_instance()
 
     # Get NPCs if available
-    # NPCs disabled - unreliable detection with incorrect positions
-    npcs = []
-    # if include_npcs and 'object_events' in map_info:
-    #     npcs = map_info.get('object_events', [])
+    npcs = map_info.get('object_events', []) if include_npcs and map_info.get('object_events') else []
 
     # Get connections from current area
     connections = []
@@ -789,7 +786,19 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
             player_x, player_y = player_coords if player_coords else (0, 0)
 
             # Track interesting tiles for debug logging
-            debug_tiles = {'stairs': [], 'door': [], 'tv': [], 'clock': [], 'computer': [], 'ledge': []}
+            debug_tiles = {'stairs': [], 'door': [], 'tv': [], 'clock': [], 'computer': [], 'ledge': [], 'npc': []}
+
+            npc_positions = set()
+            if npcs:
+                for npc in npcs:
+                    nx = npc.get('current_x', npc.get('x'))
+                    ny = npc.get('current_y', npc.get('y'))
+                    if nx is None or ny is None:
+                        continue
+                    try:
+                        npc_positions.add((int(nx), int(ny)))
+                    except (TypeError, ValueError):
+                        continue
 
             for y_idx, row in enumerate(raw_tiles):
                 for x_idx, tile_data in enumerate(row):
@@ -800,6 +809,11 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
                         # Convert array index to game coordinates
                         game_x = player_x + (x_idx - radius)
                         game_y = player_y + (y_idx - radius)
+
+                         # NPCs occupy tiles and are not walkable
+                        if (game_x, game_y) in npc_positions:
+                            tile_type = "npc"
+                            tile_walkable = False
 
                         # Track interesting tiles for debug output
                         if tile_type in debug_tiles:
@@ -835,10 +849,30 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
 
             # Build JSON output
             import json as json_lib
+            npc_list = []
+            if npcs:
+                for npc in npcs:
+                    nx = npc.get('current_x', npc.get('x'))
+                    ny = npc.get('current_y', npc.get('y'))
+                    if nx is None or ny is None:
+                        continue
+                    try:
+                        nx_int = int(nx)
+                        ny_int = int(ny)
+                    except (TypeError, ValueError):
+                        continue
+                    npc_list.append({
+                        "x": nx_int,
+                        "y": ny_int,
+                        "trainer_type": npc.get('trainer_type', 0),
+                        "id": npc.get('id', npc.get('obj_event_id'))
+                    })
+
             json_output = {
                 "location": location_name if location_name else "Unknown",
                 "player_position": {"x": player_coords[0], "y": player_coords[1]} if player_coords else None,
-                "tiles": tiles_list
+                "tiles": tiles_list,
+                "npcs": npc_list
             }
 
             # Console debug: Print interesting tile locations
