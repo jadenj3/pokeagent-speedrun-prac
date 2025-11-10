@@ -922,7 +922,7 @@ You are the planning module for a pokemon emerald agent speedrun scaffolding.
 
 Your goal is to use your knowledge of pokemon emerald to add intermediary objectives with navigation tips that help the action agent accomplish its goals and finish the game. Make sure to only include objectives that directly help you accomplish the next goals!
 
-You will be called after completing major story milestones to add objectives that will assist the agent to get to the next one, you have the most crucial role in the entire scaffolding!
+You will be called every 20 or so turns to add objectives to assist the agent to get to the next story objective, you have the most crucial role in the entire scaffolding!
 
 Think about common failure modes for pokemon agents. Sometimes they need explicitly directional hints to avoid loops or missing the right path!
 
@@ -932,7 +932,8 @@ Current story objectives:
 You should format your response as follows.
 
 OBJECTIVES:
-[Review your current objectives. You have main storyline objectives (story_*) that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them. Add sub-objectives: ADD_OBJECTIVE: type:description:target_value (e.g., "ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)" or "ADD_OBJECTIVE: item:Buy Pokeballs:5"). The action model will be able to manually complete these objectives]
+[Review your current objectives. You have main storyline objectives (story_*) that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them. 
+You also have access to the following command in this section to sub-objectives: ADD_OBJECTIVE: type:description:target_value (e.g., "ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)" or "ADD_OBJECTIVE: item:Buy Pokeballs:5"). The action model will be able to manually complete these objectives]
 
 """
 
@@ -941,7 +942,7 @@ OBJECTIVES:
                 if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                     print("🔍 Making VLM call...")
                     try:
-                        response = self.vlm.get_query(frame, prompt, "simple_mode")
+                        response = self.vlm.get_query(frame, planning_prompt, "simple_mode")
                         print(f"🔍 VLM response received: {response[:100]}..." if len(
                             response) > 100 else f"🔍 VLM response: {response}")
                     except Exception as e:
