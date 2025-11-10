@@ -62,10 +62,7 @@ def print_map_debug(state_data):
     # Track interesting tiles
     debug_tiles = {'stairs': [], 'door': [], 'tv': [], 'computer': [], 'ledge': []}
 
-    grid_height = len(raw_tiles)
-    grid_width = len(raw_tiles[0]) if grid_height > 0 else 0
-    radius_y = grid_height // 2
-    radius_x = grid_width // 2
+    radius = 7  # Memory tiles are 15x15 grid centered on player
     for y_idx, row in enumerate(raw_tiles):
         for x_idx, tile_data in enumerate(row):
             if tile_data and isinstance(tile_data, (list, tuple)) and len(tile_data) > 1:
@@ -86,8 +83,8 @@ def print_map_debug(state_data):
                     tile_type = "ledge"
 
                 if tile_type:
-                    game_x = player_x + (x_idx - radius_x)
-                    game_y = player_y + (y_idx - radius_y)
+                    game_x = player_x + (x_idx - radius)
+                    game_y = player_y + (y_idx - radius)
                     debug_tiles[tile_type].append((game_x, game_y))
 
     # Add hardcoded special objects for BRENDANS HOUSE 2F
@@ -706,7 +703,7 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
     context_parts = []
 
     if not map_info:
-        return context_parts, ""
+        return context_parts
 
     # Get location name from player data
     location_name = None
@@ -722,7 +719,7 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
         context_parts.append("\n=== LOCATION INFO ===")
         context_parts.append(f"Current Location: {location_name}")
         context_parts.append("No map available during title sequence")
-        return context_parts, ""
+        return context_parts
 
     context_parts.append("\n=== LOCATION & MAP INFO ===")
     if location_name:
@@ -785,73 +782,46 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
             # Convert raw tiles grid to JSON format
             tiles_list = []
 
-            # Memory tiles are centered on player (grid is (2*radius+1)^2)
-            # Determine radius dynamically from grid dimensions
-            grid_height = len(raw_tiles)
-            grid_width = len(raw_tiles[0]) if grid_height > 0 else 0
-            radius_y = grid_height // 2
-            radius_x = grid_width // 2
+            # Memory tiles are centered on player with radius=7 (15x15 grid)
+            # Array index [7][7] = player position
+            # Convert array indices to game coordinates
+            radius = 7
             player_x, player_y = player_coords if player_coords else (0, 0)
 
             # Track interesting tiles for debug logging
             debug_tiles = {'stairs': [], 'door': [], 'tv': [], 'clock': [], 'computer': [], 'ledge': []}
 
-            grass_keywords = ["TALL_GRASS", "LONG_GRASS", "SHORT_GRASS", "ASHGRASS"]
-            indoor_walkable_keywords = ["INDOOR", "DECORATION", "HOLDS"]
-
             for y_idx, row in enumerate(raw_tiles):
                 for x_idx, tile_data in enumerate(row):
                     if tile_data:
                         # Tile format: (metatile_id, behavior, collision, ...)
-                        tile_id = tile_data[0] if isinstance(tile_data, (list, tuple)) and len(tile_data) > 0 else None
                         collision_flag = None
                         if isinstance(tile_data, (list, tuple)):
                             if len(tile_data) > 2:
                                 collision_flag = tile_data[2]
                         # Extract behavior value from index 1
-                        behavior_value = 0
-                        behavior_name = ""
                         if isinstance(tile_data, (list, tuple)) and len(tile_data) > 1:
                             behavior_obj = tile_data[1]
+                            # Get numeric value from behavior enum or int
                             if hasattr(behavior_obj, 'value'):
-                                behavior_value = behavior_obj.value
-                                behavior_name = getattr(behavior_obj, 'name', "")
-                            elif isinstance(behavior_obj, int):
-                                behavior_value = behavior_obj
-                                try:
-                                    behavior_enum = MetatileBehavior(behavior_obj)
-                                    behavior_name = behavior_enum.name
-                                except ValueError:
-                                    behavior_name = ""
+                                behavior = behavior_obj.value
                             else:
-                                behavior_value = 0
-                                behavior_name = ""
+                                behavior = behavior_obj
                         else:
-                            behavior_value = 0
-                            behavior_name = ""
+                            behavior = 0
 
                         # Map behavior to type
-                        if tile_id == 1023:
-                            tile_type = "blocked"
-                        elif behavior_value in [96, 105]:  # NON_ANIMATED_DOOR, ANIMATED_DOOR (actually stairs)
+                        if behavior in [96, 105]:  # NON_ANIMATED_DOOR, ANIMATED_DOOR (actually stairs)
                             tile_type = "stairs"
-                        elif behavior_value in [97, 98, 99, 100, 101]:  # LADDER, arrow warps (actually doors)
+                        elif behavior in [97, 98, 99, 100, 101]:  # LADDER, arrow warps (actually doors)
                             tile_type = "door"
-                        elif behavior_value == 134:  # TELEVISION
+                        elif behavior == 134:  # TELEVISION
                             tile_type = "tv"
-                        elif behavior_value in [131, 197]:  # PC, PLAYER_ROOM_PC_ON
+                        elif behavior in [131, 197]:  # PC, PLAYER_ROOM_PC_ON
                             tile_type = "computer"
-                        elif behavior_value in [56, 57, 58, 59, 60, 61, 62, 63]:  # JUMP_* (ledges)
+                        elif behavior in [56, 57, 58, 59, 60, 61, 62, 63]:  # JUMP_* (ledges)
                             tile_type = "ledge"
-                        elif behavior_name and ("JUMP" in behavior_name or "LEDGE" in behavior_name):
-                            tile_type = "ledge"
-                        elif behavior_name and any(keyword in behavior_name for keyword in grass_keywords):
-                            tile_type = "tall_grass"
-                        elif behavior_name and "WATER" in behavior_name:
-                            tile_type = "water"
-                        elif behavior_name and any(keyword in behavior_name for keyword in indoor_walkable_keywords):
-                            tile_type = "walkable"
-                        elif behavior_value == 0:
+                        elif behavior == 0:
                             tile_type = "walkable"
                         else:
                             tile_type = "blocked"
@@ -861,8 +831,8 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
                             tile_type = "blocked"
 
                         # Convert array index to game coordinates
-                        game_x = player_x + (x_idx - radius_x)
-                        game_y = player_y + (y_idx - radius_y)
+                        game_x = player_x + (x_idx - radius)
+                        game_y = player_y + (y_idx - radius)
 
                         # Track interesting tiles for debug output
                         if tile_type in debug_tiles:
@@ -872,7 +842,7 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
                             "x": game_x,
                             "y": game_y,
                             "type": tile_type,
-                            "walkable": tile_type in ["walkable", "door", "stairs", "tv", "computer", "tall_grass"]
+                            "walkable": tile_type in ["walkable", "door", "stairs", "tv", "computer"]
                         })
 
             # Add hardcoded special objects for BRENDANS HOUSE 2F
