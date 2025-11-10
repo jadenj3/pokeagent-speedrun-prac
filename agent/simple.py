@@ -1022,6 +1022,7 @@ ANALYSIS:
 Context: {context} """
             
             # Print complete prompt to terminal for debugging
+            '''
             print("\n" + "="*120)
             print("🤖 SIMPLE AGENT PROMPT SENT TO VLM:")
             print("="*120)
@@ -1034,7 +1035,7 @@ Context: {context} """
             print("="*120)
             print("🤖 END OF SIMPLE AGENT PROMPT")
             print("="*120 + "\n")
-            sys.stdout.flush()
+            sys.stdout.flush()'''
             
             # Make VLM call - double-check frame validation before VLM
             if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
