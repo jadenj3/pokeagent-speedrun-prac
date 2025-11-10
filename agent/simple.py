@@ -924,6 +924,8 @@ Hint: Use the json map, map preview, and visual frame to determine which coordin
 Remember that ledges are blocked.
 **IMPORTANT**: navigate_to() doesn't have accurate NPC data, so you have to use your visual information and manually step around the NPC, otherwise you risk being stuck in a loop walking into the NPC.
 
+ALSO IMPORTANT: To interact with NPCs you have to go to an adjacent tile and face them. You don't have this information from memory, so visually inspect the image to see if you are facing the NPC before pressing 'A'.
+
 This is your analysis from your previous turn, it will likely contain helpful context about your current situation. Use this when planning your next move:
 {self.analysis}
 
