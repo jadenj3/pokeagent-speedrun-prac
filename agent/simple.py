@@ -731,6 +731,58 @@ class SimpleAgent:
         
         action = self.process_step(frame, game_state)
         return {"action": action, "reasoning": "Simple agent decision"}
+
+    def a_star(self, data, dest_x, dest_y):
+        # Build tile map for quick lookup
+        tile_map = {(tile['x'], tile['y']): tile for tile in data['tiles']}
+
+        start_x = data['player_position']['x']
+        start_y = data['player_position']['y']
+
+        # Check if destination is walkable
+        if (dest_x, dest_y) not in tile_map or not tile_map[(dest_x, dest_y)]['walkable']:
+            return None  # Can't reach non-walkable destination
+
+        # Heuristic: Manhattan distance
+        def heuristic(x, y):
+            return abs(x - dest_x) + abs(y - dest_y)
+
+        # Priority queue: (f_score, counter, x, y, path)
+        counter = 0
+        pq = [(heuristic(start_x, start_y), counter, start_x, start_y, [])]
+        visited = set()
+
+        directions = {
+            'UP': (0, -1),
+            'DOWN': (0, 1),
+            'LEFT': (-1, 0),
+            'RIGHT': (1, 0)
+        }
+
+        while pq:
+            f_score, _, x, y, path = heapq.heappop(pq)
+
+            if (x, y) in visited:
+                continue
+            visited.add((x, y))
+
+            # Reached destination
+            if x == dest_x and y == dest_y:
+                return path
+
+            # Explore neighbors
+            for direction, (dx, dy) in directions.items():
+                nx, ny = x + dx, y + dy
+
+                if (nx, ny) in tile_map and tile_map[(nx, ny)]['walkable'] and (nx, ny) not in visited:
+                    g_score = len(path) + 1
+                    h_score = heuristic(nx, ny)
+                    f = g_score + h_score
+
+                    counter += 1
+                    heapq.heappush(pq, (f, counter, nx, ny, path + [direction]))
+
+        return ['A']  # No path found
     
     def process_step(self, frame, game_state: Dict[str, Any]) -> str:
         """
@@ -824,6 +876,7 @@ class SimpleAgent:
             player_data = game_state.get('player', {}) or {}
             map_only_sections, json_data = _format_map_info(map_info, player_data, include_npcs=True, full_state_data=game_state, use_json_map=True)
             map_only = "\n".join(map_only_sections) if map_only_sections else ""
+
             player_location = game_state.get("player", {}).get("location", "Unknown Location")
             pathfinding_rules = ""
             if context != "title":
@@ -976,58 +1029,6 @@ Context: {context} """
         except Exception as e:
             logger.error(f"Error in simple agent processing: {e}")
             return ["A"]  # Default safe action as list
-
-    def a_star(self, data, dest_x, dest_y):
-        # Build tile map for quick lookup
-        tile_map = {(tile['x'], tile['y']): tile for tile in data['tiles']}
-
-        start_x = data['player_position']['x']
-        start_y = data['player_position']['y']
-
-        # Check if destination is walkable
-        if (dest_x, dest_y) not in tile_map or not tile_map[(dest_x, dest_y)]['walkable']:
-            return None  # Can't reach non-walkable destination
-
-        # Heuristic: Manhattan distance
-        def heuristic(x, y):
-            return abs(x - dest_x) + abs(y - dest_y)
-
-        # Priority queue: (f_score, counter, x, y, path)
-        counter = 0
-        pq = [(heuristic(start_x, start_y), counter, start_x, start_y, [])]
-        visited = set()
-
-        directions = {
-            'UP': (0, -1),
-            'DOWN': (0, 1),
-            'LEFT': (-1, 0),
-            'RIGHT': (1, 0)
-        }
-
-        while pq:
-            f_score, _, x, y, path = heapq.heappop(pq)
-
-            if (x, y) in visited:
-                continue
-            visited.add((x, y))
-
-            # Reached destination
-            if x == dest_x and y == dest_y:
-                return path
-
-            # Explore neighbors
-            for direction, (dx, dy) in directions.items():
-                nx, ny = x + dx, y + dy
-
-                if (nx, ny) in tile_map and tile_map[(nx, ny)]['walkable'] and (nx, ny) not in visited:
-                    g_score = len(path) + 1
-                    h_score = heuristic(nx, ny)
-                    f = g_score + h_score
-
-                    counter += 1
-                    heapq.heappush(pq, (f, counter, nx, ny, path + [direction]))
-
-        return ['A']  # No path found
     
     def _parse_actions(self, response: str, game_state: Dict[str, Any] = None, json_data = None) -> List[str]:
         """Parse action response from LLM into list of valid actions"""
