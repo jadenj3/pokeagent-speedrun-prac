@@ -1003,7 +1003,9 @@ Do not select a movement that is blocked.
 In your response include the following sections:
 
 OBJECTIVES:
-[Review your current objectives. You have main storyline objectives (story_*) that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them. These are your highest priority, everything you do should be in service of accomplishing these goals]
+[Review your current objectives. You have main storyline objectives (story_*) that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them. These are your highest priority, everything you do should be in service of accomplishing these goals
+You can also Complete added objectives as follows: COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs")
+NOTE: Do NOT try to complete storyline objectives (story_*) - they auto-complete when milestones are reached]
 
 ACTION:
 [If you are in dialogue, prefer single actions like 'A'. If you are stuck in a loop also prefer single actions, it will give you space to think about each move.
