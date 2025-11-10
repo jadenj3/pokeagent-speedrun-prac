@@ -1498,32 +1498,32 @@ class MapStitcher:
         # Don't trim '?' as those are unexplored areas we want to show
         # Don't aggressively trim walls as they show room boundaries
         
-        # Only trim rows that are completely empty (all spaces/None)
+        # Only trim rows that are completely empty (no known tiles)
+        empty_trim_values = {' ', None, '?'}
         while min_y < max_y:
             row_tiles = [location_grid.get((x, min_y), ' ') for x in range(min_x, max_x + 1)]
-            # Keep the row if it has ANY content (including ? and #)
-            if any(t not in [' ', None] for t in row_tiles):
+            if any(t not in empty_trim_values for t in row_tiles):
                 break
             min_y += 1
         
         # Check bottom rows - only trim completely empty
         while max_y > min_y:
             row_tiles = [location_grid.get((x, max_y), ' ') for x in range(min_x, max_x + 1)]
-            if any(t not in [' ', None] for t in row_tiles):
+            if any(t not in empty_trim_values for t in row_tiles):
                 break
             max_y -= 1
         
         # Check left columns - only trim completely empty
         while min_x < max_x:
             col_tiles = [location_grid.get((min_x, y), ' ') for y in range(min_y, max_y + 1)]
-            if any(t not in [' ', None] for t in col_tiles):
+            if any(t not in empty_trim_values for t in col_tiles):
                 break
             min_x += 1
         
         # Check right columns - only trim completely empty
         while max_x > min_x:
             col_tiles = [location_grid.get((max_x, y), ' ') for y in range(min_y, max_y + 1)]
-            if any(t not in [' ', None] for t in col_tiles):
+            if any(t not in empty_trim_values for t in col_tiles):
                 break
             max_x -= 1
         
