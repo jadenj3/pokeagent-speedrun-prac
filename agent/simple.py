@@ -953,8 +953,6 @@ Your recent actions are:
 And your current coordinates:
 {current_player_coords}
 
-{loop_warning}
-
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
 
 Remember: You can traverse tall grass.
