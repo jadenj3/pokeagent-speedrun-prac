@@ -62,7 +62,10 @@ def print_map_debug(state_data):
     # Track interesting tiles
     debug_tiles = {'stairs': [], 'door': [], 'tv': [], 'computer': [], 'ledge': []}
 
-    radius = 7  # Memory tiles are 15x15 grid centered on player
+    grid_height = len(raw_tiles)
+    grid_width = len(raw_tiles[0]) if grid_height > 0 else 0
+    radius_y = grid_height // 2
+    radius_x = grid_width // 2
     for y_idx, row in enumerate(raw_tiles):
         for x_idx, tile_data in enumerate(row):
             if tile_data and isinstance(tile_data, (list, tuple)) and len(tile_data) > 1:
@@ -83,8 +86,8 @@ def print_map_debug(state_data):
                     tile_type = "ledge"
 
                 if tile_type:
-                    game_x = player_x + (x_idx - radius)
-                    game_y = player_y + (y_idx - radius)
+                    game_x = player_x + (x_idx - radius_x)
+                    game_y = player_y + (y_idx - radius_y)
                     debug_tiles[tile_type].append((game_x, game_y))
 
     # Add hardcoded special objects for BRENDANS HOUSE 2F
@@ -703,7 +706,7 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
     context_parts = []
 
     if not map_info:
-        return context_parts
+        return context_parts, ""
 
     # Get location name from player data
     location_name = None
@@ -719,7 +722,7 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
         context_parts.append("\n=== LOCATION INFO ===")
         context_parts.append(f"Current Location: {location_name}")
         context_parts.append("No map available during title sequence")
-        return context_parts
+        return context_parts, ""
 
     context_parts.append("\n=== LOCATION & MAP INFO ===")
     if location_name:
@@ -782,10 +785,12 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
             # Convert raw tiles grid to JSON format
             tiles_list = []
 
-            # Memory tiles are centered on player with radius=7 (15x15 grid)
-            # Array index [7][7] = player position
-            # Convert array indices to game coordinates
-            radius = 7
+            # Memory tiles are centered on player (grid is (2*radius+1)^2)
+            # Determine radius dynamically from grid dimensions
+            grid_height = len(raw_tiles)
+            grid_width = len(raw_tiles[0]) if grid_height > 0 else 0
+            radius_y = grid_height // 2
+            radius_x = grid_width // 2
             player_x, player_y = player_coords if player_coords else (0, 0)
 
             # Track interesting tiles for debug logging
@@ -831,8 +836,8 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
                             tile_type = "blocked"
 
                         # Convert array index to game coordinates
-                        game_x = player_x + (x_idx - radius)
-                        game_y = player_y + (y_idx - radius)
+                        game_x = player_x + (x_idx - radius_x)
+                        game_y = player_y + (y_idx - radius_y)
 
                         # Track interesting tiles for debug output
                         if tile_type in debug_tiles:

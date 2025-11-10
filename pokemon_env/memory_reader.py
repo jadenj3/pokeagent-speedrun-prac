@@ -3,6 +3,7 @@ import struct
 from typing import Optional, Dict, Any, List, Tuple
 import logging
 import time
+import os
 
 from mgba._pylib import ffi, lib
 
@@ -14,6 +15,8 @@ from utils import state_formatter
 from utils import map_stitcher_singleton
 
 logger = logging.getLogger(__name__)
+
+JSON_MAP_RADIUS = int(os.getenv("POKEAGENT_JSON_MAP_RADIUS", "12"))
 
 @dataclass
 class MemoryAddresses:
@@ -2199,8 +2202,8 @@ class PokemonEmeraldReader:
                 if not self._find_map_buffer_addresses():
                     return []
             
-            map_x = player_x + 7
-            map_y = player_y + 7
+            map_x = player_x + radius
+            map_y = player_y + radius
             
             # Ensure consistent 15x15 output by adjusting boundaries
             target_width = 2 * radius + 1  # Should be 15 for radius=7
@@ -2227,10 +2230,11 @@ class PokemonEmeraldReader:
             height = y_end - y_start
             
             # Additional validation for reasonable dimensions
-            if width > 50 or height > 50:
-                logger.warning(f"Map reading area too large: {width}x{height}, limiting to 15x15")
-                width = min(width, 15)
-                height = min(height, 15)
+            max_dim = min(2 * radius + 1, 50)
+            if width > max_dim or height > max_dim:
+                logger.warning(f"Map reading area too large: {width}x{height}, limiting to {max_dim}x{max_dim}")
+                width = min(width, max_dim)
+                height = min(height, max_dim)
             
             return self.read_map_metatiles(x_start, y_start, width, height)
         except Exception as e:
@@ -2554,7 +2558,7 @@ class PokemonEmeraldReader:
         return state
     
     def read_map(self, state): 
-        tiles = self.read_map_around_player(radius=7)  # 15x15 grid for better context
+        tiles = self.read_map_around_player(radius=JSON_MAP_RADIUS)  # Expanded grid for better context
         if tiles:
             # DEBUG: Print tile data before processing for HTTP API
             total_tiles = sum(len(row) for row in tiles)
