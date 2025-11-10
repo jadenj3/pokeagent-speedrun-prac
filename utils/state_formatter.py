@@ -795,6 +795,10 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
                 for x_idx, tile_data in enumerate(row):
                     if tile_data:
                         # Tile format: (metatile_id, behavior, collision, ...)
+                        collision_flag = None
+                        if isinstance(tile_data, (list, tuple)):
+                            if len(tile_data) > 2:
+                                collision_flag = tile_data[2]
                         # Extract behavior value from index 1
                         if isinstance(tile_data, (list, tuple)) and len(tile_data) > 1:
                             behavior_obj = tile_data[1]
@@ -820,6 +824,10 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
                         elif behavior == 0:
                             tile_type = "walkable"
                         else:
+                            tile_type = "blocked"
+
+                        # Collision flag overrides walkability for generic tiles
+                        if tile_type == "walkable" and collision_flag not in (0, None, False):
                             tile_type = "blocked"
 
                         # Convert array index to game coordinates
