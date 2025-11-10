@@ -1000,6 +1000,7 @@ Remember: You can traverse tall grass.
 Do not select a movement that is blocked. 
 
 **IMPORTANT** To enter doors/stairs/warps CHECK THE MOVEMENT PREVIEW AND USE SINGLE ACTIONS. navigate_to is great for long distances, but it can struggle with entering locations if you are not perfectly aligned with the door or you are stuck on an NPC. The movement preview will have better information for you to use.
+If you want to you can use navigate_to to get close to the door, but afterwards make sure to use single actions.
 
 In your response include the following sections:
 
