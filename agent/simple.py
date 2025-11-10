@@ -783,7 +783,35 @@ class SimpleAgent:
                     heapq.heappush(pq, (f, counter, nx, ny, path + [direction]))
 
         return ['A']  # No path found
-    
+
+    def reachable_tiles(self, json_data):
+        """Return list of reachable coordinates from the player's position given JSON tiles."""
+        if not json_data or not json_data.get("tiles") or not json_data.get("player_position"):
+            return []
+
+        tile_map = {(tile["x"], tile["y"]): tile for tile in json_data["tiles"]}
+        start = json_data["player_position"]
+        if start is None or "x" not in start or "y" not in start:
+            return []
+
+        start_coord = (start["x"], start["y"])
+        if not tile_map.get(start_coord, {}).get("walkable", True):
+            return []
+
+        visited = set([start_coord])
+        queue = [start_coord]
+        directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+
+        while queue:
+            x, y = queue.pop(0)
+            for dx, dy in directions:
+                nx, ny = x + dx, y + dy
+                if (nx, ny) not in visited and tile_map.get((nx, ny), {}).get("walkable"):
+                    visited.add((nx, ny))
+                    queue.append((nx, ny))
+
+        return list(visited)
+
     def process_step(self, frame, game_state: Dict[str, Any]) -> str:
         """
         Main processing step for simple mode with history tracking
@@ -877,6 +905,8 @@ class SimpleAgent:
             map_only_sections, json_data = _format_map_info(map_info, player_data, include_npcs=True, full_state_data=game_state, use_json_map=True)
             map_only = "\n".join(map_only_sections) if map_only_sections else ""
 
+            reachable_tiles = self.reachable_tiles(json_data)
+
             player_location = game_state.get("player", {}).get("location", "Unknown Location")
             pathfinding_rules = ""
             if context != "title":
@@ -902,8 +932,8 @@ Your current objectives are:
 Your current location is:
 {player_location}
 
-Current map json is:
-{map_only}
+The current reachable tiles from your location are:
+{reachable_tiles}
 
 Movement preview (check this to make sure you aren't selecting a blocked action):
 {map_preview}
@@ -933,7 +963,8 @@ OBJECTIVES:
 ACTION:
 [If you are in dialogue, prefer single actions like 'A'. If you are stuck in a loop also prefer single actions, it will give you space to think about each move.
 You also have access to the navigate_to(x,y) tool. This will automatically run A* on your selected coordinate to find the optimal way to reach your destination. This is a powerful tool that should be used
-liberally! Using it will also override any other actions you input, so don't include it with other actions.]
+liberally! Using it will also override any other actions you input, so don't include it with other actions.
+When using the navigate_to(x,y) tool, make sure to only choose reachable tiles! This information is provided above.]
 
 ANALYSIS:
 [Summarize your current situation. This will be passed onto you as context during your next turn. It's especially important to summarize any dead ends you found and potential alternate paths. This is the only information that gets passed forward in time, so note anything important here. You can be as verbose as you like.]
