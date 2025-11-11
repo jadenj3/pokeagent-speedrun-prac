@@ -1316,10 +1316,10 @@ Context: {context} """
                         target_value = parts[2].strip() if len(parts) > 2 else None
                         
                         # Parse target_value based on type
-                        parsed_target = self._parse_target_value(obj_type, target_value)
+                        #parsed_target = self._parse_target_value(obj_type, target_value)
                         
                         # Add the objective
-                        self.add_objective(description, obj_type, parsed_target)
+                        self.add_objective(description, obj_type, target_value)
                 
                 elif upper_line.startswith('COMPLETE_OBJECTIVE:'):
                     # Parse format: COMPLETE_OBJECTIVE: objective_id:notes
