@@ -55,7 +55,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_MAX_HISTORY_ENTRIES = 100  # Previous states/locations with context
 DEFAULT_MAX_RECENT_ACTIONS = 50    # Recent button presses
 DEFAULT_HISTORY_DISPLAY_COUNT = 30 # Number of history entries shown to LLM
-DEFAULT_ACTIONS_DISPLAY_COUNT = 10 # Number of recent actions shown to LLM
+DEFAULT_ACTIONS_DISPLAY_COUNT = 5 # Number of recent actions shown to LLM
 DEFAULT_MOVEMENT_MEMORY_CLEAR_INTERVAL = 30  # Clear movement memory after N actions (0 = never clear)
 
 def configure_simple_agent_defaults(max_history_entries: int = None, max_recent_actions: int = None, 
@@ -913,7 +913,7 @@ class SimpleAgent:
             pathfinding_rules = ""
             if context != "title":
                 pathfinding_rules = ""
-            recent_coords = [entry.player_coords for entry in list(self.state.history)[-10:]]
+            recent_coords = [entry.player_coords for entry in list(self.state.history)[-5:]]
             loop_warning = ""
             if len(set(recent_coords[-6:])) <= 3 and len(recent_coords) >= 6:
                 loop_warning = "⚠️ You are revisiting the same coordinates repeatedly. Pick a direction you haven't tried yet (use the map and movement preview)."
@@ -996,7 +996,7 @@ Movement preview (check this to make sure you aren't selecting a blocked action)
 {map_preview}
 IMPORTANT: The movement preview doesn't show NPCs, so look for visual confirmation if you think an NPC is blocking your path. If you are blocked by an NPC you should move around them, they only block a single tile. If you need to complete a story segment to move an npc, it will show up in your objectives.
 
-This is your recent coordinate history:
+This is your recent coordinate history, check this and your action history to see if you are stuck:
 {recent_coords}
 
 Your recent actions are:
