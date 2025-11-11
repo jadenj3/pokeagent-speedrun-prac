@@ -787,18 +787,27 @@ class SimpleAgent:
         return ['A']  # No path found
 
     def reachable_tiles(self, json_data):
-        """Return list of reachable coordinates from the player's position given JSON tiles."""
+        """Return structured info about reachable tiles, highlighting doors/stairs/warps."""
+        summary = {
+            "total": 0,
+            "tiles": [],
+            "warps": [],
+            "doors": [],
+            "stairs": [],
+            "text": "No reachable tiles"
+        }
+
         if not json_data or not json_data.get("tiles") or not json_data.get("player_position"):
-            return []
+            return summary
 
         tile_map = {(tile["x"], tile["y"]): tile for tile in json_data["tiles"]}
         start = json_data["player_position"]
         if start is None or "x" not in start or "y" not in start:
-            return []
+            return summary
 
         start_coord = (start["x"], start["y"])
         if not tile_map.get(start_coord, {}).get("walkable", True):
-            return []
+            return summary
 
         visited = set([start_coord])
         queue = [start_coord]
@@ -808,11 +817,67 @@ class SimpleAgent:
             x, y = queue.pop(0)
             for dx, dy in directions:
                 nx, ny = x + dx, y + dy
-                if (nx, ny) not in visited and tile_map.get((nx, ny), {}).get("walkable"):
+                tile = tile_map.get((nx, ny))
+                if tile and tile.get("walkable") and (nx, ny) not in visited:
                     visited.add((nx, ny))
                     queue.append((nx, ny))
 
-        return list(visited)
+        reachable_list = []
+        warps = []
+        doors = []
+        stairs = []
+
+        for coord in sorted(visited):
+            tile = tile_map.get(coord, {})
+            tile_type = tile.get("type", "walkable")
+            entry = {
+                "x": coord[0],
+                "y": coord[1],
+                "type": tile_type
+            }
+            if tile.get("warp_destination"):
+                entry["warp_destination"] = tile["warp_destination"]
+            reachable_list.append(entry)
+
+            tile_type_lower = tile_type.lower()
+            if tile.get("warp_destination") or "warp" in tile_type_lower:
+                warps.append(entry)
+            elif tile_type_lower == "door":
+                doors.append(entry)
+            elif tile_type_lower == "stairs":
+                stairs.append(entry)
+
+        summary["total"] = len(reachable_list)
+        summary["tiles"] = reachable_list
+        summary["warps"] = warps
+        summary["doors"] = doors
+        summary["stairs"] = stairs
+
+        def _fmt_entry(entry):
+            base = f"({entry['x']},{entry['y']})"
+            if entry.get("warp_destination"):
+                dest = entry["warp_destination"]
+                dest_name = dest.get("to_name", "Unknown")
+                target = dest.get("to_pos")
+                if target:
+                    base += f" → {dest_name} ({target[0]},{target[1]})"
+                else:
+                    base += f" → {dest_name}"
+            return base
+
+        lines = [f"Reachable tiles: {summary['total']}"]
+        sample_coords = [_fmt_entry(entry) for entry in reachable_list[:20]]
+        if sample_coords:
+            lines.append("Sample: " + ", ".join(sample_coords))
+        if doors:
+            lines.append("Doors: " + ", ".join(_fmt_entry(entry) for entry in doors))
+        if stairs:
+            lines.append("Stairs: " + ", ".join(_fmt_entry(entry) for entry in stairs))
+        if warps:
+            lines.append("Warps: " + ", ".join(_fmt_entry(entry) for entry in warps))
+        summary["text"] = "\n".join(lines)
+
+        return summary
 
     def process_step(self, frame, game_state: Dict[str, Any]) -> str:
         """
@@ -907,7 +972,8 @@ class SimpleAgent:
             map_only_sections, json_data = _format_map_info(map_info, player_data, include_npcs=True, full_state_data=game_state, use_json_map=True)
             map_only = "\n".join(map_only_sections) if map_only_sections else ""
 
-            reachable_tiles = self.reachable_tiles(json_data)
+            reachable_tiles_info = self.reachable_tiles(json_data)
+            reachable_tiles_text = reachable_tiles_info["text"]
 
             player_location = game_state.get("player", {}).get("location", "Unknown Location")
             pathfinding_rules = ""
@@ -990,7 +1056,7 @@ Your current location is:
 {player_location}
 
 The current reachable tiles from your location are:
-{reachable_tiles}
+{reachable_tiles_text}
 
 Movement preview (check this to make sure you aren't selecting a blocked action):
 {map_preview}
