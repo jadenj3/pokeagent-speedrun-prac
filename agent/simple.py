@@ -934,7 +934,7 @@ Current story objectives you are trying to accomplish:
 {objectives_summary}
 
 These are the objectives you have currently added (and potentially some that were recently completed):
-
+{added_objectives_summary}
 
 You should format your response as follows.
 
