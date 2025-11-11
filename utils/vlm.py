@@ -784,9 +784,11 @@ class GeminiBackend(VLMBackend):
         )
         return response
 
-    def get_query(self, img: Union[Image.Image, np.ndarray], text: str, module_name: str = "Unknown") -> str:
+    def get_query(self, img: Union[Image.Image, np.ndarray], text: str, module_name: str = "Unknown", model_name = None) -> str:
         """Process an image and text prompt using Gemini API"""
         start_time = time.time()
+        if model_name:
+            self.model_name = model_name
         try:
             image = self._prepare_image(img)
             content_parts = [text, image]
@@ -904,7 +906,7 @@ class VLM:
         """
         self.model_name = model_name
         self.backend_type = backend.lower()
-        
+
         # Auto-detect backend based on model name if not explicitly specified
         if backend == 'auto':
             self.backend_type = self._auto_detect_backend(model_name)
@@ -961,14 +963,19 @@ class VLM:
             return 'openai'
     
     def get_query(self, img: Union[Image.Image, np.ndarray], text: str, module_name: str = "Unknown",
-                  reasoning_effort: Optional[str] = None) -> str:
+                  reasoning_effort: Optional[str] = None, model_name: Optional[str] = None) -> str:
         """Process an image and text prompt"""
         try:
             backend_kwargs = {}
+            effective_model = model_name or self.model_name
             if reasoning_effort and getattr(self.backend, "supports_reasoning_effort", False):
                 backend_kwargs["reasoning_effort"] = reasoning_effort
+            if model_name and self.backend_type == "gemini":
+                backend_kwargs["model_name"] = model_name
             # Backend handles its own logging, so we don't duplicate it here
             result = self.backend.get_query(img, text, module_name, **backend_kwargs)
+            if model_name and self.backend_type == "gemini":
+                self.model_name = model_name
             return result
         except Exception as e:
             # Only log errors that aren't already logged by the backend
@@ -978,7 +985,7 @@ class VLM:
                 prompt=text,
                 error=str(e),
                 metadata={
-                    "model": self.model_name,
+                    "model": effective_model,
                     "backend": self.backend.__class__.__name__,
                     "duration": duration,
                     "has_image": True

@@ -951,7 +951,7 @@ ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)]
                 if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                     print("🔍 Making VLM objectives call...")
                     try:
-                        response = self.vlm.get_query(frame, planning_prompt, "simple_mode")
+                        response = self.vlm.get_query(frame, planning_prompt, "simple_mode", model_name = 'gemini-2.5-pro')
                         print(f"🔍 VLM response received: {response[:100]}..." if len(
                             response) > 100 else f"🔍 VLM response: {response}")
                     except Exception as e:
@@ -1029,7 +1029,8 @@ MEMORIES:
 [Here you can add memories that will be persistently stored for the agent and displayed on subsequent turns.
 Every new line you add will be stored as a new memory, eg:
 Path south of the town is a dead end, avoid it.
-If I run low on pokemon health, I can heal at the pokemon center in the middle of town]
+If I run low on pokemon health, I can heal at the pokemon center in the middle of town
+Also try to avoid memorizing coordinates, it can throw you through a loop! General directions eg Left, Right, West are fine though.]
 
 ACTION:
 [If you are in dialogue, prefer single actions like 'A'. If you are stuck in a loop also prefer single actions, it will give you space to think about each move.
@@ -1064,7 +1065,7 @@ Context: {context} """
             if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                 print("🔍 Making VLM call...")
                 try:
-                    response = self.vlm.get_query(frame, prompt, "simple_mode")
+                    response = self.vlm.get_query(frame, prompt, "simple_mode", model_name = "gemini-flash-latest")
                     print(f"🔍 VLM response received: {response[:100]}..." if len(response) > 100 else f"🔍 VLM response: {response}")
                 except Exception as e:
                     print(f"❌ VLM call failed: {e}")
