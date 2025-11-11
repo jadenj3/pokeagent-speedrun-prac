@@ -168,6 +168,8 @@ class SimpleAgent:
         self.memories = []
 
         self.response_history = deque(maxlen=50)
+
+        self.last_turn_actions = []
     
     def set_reasoning_effort(self, effort: Optional[str]):
         """Adjust reasoning effort for subsequent model calls."""
@@ -973,6 +975,55 @@ class SimpleAgent:
             player_data = game_state.get('player', {}) or {}
             map_only_sections, json_data = _format_map_info(map_info, player_data, include_npcs=True, full_state_data=game_state, use_json_map=True)
             map_only = "\n".join(map_only_sections) if map_only_sections else ""
+            recent_coords = [entry.player_coords for entry in list(self.state.history)[-5:]]
+
+            def calculate_blocked_tiles(prev_coord, curr_coord, last_actions):
+                if 'A' in last_actions:
+                    return []
+
+                directions = {
+                    'UP': (0, -1),
+                    'DOWN': (0, 1),
+                    'LEFT': (-1, 0),
+                    'RIGHT': (1, 0)
+                }
+
+                curr_x, curr_y = curr_coord  # where we actually ended up
+                expected_x, expected_y = prev_coord  # where we started
+
+                for i, action in enumerate(last_actions):
+                    dx, dy = directions[action]
+                    next_expected_x = expected_x + dx
+                    next_expected_y = expected_y + dy
+
+                    if expected_x == curr_x and expected_y == curr_y:
+                        # We're at the current position, so the NEXT tile must be blocked
+                        return [(next_expected_x, next_expected_y)]
+
+                    # Move to next expected position
+                    expected_x, expected_y = next_expected_x, next_expected_y
+
+                # If we got through all actions and never matched curr_coord,
+                # either we made it to the end or something unexpected happened
+                return []
+
+            blocked_tiles = calculate_blocked_tiles(recent_coords[-1], player_coords, self.last_actions)
+
+            if blocked_tiles and json_data and json_data.get("tiles"):
+                blocked_set = set(blocked_tiles)
+                tile_lookup = {(tile["x"], tile["y"]): tile for tile in json_data["tiles"]}
+                for coord in blocked_set:
+                    tile = tile_lookup.get(coord)
+                    if tile:
+                        tile["walkable"] = False
+                        tile["type"] = tile.get("type") or "blocked"
+                    else:
+                        json_data["tiles"].append({
+                            "x": coord[0],
+                            "y": coord[1],
+                            "type": "blocked",
+                            "walkable": False
+                        })
 
             reachable_tiles_info = self.reachable_tiles(json_data)
             reachable_tiles_text = reachable_tiles_info["text"]
@@ -981,7 +1032,6 @@ class SimpleAgent:
             pathfinding_rules = ""
             if context != "title":
                 pathfinding_rules = ""
-            recent_coords = [entry.player_coords for entry in list(self.state.history)[-5:]]
             loop_warning = ""
             if len(set(recent_coords[-6:])) <= 3 and len(recent_coords) >= 6:
                 loop_warning = "⚠️ You are revisiting the same coordinates repeatedly. Pick a direction you haven't tried yet (use the map and movement preview)."
@@ -1153,6 +1203,9 @@ Context: {context} """
                 self.response_history.append(response)
             # Extract action(s) from structured response
             actions, reasoning, analysis = self._parse_structured_response(response, game_state, json_data = json_data)
+
+            self.last_turn_actions = actions
+
             self.prev_analysis.append(analysis)
             if len(self.prev_analysis) >= 2 and self.prev_analysis[-2] == self.prev_analysis[-1]:
                 self.prev_analysis = ["I seem to be stuck in a loop. I should carefully examine my situation and choose a different action this turn"]
