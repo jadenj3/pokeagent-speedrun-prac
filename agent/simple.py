@@ -1045,7 +1045,7 @@ ALSO IMPORTANT: To interact with NPCs you have to go to an adjacent tile and fac
 You also have to face items to interact with them. Again inspect the image to see if you are facing the item.
 
 This is your analysis from your previous turn, it will likely contain helpful context about your current situation. Use this when planning your next move:
-{self.prev_analysis[-5:]}
+{self.prev_analysis[-1]}
 
 Your current story objectives are:
 {objectives_summary}
