@@ -983,6 +983,8 @@ class SimpleAgent:
             loop_warning = ""
             if len(set(recent_coords[-6:])) <= 3 and len(recent_coords) >= 6:
                 loop_warning = "⚠️ You are revisiting the same coordinates repeatedly. Pick a direction you haven't tried yet (use the map and movement preview)."
+            if len(self.prev_analysis) > 0:
+                prev_analysis = self.prev_analysis[-1]
 
 
             planning_prompt = f"""
@@ -1045,7 +1047,7 @@ ALSO IMPORTANT: To interact with NPCs you have to go to an adjacent tile and fac
 You also have to face items to interact with them. Again inspect the image to see if you are facing the item.
 
 This is your analysis from your previous turn, it will likely contain helpful context about your current situation. Use this when planning your next move:
-{self.prev_analysis[-1]}
+{prev_analysis}
 
 Your current story objectives are:
 {objectives_summary}
