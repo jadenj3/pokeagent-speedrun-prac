@@ -164,6 +164,8 @@ class SimpleAgent:
         self._initialize_storyline_objectives()
 
         self.analysis = ""
+
+        self.memories = []
     
     def set_reasoning_effort(self, effort: Optional[str]):
         """Adjust reasoning effort for subsequent model calls."""
@@ -962,6 +964,9 @@ ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)]
                 actions, reasoning, analysis = self._parse_structured_response(response, game_state,
                                                                                json_data=json_data)
 
+                recent_memories = self.memories[-10:]
+                memories_str = "\n".join(recent_memories) if recent_memories else "None recorded yet."
+
             # Create enhanced prompt with objectives, history context and chain of thought request
             prompt = f"""You are playing as the Protagonist in Pokemon Emerald. 
             Based on the current game frame and state information, think through your next move and choose the best action.
@@ -1000,6 +1005,10 @@ Your recent actions are:
 
 And your current coordinates:
 {current_player_coords}
+
+Your recorded memories from previous turns:
+{memories_str}
+
 
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
 
@@ -1239,6 +1248,11 @@ Context: {context} """
                 elif line.upper().startswith('REASONING:'):
                     current_section = 'reasoning'
                     reasoning = line[10:].strip()  # Remove "REASONING:" prefix
+                elif line.upper().startswith('MEMORIES:'):
+                    current_section = 'memories'
+                    memory = line[9:].strip()
+                    if len(memory) > 5:
+                        self.memories.append(memory)
                 elif line.upper().startswith('ACTION:'):
                     current_section = 'action'
                     # Extract actions from this line
@@ -1255,6 +1269,8 @@ Context: {context} """
                         plan += " " + line
                     elif current_section == 'reasoning':
                         reasoning += " " + line
+                    elif current_section == 'memories':
+                        self.memories.append(line)
                     elif current_section == 'action':
                         # Additional action parsing from action section content
                         if line.strip():  # Only process non-empty lines
