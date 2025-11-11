@@ -1251,7 +1251,7 @@ Context: {context} """
                 elif line.upper().startswith('MEMORIES:'):
                     current_section = 'memories'
                     memory = line[9:].strip()
-                    if len(memory) > 5:
+                    if len(memory) > 5: #
                         self.memories.append(memory)
                 elif line.upper().startswith('ACTION:'):
                     current_section = 'action'
