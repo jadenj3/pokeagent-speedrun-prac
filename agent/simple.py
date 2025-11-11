@@ -1006,10 +1006,6 @@ Your recent actions are:
 And your current coordinates:
 {current_player_coords}
 
-Your recorded memories from previous turns:
-{memories_str}
-
-
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
 
 Remember: You can traverse tall grass.
@@ -1024,13 +1020,6 @@ OBJECTIVES:
 [Review your current objectives. You have main storyline objectives (story_*) that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them. These are your highest priority, everything you do should be in service of accomplishing these goals
 You can also Complete added objectives as follows: COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs")
 NOTE: Do NOT try to complete storyline objectives (story_*) - they auto-complete when milestones are reached]
-
-MEMORIES:
-[Here you can add memories that will be persistently stored for the agent and displayed on subsequent turns.
-Every new line you add will be stored as a new memory, eg:
-Path south of the town is a dead end, avoid it.
-If I run low on pokemon health, I can heal at the pokemon center in the middle of town
-Also try to avoid memorizing coordinates, it can throw you through a loop! General directions eg Left, Right, West are fine though.]
 
 ACTION:
 [If you are in dialogue, prefer single actions like 'A'. If you are stuck in a loop also prefer single actions, it will give you space to think about each move.
