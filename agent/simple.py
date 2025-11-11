@@ -931,11 +931,16 @@ You also have access to the current game frame. Visually inspect it to get a sen
 Current story objectives you are trying to accomplish:
 {objectives_summary}
 
+These are the objectives you have currently added (and potentially some that were recently completed):
+
+
 You should format your response as follows.
 
 OBJECTIVES:
 [Review your current objectives. You have main storyline objectives (story_*) that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them. 
-You also have access to the following command in this section to sub-objectives: ADD_OBJECTIVE: type:description:target_value (e.g., "ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)" or "ADD_OBJECTIVE: item:Buy Pokeballs:5"). The action model will be able to manually complete these objectives]
+You also have access to the following command in this section to sub-objectives: ADD_OBJECTIVE: type:description:target_value (e.g., "ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)" or "ADD_OBJECTIVE: item:Buy Pokeballs:5"). The action model will be able to manually complete these objectives
+This section should only contain calls do the ADD_OBJECTIVE tool at the start of each line, eg
+ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)]
 
 """
 
