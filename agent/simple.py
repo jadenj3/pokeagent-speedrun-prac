@@ -151,6 +151,8 @@ class SimpleAgent:
         self.state.history = deque(maxlen=max_history_entries)
         self.state.recent_actions = deque(maxlen=max_recent_actions)
 
+        self.story_objective_completed = False
+
         self.reasoning_effort: Optional[str] = "medium"
         
         # Display parameters for LLM prompts
@@ -552,6 +554,7 @@ class SimpleAgent:
                     obj.completed_at = datetime.now()
                     obj.progress_notes = f"Auto-completed by emulator milestone: {obj.milestone_id}"
                     self.state.objectives_updated = True
+                    self.story_objective_completed = True
                     completed_ids.append(obj.id)
                     logger.info(f"Auto-completed storyline objective via milestone {obj.milestone_id}: {obj.description}")
 
@@ -950,6 +953,7 @@ class SimpleAgent:
             
             # Check storyline milestones and auto-complete objectives
             self.check_storyline_milestones(game_state)
+
             
             # Get relevant history and stuck detection
             history_summary = self.get_relevant_history_summary(context, coords)
@@ -1077,7 +1081,7 @@ ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20). You should only add
 You can also complete added objectives, eg
 COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs")]
 """
-            '''
+
             self_critique_prompt = f"""
 You are managing an action agent for pokemon emerald in a pokemon emerald speedrun. You are the self critique module. You should examine the current objectives, the analysis history of the planning agent, and use your knowledge of pokemon emerald to detect loops, mistaken assumptions, and provide guidance for the action module to complete the main story objectives.
 You are called at the start of a turn for the LLM, so the actions you are seeing have already occured. 
@@ -1086,11 +1090,12 @@ These are the previous responses:
 """
             # Make VLM call for planning module - double-check frame validation before VLM
             self_critique_response = ""
-            if self.state.step_counter == 1 or self.state.step_counter % 50 == 0:
+            '''
+            if self.state.step_counter == 1 or self.story_objective_completed:
                 if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                     print("🔍 Making VLM objectives call...")
                     try:
-                        response = self.vlm.get_query(frame, self_critique_prompt, "simple_mode", model_name = 'gemini-2.5-pro')
+                        response = self.vlm.get_query(frame, planning_prompt, "simple_mode", model_name = 'gemini-2.5-pro')
                         print(f"🔍 VLM response received: {response[:100]}..." if len(
                             response) > 100 else f"🔍 VLM response: {response}")
                     except Exception as e:
@@ -1101,8 +1106,8 @@ These are the previous responses:
                     return "WAIT"
                 # will automatically update objectives
             actions, reasoning, analysis = self._parse_structured_response(response, game_state, json_data=json_data)
+            self.story_objective_completed = False'''
 
-            '''
             # Create enhanced prompt with objectives, history context and chain of thought request
             prompt = f"""You are playing as the Protagonist Brendan in Pokemon Emerald. 
             Based on the current game frame and state information, think through your next move and choose the best action.
