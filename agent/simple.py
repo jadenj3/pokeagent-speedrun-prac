@@ -163,7 +163,7 @@ class SimpleAgent:
         # Initialize storyline objectives for Emerald progression
         self._initialize_storyline_objectives()
 
-        self.analysis = ""
+        self.prev_analysis = []
 
         self.memories = []
     
@@ -1045,7 +1045,7 @@ ALSO IMPORTANT: To interact with NPCs you have to go to an adjacent tile and fac
 You also have to face items to interact with them. Again inspect the image to see if you are facing the item.
 
 This is your analysis from your previous turn, it will likely contain helpful context about your current situation. Use this when planning your next move:
-{self.analysis}
+{self.prev_analysis[-5:]}
 
 Your current story objectives are:
 {objectives_summary}
@@ -1128,7 +1128,9 @@ Context: {context} """
             
             # Extract action(s) from structured response
             actions, reasoning, analysis = self._parse_structured_response(response, game_state, json_data = json_data)
-            self.analysis = analysis or self.analysis
+            self.prev_analysis.append(analysis)
+            if len(self.prev_analysis) >= 2 and self.prev_analysis[-2] == self.prev_analysis[-1]:
+                self.prev_analysis = ["I seem to be stuck in a loop. I should carefully examine my situation and choose a different action this turn"]
             # Check for failed movement by comparing previous coordinates
             if len(self.state.history) > 0:
                 prev_coords = self.state.history[-1].player_coords
