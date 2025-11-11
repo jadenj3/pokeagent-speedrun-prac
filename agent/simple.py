@@ -166,6 +166,8 @@ class SimpleAgent:
         self.prev_analysis = []
 
         self.memories = []
+
+        self.response_history = deque(maxlen=50)
     
     def set_reasoning_effort(self, effort: Optional[str]):
         """Adjust reasoning effort for subsequent model calls."""
@@ -988,6 +990,12 @@ class SimpleAgent:
             else:
                 prev_analysis = "No previous analysis yet"
 
+            recent_responses = list(self.response_history)[-3:]  # or whatever count you want
+            prev_responses_str = "\n".join(
+                f"{resp.strip()}\n{'=' * 80}"
+                for resp in recent_responses
+            )
+            prev_responses_str = prev_responses_str.rstrip("=\n")  # optional to drop trailing bar
 
             planning_prompt = f"""
 You are the planning module for a pokemon emerald agent speedrun scaffolding. 
@@ -1016,15 +1024,21 @@ ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)]
 
 """
 
+            self_critique_prompt = f"""
+You are managing an action agent for pokemon emerald in a pokemon emerald speedrun. You are the self critique module. You should examine the current objectives, the analysis history of the planning agent, and use your knowledge of pokemon emerald to detect loops, mistaken assumptions, and provide guidance for the action module to complete the main story objectives.
+These are the previous responses:
+{prev_responses_str}
+"""
             # Make VLM call for planning module - double-check frame validation before VLM
-            '''
-            if self.state.step_counter == 1 or self.state.step_counter % 100 == 0:
+            self_critique_response = ""
+            if self.state.step_counter > 1:
                 if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                     print("🔍 Making VLM objectives call...")
                     try:
-                        response = self.vlm.get_query(frame, planning_prompt, "simple_mode", model_name = 'gemini-2.5-pro')
+                        response = self.vlm.get_query(frame, self_critique_prompt, "simple_mode", model_name = 'gemini-2.5-pro')
                         print(f"🔍 VLM response received: {response[:100]}..." if len(
                             response) > 100 else f"🔍 VLM response: {response}")
+                        self_critique_response = response
                     except Exception as e:
                         print(f"❌ VLM call failed: {e}")
                         return "WAIT"
@@ -1032,11 +1046,7 @@ ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)]
                     logger.error("🚫 CRITICAL: About to call VLM but frame validation failed - this should never happen!")
                     return "WAIT"
                 # will automatically update objectives
-                actions, reasoning, analysis = self._parse_structured_response(response, game_state,
-                                                                               json_data=json_data)
 
-            recent_memories = self.memories[-10:]
-            memories_str = "\n".join(recent_memories) if recent_memories else "None recorded yet."'''
 
             # Create enhanced prompt with objectives, history context and chain of thought request
             prompt = f"""You are playing as the Protagonist Brendan in Pokemon Emerald. 
@@ -1047,9 +1057,6 @@ Hint: Use the reachable tiles, map preview, and visual frame to determine which 
 
 ALSO IMPORTANT: To interact with NPCs you have to go to an adjacent tile and face them. You don't have this information from memory, so visually inspect the image to see if you are facing the NPC before pressing 'A'.
 You also have to face items to interact with them. Again inspect the image to see if you are facing the item.
-
-This is your analysis from your previous turn, it will likely contain helpful context about your current situation. Use this when planning your next move:
-{prev_analysis}
 
 Your current story objectives are:
 {objectives_summary}
@@ -1079,6 +1086,11 @@ Do not select a movement that is blocked.
 
 **IMPORTANT** To enter doors/stairs/warps CHECK THE MOVEMENT PREVIEW AND USE SINGLE ACTIONS. navigate_to is great for long distances, but it can struggle with entering locations if you are not perfectly aligned with the door or you are stuck on an NPC. The movement preview will have better information for you to use.
 If you want to you can use navigate_to to get close to the door, but afterwards make sure to use single actions.
+
+
+You managed by a planning agent that has access to your analysis and turn history. They will provide a critique of your actions here:
+{self_critique_response}
+You should listen to their advice and follow their instructions, they have a lot of context on your current state and provide useful guidance.
 
 In your response include the following sections:
 
@@ -1129,7 +1141,8 @@ Context: {context} """
             else:
                 logger.error("🚫 CRITICAL: About to call VLM but frame validation failed - this should never happen!")
                 return "WAIT"
-            
+            if response:
+                self.response_history.append(response)
             # Extract action(s) from structured response
             actions, reasoning, analysis = self._parse_structured_response(response, game_state, json_data = json_data)
             self.prev_analysis.append(analysis)
