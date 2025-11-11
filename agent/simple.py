@@ -947,6 +947,7 @@ ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)]
 """
 
             # Make VLM call for planning module - double-check frame validation before VLM
+            '''
             if self.state.step_counter == 1 or self.state.step_counter % 100 == 0:
                 if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                     print("🔍 Making VLM objectives call...")
@@ -965,14 +966,13 @@ ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)]
                                                                                json_data=json_data)
 
             recent_memories = self.memories[-10:]
-            memories_str = "\n".join(recent_memories) if recent_memories else "None recorded yet."
+            memories_str = "\n".join(recent_memories) if recent_memories else "None recorded yet."'''
 
             # Create enhanced prompt with objectives, history context and chain of thought request
             prompt = f"""You are playing as the Protagonist in Pokemon Emerald. 
             Based on the current game frame and state information, think through your next move and choose the best action.
 
 Hint: Use the reachable tiles, map preview, and visual frame to determine which coordinate you want to go to, then use the navigate_to(x,y) action to find the optimal path to your destination.
-Remember that ledges are blocked.
 **IMPORTANT**: navigate_to() doesn't have accurate NPC data, so you have to use your visual information and manually step around the NPC, otherwise you risk being stuck in a loop walking into the NPC.
 
 ALSO IMPORTANT: To interact with NPCs you have to go to an adjacent tile and face them. You don't have this information from memory, so visually inspect the image to see if you are facing the NPC before pressing 'A'.
@@ -981,11 +981,10 @@ You also have to face items to interact with them. Again inspect the image to se
 This is your analysis from your previous turn, it will likely contain helpful context about your current situation. Use this when planning your next move:
 {self.analysis}
 
-Your current objectives are:
+Your current story objectives are:
 {objectives_summary}
 
-You also have access to intermediary objectives added by a separate planning agent. Look to these for guidance and hints. They will help you accomplish your main goal:
-{added_objectives_summary}
+Make sure to review your current objectives. You have main storyline objectives that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them. These are your highest priority, everything you do should be in service of accomplishing these goals
 
 Your current location is:
 {player_location}
@@ -1008,18 +1007,12 @@ And your current coordinates:
 
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
 
-Remember: You can traverse tall grass.
 Do not select a movement that is blocked. 
 
 **IMPORTANT** To enter doors/stairs/warps CHECK THE MOVEMENT PREVIEW AND USE SINGLE ACTIONS. navigate_to is great for long distances, but it can struggle with entering locations if you are not perfectly aligned with the door or you are stuck on an NPC. The movement preview will have better information for you to use.
 If you want to you can use navigate_to to get close to the door, but afterwards make sure to use single actions.
 
 In your response include the following sections:
-
-OBJECTIVES:
-[Review your current objectives. You have main storyline objectives (story_*) that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them. These are your highest priority, everything you do should be in service of accomplishing these goals
-You can also Complete added objectives as follows: COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs")
-NOTE: Do NOT try to complete storyline objectives (story_*) - they auto-complete when milestones are reached]
 
 ACTION:
 [If you are in dialogue, prefer single actions like 'A'. If you are stuck in a loop also prefer single actions, it will give you space to think about each move.
