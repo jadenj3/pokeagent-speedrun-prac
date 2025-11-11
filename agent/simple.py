@@ -954,7 +954,7 @@ class SimpleAgent:
             # Get relevant history and stuck detection
             history_summary = self.get_relevant_history_summary(context, coords)
             stuck_warning = self.get_stuck_warning(coords, context, game_state)
-            recent_actions_str = ', '.join(list(self.state.recent_actions)[-self.actions_display_count:]) if self.state.recent_actions else 'None'
+            recent_actions_str = ', '.join(list(self.state.recent_actions)[-1:]) if self.state.recent_actions else 'None'
             
             # Format objectives for LLM
             active_objectives = self.get_active_objectives()
@@ -1129,9 +1129,6 @@ The current reachable tiles from your location are:
 Movement preview (check this to make sure you aren't selecting a blocked action):
 {map_preview}
 IMPORTANT: The movement preview doesn't show NPCs, so look for visual confirmation if you think an NPC is blocking your path. If you are blocked by an NPC you should move around them, they only block a single tile. If you need to complete a story segment to move an npc, it will show up in your objectives.
-
-This is your recent coordinate history, check this and your action history to see if you are stuck:
-{recent_coords}
 
 Your recent actions are:
 {recent_actions_str}
