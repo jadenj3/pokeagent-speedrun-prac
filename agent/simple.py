@@ -1006,8 +1006,9 @@ class SimpleAgent:
                 # If we got through all actions and never matched curr_coord,
                 # either we made it to the end or something unexpected happened
                 return []
-
-            blocked_tiles = calculate_blocked_tiles(recent_coords[-1], player_coords, self.last_actions)
+            blocked_tiles = []
+            if len(recent_coords) > 0 and len(self.last_actions) > 0 and player_coords:
+                blocked_tiles = calculate_blocked_tiles(recent_coords[-1], player_coords, self.last_actions)
 
             if blocked_tiles and json_data and json_data.get("tiles"):
                 blocked_set = set(blocked_tiles)
