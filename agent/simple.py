@@ -964,8 +964,8 @@ ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)]
                 actions, reasoning, analysis = self._parse_structured_response(response, game_state,
                                                                                json_data=json_data)
 
-                recent_memories = self.memories[-10:]
-                memories_str = "\n".join(recent_memories) if recent_memories else "None recorded yet."
+            recent_memories = self.memories[-10:]
+            memories_str = "\n".join(recent_memories) if recent_memories else "None recorded yet."
 
             # Create enhanced prompt with objectives, history context and chain of thought request
             prompt = f"""You are playing as the Protagonist in Pokemon Emerald. 
