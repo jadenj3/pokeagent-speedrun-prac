@@ -3794,24 +3794,25 @@ class PokemonEmeraldReader:
                 return []
             
             player_x, player_y = player_coords
+            object_events = []
             
-            # Prefer static spawn positions from gObjectEvents
-            static_npcs = self._read_gobject_static_events(player_x, player_y)
-            if not static_npcs:
-                logger.debug("Falling back to known NPC address list for static NPCs")
-                static_npcs = self._read_known_npc_addresses(player_x, player_y)
+            # Method 1: Get stable NPC base positions first
+            logger.debug("Reading base NPC positions from known addresses...")
+            known_npcs = self._read_known_npc_addresses(player_x, player_y)
+            
+            if known_npcs:
+                # Method 2: Try to enhance with walking positions from OAM
+                logger.debug("Enhancing NPCs with walking positions from OAM...")
+                enhanced_npcs = self._enhance_npcs_with_oam_walking(known_npcs, player_x, player_y)
+                object_events.extend(enhanced_npcs)
+            else:
+                logger.debug("No known NPCs found, this shouldn't happen in npc.state")
+                object_events = []
             
             # Filter out false positives (NPCs on door tiles)
-            filtered_events = self._filter_door_false_positives(static_npcs, player_x, player_y)
+            filtered_events = self._filter_door_false_positives(object_events, player_x, player_y)
             
-            # Log NPC positions every step for debugging
-            if filtered_events:
-                npc_coords = ", ".join(f"({npc['current_x']},{npc['current_y']})" for npc in filtered_events)
-                print(f"[NPC DEBUG] Static NPCs near player: {npc_coords}")
-            else:
-                print("[NPC DEBUG] No static NPCs detected near player")
-            
-            logger.info(f"📍 Found {len(filtered_events)} static NPCs near player at ({player_x}, {player_y})")
+            logger.info(f"📍 Found {len(filtered_events)} NPCs/trainers near player at ({player_x}, {player_y})")
             
             return filtered_events
             
@@ -4213,71 +4214,6 @@ class PokemonEmeraldReader:
         except Exception as e:
             logger.debug(f"IWRAM NPC scanning failed: {e}")
             
-        return object_events
-    
-    def _read_gobject_static_events(self, player_x, player_y):
-        """
-        Read static NPC spawn positions from gObjectEvents (initialCoords only).
-        This provides reliable, non-moving NPC positions.
-        """
-        object_events = []
-        try:
-            gobject_events_addr = 0x02037230
-            max_object_events = 16
-            object_event_size = 68
-            
-            for i in range(max_object_events):
-                try:
-                    event_addr = gobject_events_addr + (i * object_event_size)
-                    active_flags = self._read_u32(event_addr + 0x00)
-                    active = active_flags & 0x1
-                    if not active:
-                        continue
-                    
-                    initial_x = self._read_s16(event_addr + 0x14)
-                    initial_y = self._read_s16(event_addr + 0x16)
-                    
-                    if initial_x is None or initial_y is None:
-                        continue
-                    if initial_x < -50 or initial_x > 200 or initial_y < -50 or initial_y > 200:
-                        continue
-                    if initial_x == 1023 and initial_y == 1023:
-                        continue
-                    
-                    distance = abs(initial_x - player_x) + abs(initial_y - player_y)
-                    if distance > 20:
-                        continue
-                    
-                    local_id = self._read_u8(event_addr + 0x02)
-                    graphics_id = self._read_u8(event_addr + 0x03)
-                    movement_type = self._read_u8(event_addr + 0x04)
-                    trainer_type = self._read_u8(event_addr + 0x05)
-                    
-                    object_event = {
-                        'id': f'gobj_static_{i}',
-                        'obj_event_id': self._read_u8(event_addr + 0x01),
-                        'local_id': local_id,
-                        'graphics_id': graphics_id,
-                        'movement_type': movement_type,
-                        'current_x': int(initial_x),
-                        'current_y': int(initial_y),
-                        'initial_x': int(initial_x),
-                        'initial_y': int(initial_y),
-                        'elevation': 0,
-                        'trainer_type': trainer_type,
-                        'active': 1,
-                        'memory_address': event_addr,
-                        'source': f'gobject_static_{i}_({initial_x},{initial_y})',
-                        'walking_position': False
-                    }
-                    object_events.append(object_event)
-                except Exception as e:
-                    logger.debug(f"Failed to read gObjectEvent static NPC at slot {i}: {e}")
-                    continue
-            
-        except Exception as e:
-            logger.debug(f"Error reading gObjectEvents for static NPCs: {e}")
-        
         return object_events
     
     def _read_gobject_walking_positions(self, player_x, player_y):
