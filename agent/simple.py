@@ -1032,7 +1032,8 @@ IMPORTANT RULE: Don't interact with NPCs unless you have to. It will likely wast
 ALSO IMPORTANT: You interact with warps/stairs by walking into them, not pressing 'A'. They will also show up in your movement preview. Confirm you are in front of them using your movement preview, then walk into them to transition.]
 
 ANALYSIS:
-[Summarize your current situation. This will be passed onto you as context during your next turn. It's especially important to summarize any dead ends you found and potential alternate paths. This is the only information that gets passed forward in time, so note anything important here. You can be as verbose as you like.]
+[Summarize your current situation. This will be passed onto you as context during your next turn. It's especially important to summarize any dead ends you found and potential alternate paths. This is the only information that gets passed forward in time, so note anything important here. You can be as verbose as you like.
+Very important: Avoid mentioning coordinates at all here, you tend to hallucinate and confuse yourself, ending up in an eternal loop]
 Context: {context} """
             
             # Print complete prompt to terminal for debugging
