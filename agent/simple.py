@@ -1037,7 +1037,7 @@ ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)]
             memories_str = "\n".join(recent_memories) if recent_memories else "None recorded yet."'''
 
             # Create enhanced prompt with objectives, history context and chain of thought request
-            prompt = f"""You are playing as the Protagonist in Pokemon Emerald. 
+            prompt = f"""You are playing as the Protagonist Brendan in Pokemon Emerald. 
             Based on the current game frame and state information, think through your next move and choose the best action.
 
 Hint: Use the reachable tiles, map preview, and visual frame to determine which coordinate you want to go to, then use the navigate_to(x,y) action to find the optimal path to your destination.
