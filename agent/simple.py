@@ -1233,8 +1233,8 @@ Context: {context} """
             if path:
                 return path
 
-        if interact_with and json_data:
-            path, last_tile = self.a_star(json_data, dest_x, dest_y)
+        #if interact_with and json_data:
+            #path, last_tile = self.a_star(json_data, dest_x, dest_y)
 
 
         response_upper = response.upper().strip()
