@@ -1273,11 +1273,26 @@ Context: {context} """
 
         nav_match = re.search(r"navigate_to\s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)",
                               response, flags=re.IGNORECASE)
-        interact_with = False
+        def build_interact_actions(json_data, dest_x, dest_y):
+            coord = (dest_x, dest_y)
+            tile_lookup = {(tile["x"], tile["y"]): tile for tile in json_data["tiles"]}
+            tile = tile_lookup.get(coord)
+            if tile:
+                tile["walkable"] = True
+                tile["type"] = tile.get("type") or "walkable"
+            else:
+                json_data["tiles"].append({
+                    "x": coord[0],
+                    "y": coord[1],
+                    "type": "walkable",
+                    "walkable": True
+                })
+            path = self.a_star(json_data, dest_x, dest_y)
+            if not path:
+                return []
+            path.append("A")
+            return path
 
-        def interact_with(json_data, dest_x, dest_y):
-            #path, last_tile = self.a_star(json_data, dest_x, dest_y)
-            pass
 
         if nav_match and json_data:
             dest_x, dest_y = map(int, nav_match.groups())
@@ -1285,8 +1300,15 @@ Context: {context} """
             if path:
                 return path
 
-        #if interact_with and json_data:
-            #path, last_tile = self.a_star(json_data, dest_x, dest_y)
+        interact_match = re.search(r"interact_with\s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)",
+                                   response, flags=re.IGNORECASE)
+        if interact_match and json_data:
+            dest_x, dest_y = map(int, interact_match.groups())
+            path = build_interact_actions(json_data, dest_x, dest_y)
+            if path:
+                return path
+            else:
+                logger.warning(f"interact_with({dest_x},{dest_y}) failed to find a path; falling back to raw actions")
 
 
         response_upper = response.upper().strip()
