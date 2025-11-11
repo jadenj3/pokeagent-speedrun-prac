@@ -1221,11 +1221,21 @@ Context: {context} """
 
         nav_match = re.search(r"navigate_to\s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)",
                               response, flags=re.IGNORECASE)
+        interact_with = False
+
+        def interact_with(json_data, dest_x, dest_y):
+            #path, last_tile = self.a_star(json_data, dest_x, dest_y)
+            pass
+
         if nav_match and json_data:
             dest_x, dest_y = map(int, nav_match.groups())
             path = self.a_star(json_data, dest_x, dest_y)
             if path:
                 return path
+
+        if interact_with and json_data:
+            path, last_tile = self.a_star(json_data, dest_x, dest_y)
+
 
         response_upper = response.upper().strip()
         valid_actions = ['A', 'B', 'START', 'SELECT', 'UP', 'DOWN', 'LEFT', 'RIGHT', 'WAIT']
