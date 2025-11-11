@@ -1036,7 +1036,7 @@ ACTION:
 [If you are in dialogue, prefer single actions like 'A'. If you are stuck in a loop also prefer single actions, it will give you space to think about each move.
 You also have access to the navigate_to(x,y) tool. This will automatically run A* on your selected coordinate to find the optimal way to reach your destination. This is a powerful tool that should be used
 liberally! Using it will also override any other actions you input, so don't include it with other actions.
-When using the navigate_to(x,y) tool, make sure to only choose reachable tiles! This information is provided above.
+When using the navigate_to(x,y) tool, make sure to only choose reachable tiles! This information is provided above. Lower X means the tile is to your west, while a lower Y means the tile is to your north.
 Some important notes: Don't use the navigate_to(x,y) tool when you are in dialogue or battle, you will be stuck.
 The navigate_to tool also doesn't contain information about NPCs, so if you are near an NPC and become stuck, you likely need to use single actions without the tool to sidestep them manually.
 IMPORTANT RULE: Don't interact with NPCs unless you have to. It will likely waste time.]
