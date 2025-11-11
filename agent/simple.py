@@ -1305,7 +1305,7 @@ Context: {context} """
 
                 if upper_line.startswith('ADD_OBJECTIVE:'):
                     # Parse format: ADD_OBJECTIVE: type:description:target_value
-                    content = normalized_line[14:].strip()  # Remove prefix
+                    content = line[14:].strip()  # Remove prefix
                     parts = content.split(':', 2)  # Split into max 3 parts
                     
                     if len(parts) >= 2:
@@ -1321,7 +1321,7 @@ Context: {context} """
                 
                 elif upper_line.startswith('COMPLETE_OBJECTIVE:'):
                     # Parse format: COMPLETE_OBJECTIVE: objective_id:notes
-                    content = normalized_line[19:].strip()  # Remove prefix
+                    content = line[19:].strip()  # Remove prefix
                     parts = content.split(':', 1)  # Split into max 2 parts
                     
                     if len(parts) >= 1:
