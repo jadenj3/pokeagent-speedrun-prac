@@ -1250,7 +1250,7 @@ Context: {context} """
                     if current_section == 'analysis':
                         analysis += " " + line
                     elif current_section == 'objectives':
-                        objectives_section += " " + line
+                        objectives_section += "\n" + line
                     elif current_section == 'plan':
                         plan += " " + line
                     elif current_section == 'reasoning':
