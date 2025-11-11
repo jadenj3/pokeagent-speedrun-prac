@@ -1083,7 +1083,7 @@ You are managing an action agent for pokemon emerald in a pokemon emerald speedr
 You are called at the start of a turn for the LLM, so the actions you are seeing have already occured. 
 These are the previous responses:
 {prev_responses_str}
-"""'''
+"""
             # Make VLM call for planning module - double-check frame validation before VLM
             self_critique_response = ""
             if self.state.step_counter == 1 or self.state.step_counter % 50 == 0:
