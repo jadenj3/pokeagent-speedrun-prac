@@ -985,6 +985,8 @@ class SimpleAgent:
                 loop_warning = "⚠️ You are revisiting the same coordinates repeatedly. Pick a direction you haven't tried yet (use the map and movement preview)."
             if len(self.prev_analysis) > 0:
                 prev_analysis = self.prev_analysis[-1]
+            else:
+                prev_analysis = "No previous analysis yet"
 
 
             planning_prompt = f"""
