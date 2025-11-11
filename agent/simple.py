@@ -1050,8 +1050,6 @@ This is your analysis from your previous turn, it will likely contain helpful co
 Your current story objectives are:
 {objectives_summary}
 
-Make sure to review your current objectives. You have main storyline objectives that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them. These are your highest priority, everything you do should be in service of accomplishing these goals
-
 Your current location is:
 {player_location}
 
@@ -1079,6 +1077,10 @@ Do not select a movement that is blocked.
 If you want to you can use navigate_to to get close to the door, but afterwards make sure to use single actions.
 
 In your response include the following sections:
+
+OBJECTIVES:
+[Make sure to review your current objectives. You have main storyline objectives that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them. These are your highest priority, everything you do should be in service of accomplishing these goals
+Think deeply about your current position and use your knowledge of pokemon emerald to figure out which direction to go to reach your next objective]
 
 ACTION:
 [If you are in dialogue, prefer single actions like 'A'. If you are stuck in a loop also prefer single actions, it will give you space to think about each move.
