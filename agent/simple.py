@@ -1020,7 +1020,9 @@ OBJECTIVES:
 [Review your current objectives. You have main storyline objectives (story_*) that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them. 
 You also have access to the following command in this section to sub-objectives: ADD_OBJECTIVE: type:description:target_value (e.g., "ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)" or "ADD_OBJECTIVE: item:Buy Pokeballs:5"). The action model will be able to manually complete these objectives
 This section should only contain calls do the ADD_OBJECTIVE tool at the start of each line, eg
-ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)]
+ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20). You should only add objectives that directly help you accomplish the next story goal.
+You can also complete added objectives, eg
+COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs")]
 
 """
             '''
@@ -1062,6 +1064,9 @@ You also have to face items to interact with them. Again inspect the image to se
 Your current story objectives are:
 {objectives_summary}
 
+Some intermediary objectives you have added are here:
+{added_objectives_summary}
+
 Your current location is:
 {player_location}
 
@@ -1081,6 +1086,7 @@ Your recent actions are:
 And your current coordinates:
 {current_player_coords}
 
+
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
 
 Do not select a movement that is blocked. 
@@ -1092,7 +1098,10 @@ In your response include the following sections:
 
 OBJECTIVES:
 [Make sure to review your current objectives. You have main storyline objectives that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them. These are your highest priority, everything you do should be in service of accomplishing these goals
-Think deeply about your current position and use your knowledge of pokemon emerald to figure out which direction to go to reach your next objective]
+You also have access to the following command in this section to sub-objectives: ADD_OBJECTIVE: type:description:target_value (e.g., "ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)" or "ADD_OBJECTIVE: item:Buy Pokeballs:5"). The action model will be able to manually complete these objectives
+This section should only contain calls do the ADD_OBJECTIVE tool at the start of each line, eg
+ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)
+]
 
 ACTION:
 [If you are in dialogue, prefer single actions like 'A'. If you are stuck in a loop also prefer single actions, it will give you space to think about each move.
