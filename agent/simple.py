@@ -989,7 +989,6 @@ You also have access to intermediary objectives added by a separate planning age
 
 Your current location is:
 {player_location}
-Remember: Smaller X means you are going west, smaller Y means you are going north.
 
 The current reachable tiles from your location are:
 {reachable_tiles}
@@ -1013,7 +1012,11 @@ Your recorded memories from previous turns:
 
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
 
+Remember: You can traverse tall grass.
 Do not select a movement that is blocked. 
+
+**IMPORTANT** To enter doors/stairs/warps CHECK THE MOVEMENT PREVIEW AND USE SINGLE ACTIONS. navigate_to is great for long distances, but it can struggle with entering locations if you are not perfectly aligned with the door or you are stuck on an NPC. The movement preview will have better information for you to use.
+If you want to you can use navigate_to to get close to the door, but afterwards make sure to use single actions.
 
 In your response include the following sections:
 
@@ -1033,7 +1036,7 @@ ACTION:
 [If you are in dialogue, prefer single actions like 'A'. If you are stuck in a loop also prefer single actions, it will give you space to think about each move.
 You also have access to the navigate_to(x,y) tool. This will automatically run A* on your selected coordinate to find the optimal way to reach your destination. This is a powerful tool that should be used
 liberally! Using it will also override any other actions you input, so don't include it with other actions.
-When using the navigate_to(x,y) tool, make sure to only choose reachable tiles! This information is provided above. Lower X means the tile is to your west, while a lower Y means the tile is to your north.
+When using the navigate_to(x,y) tool, make sure to only choose reachable tiles! This information is provided above.
 Some important notes: Don't use the navigate_to(x,y) tool when you are in dialogue or battle, you will be stuck.
 The navigate_to tool also doesn't contain information about NPCs, so if you are near an NPC and become stuck, you likely need to use single actions without the tool to sidestep them manually.
 IMPORTANT RULE: Don't interact with NPCs unless you have to. It will likely waste time.]
@@ -1062,7 +1065,7 @@ Context: {context} """
             if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                 print("🔍 Making VLM call...")
                 try:
-                    response = self.vlm.get_query(frame, prompt, "simple_mode", model_name = "gemini-2.5-pro")
+                    response = self.vlm.get_query(frame, prompt, "simple_mode", model_name = "gemini-2.5-flash")
                     print(f"🔍 VLM response received: {response[:100]}..." if len(response) > 100 else f"🔍 VLM response: {response}")
                 except Exception as e:
                     print(f"❌ VLM call failed: {e}")

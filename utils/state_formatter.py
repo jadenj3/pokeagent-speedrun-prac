@@ -785,21 +785,6 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
             radius = 7
             player_x, player_y = player_coords if player_coords else (0, 0)
 
-            center_y = len(raw_tiles) // 2 if raw_tiles else 0
-            center_x = len(raw_tiles[0]) // 2 if raw_tiles and raw_tiles[0] else 0
-            player_tile_symbol = None
-            if (0 <= center_y < len(raw_tiles) and
-                    raw_tiles and 0 <= center_x < len(raw_tiles[center_y]) and
-                    raw_tiles[center_y][center_x]):
-                player_tile_symbol = format_tile_to_symbol(
-                    raw_tiles[center_y][center_x],
-                    x=center_x,
-                    y=center_y,
-                    location_name=location_name
-                )
-
-            portal_lookup = _build_portal_lookup(full_state_data) if full_state_data else {}
-
             # Track interesting tiles for debug logging
             debug_tiles = {'stairs': [], 'door': [], 'tv': [], 'clock': [], 'computer': [], 'ledge': [], 'npc': []}
 
@@ -825,28 +810,8 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
                         game_x = player_x + (x_idx - radius)
                         game_y = player_y + (y_idx - radius)
 
-                        coord_key = (game_x, game_y)
-
-                        # Override walkability for known portals/warps so A* can target them
-                        portal_destination = portal_lookup.get(coord_key)
-                        if portal_destination:
-                            tile_walkable = True
-                            # Preserve existing symbol semantics but flag as warp for clarity
-                            if tile_type == "blocked":
-                                tile_type = "warp"
-
-                        # SPECIAL CASE: standing on stairs/door allows stepping onto the warp exit tile
-                        if (not tile_walkable and player_tile_symbol in {'S', 'D'} and
-                                symbol in {'#', 'W'} and player_coords):
-                            delta_x = abs(game_x - player_x)
-                            delta_y = abs(game_y - player_y)
-                            if delta_x + delta_y == 1:
-                                tile_walkable = True
-                                if tile_type == "blocked":
-                                    tile_type = "warp_exit"
-
-                        # NPCs occupy tiles and are not walkable
-                        if coord_key in npc_positions:
+                         # NPCs occupy tiles and are not walkable
+                        if (game_x, game_y) in npc_positions:
                             tile_type = "npc"
                             tile_walkable = False
 
@@ -854,16 +819,12 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
                         if tile_type in debug_tiles:
                             debug_tiles[tile_type].append((game_x, game_y))
 
-                        tile_entry = {
+                        tiles_list.append({
                             "x": game_x,
                             "y": game_y,
                             "type": tile_type,
                             "walkable": tile_walkable
-                        }
-                        if portal_destination:
-                            tile_entry["warp_destination"] = portal_destination
-
-                        tiles_list.append(tile_entry)
+                        })
 
             # Add hardcoded special objects for BRENDANS HOUSE 2F
             # (These objects don't have behavior values in memory, so we add them manually)
