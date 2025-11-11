@@ -922,7 +922,7 @@ You are the planning module for a pokemon emerald agent speedrun scaffolding.
 
 Your goal is to use your knowledge of pokemon emerald to add intermediary objectives with navigation tips that help the action agent accomplish its goals and finish the game. Make sure to only include objectives that directly help you accomplish the next goals!
 
-You will be called every 10 or so turns to add objectives to assist the agent to get to the next story objective, you have the most crucial role in the entire scaffolding!
+You will be called every 20 or so turns to add objectives to assist the agent to get to the next story objective, you have the most crucial role in the entire scaffolding!
 
 Think about common failure modes for pokemon agents. Sometimes they need explicitly directional hints to avoid loops or missing the right path!
 
@@ -945,7 +945,7 @@ ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)]
 """
 
             # Make VLM call for planning module - double-check frame validation before VLM
-            if self.state.step_counter == 1 or self.state.step_counter % 10 == 0:
+            if self.state.step_counter == 1 or self.state.step_counter % 20 == 0:
                 if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                     print("🔍 Making VLM objectives call...")
                     try:
