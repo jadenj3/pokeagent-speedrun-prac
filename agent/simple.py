@@ -1047,7 +1047,7 @@ class SimpleAgent:
                 for resp in recent_responses
             )
             prev_responses_str = prev_responses_str.rstrip("=\n")  # optional to drop trailing bar
-            '''
+
             planning_prompt = f"""
 You are the planning module for a pokemon emerald agent speedrun scaffolding. 
 
@@ -1076,7 +1076,6 @@ This section should only contain calls do the ADD_OBJECTIVE tool at the start of
 ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20). You should only add objectives that directly help you accomplish the next story goal.
 You can also complete added objectives, eg
 COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs")]
-
 """
             '''
             self_critique_prompt = f"""
@@ -1137,8 +1136,8 @@ And your current coordinates:
 {current_player_coords}
 
 
-Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT
-
+Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT, navigate_to(x,y), interact_with(x,y)
+Remember: if you want to interact with an object or npc, you should always use the interact_with(x,y) tool!!
 Do not select a movement that is blocked. 
 
 **IMPORTANT** To enter doors/stairs/warps CHECK THE MOVEMENT PREVIEW AND USE SINGLE ACTIONS. navigate_to is great for long distances, but it can struggle with entering locations if you are not perfectly aligned with the door or you are stuck on an NPC. The movement preview will have better information for you to use.
