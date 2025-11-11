@@ -3794,24 +3794,23 @@ class PokemonEmeraldReader:
                 return []
             
             player_x, player_y = player_coords
+            object_events = []
+            
+            # Method 1: Get stable NPC base positions first
             logger.debug("Reading base NPC positions from known addresses...")
             known_npcs = self._read_known_npc_addresses(player_x, player_y)
-            enhanced_npcs = []
+            
             if known_npcs:
-                logger.debug("Enhancing NPCs with OAM walking positions...")
+                # Method 2: Try to enhance with walking positions from OAM
+                logger.debug("Enhancing NPCs with walking positions from OAM...")
                 enhanced_npcs = self._enhance_npcs_with_oam_walking(known_npcs, player_x, player_y)
+                object_events.extend(enhanced_npcs)
             else:
-                logger.debug("No known NPCs found via known address list")
-            
-            runtime_npcs = self._read_runtime_object_events(player_x, player_y) or []
-            
-            merged_npcs = self._merge_npc_sources(enhanced_npcs, runtime_npcs)
-            if not merged_npcs and known_npcs:
-                # Fall back to known NPCs if enhancement/runtime both failed
-                merged_npcs = known_npcs
+                logger.debug("No known NPCs found, this shouldn't happen in npc.state")
+                object_events = []
             
             # Filter out false positives (NPCs on door tiles)
-            filtered_events = self._filter_door_false_positives(merged_npcs, player_x, player_y)
+            filtered_events = self._filter_door_false_positives(object_events, player_x, player_y)
             
             logger.info(f"📍 Found {len(filtered_events)} NPCs/trainers near player at ({player_x}, {player_y})")
             
@@ -4540,51 +4539,6 @@ class PokemonEmeraldReader:
         
         logger.info(f"Enhanced {len(enhanced_npcs)} NPCs with walking positions")
         return enhanced_npcs
-
-    def _merge_npc_sources(self, *npc_groups):
-        """
-        Merge NPC lists from multiple detection sources while reducing duplicates.
-        Preference order:
-            1. Entries with walking_position True
-            2. Entries from runtime detections (ewram/gsprite) over static sources
-        """
-        merged = {}
-        
-        def _make_key(npc):
-            cx = npc.get('current_x')
-            cy = npc.get('current_y')
-            if cx is None or cy is None:
-                return npc.get('id') or npc.get('obj_event_id') or id(npc)
-            try:
-                return (int(cx), int(cy))
-            except (TypeError, ValueError):
-                return (cx, cy)
-        
-        for group in npc_groups:
-            if not group:
-                continue
-            for npc in group:
-                if not isinstance(npc, dict):
-                    continue
-                key = _make_key(npc)
-                existing = merged.get(key)
-                if not existing:
-                    merged[key] = npc
-                    continue
-                
-                # Prefer walking positions
-                if npc.get('walking_position') and not existing.get('walking_position'):
-                    merged[key] = npc
-                    continue
-                
-                # Prefer runtime detections over static ones
-                npc_source = str(npc.get('source', ''))
-                existing_source = str(existing.get('source', ''))
-                if npc_source.startswith('ewram_runtime') or npc_source.startswith('gsprites'):
-                    if not (existing_source.startswith('ewram_runtime') or existing_source.startswith('gsprites')):
-                        merged[key] = npc
-        
-        return list(merged.values())
     
     def _validate_npc_candidate(self, addr, x, y, player_x, player_y):
         """
