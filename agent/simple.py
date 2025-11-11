@@ -995,7 +995,9 @@ class SimpleAgent:
                 curr_x, curr_y = curr_coord  # where we actually ended up
                 expected_x, expected_y = prev_coord  # where we started
 
-                for i, action in enumerate(last_actions):
+                for action in last_actions:
+                    if action not in directions:
+                        return []
                     dx, dy = directions[action]
                     next_expected_x = expected_x + dx
                     next_expected_y = expected_y + dy
