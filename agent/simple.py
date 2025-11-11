@@ -1163,7 +1163,7 @@ Some important notes: Don't use the navigate_to(x,y) tool when you are in dialog
 The navigate_to tool also doesn't contain information about NPCs, so if you are near an NPC and become stuck, you likely need to use single actions without the tool to sidestep them manually.
 IMPORTANT RULE: Don't interact with NPCs unless you have to. It will likely waste time.
 ALSO IMPORTANT: You interact with warps/stairs by walking into them, not pressing 'A'. They will also show up in your movement preview. Confirm you are in front of them using your movement preview, then walk into them to transition.
-To interact with NPCs/Objects you also have access to an interact_with(x,y) tool. You can choose any coordinate (traversable or not) and if there is an NPC or object there, it will take you there and you will interact with it.
+To interact with NPCs/Objects you also have access to an interact_with(x,y) tool. You can choose any coordinate (traversable or not) and if there is an NPC or object there, it will take you there and you will interact with it. You do not have to be next to the object, the tool will navigate for you!
 Another important rule: Check your previous action. If you used the interact_with(x,y) tool on the last turn and don't see a dialogue box on this turn, you likely missed and should choose a different coordinate for your next interact_with(x,y) call.]
 
 ANALYSIS:
