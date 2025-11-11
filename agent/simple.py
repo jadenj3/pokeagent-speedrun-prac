@@ -996,15 +996,17 @@ class SimpleAgent:
                 for resp in recent_responses
             )
             prev_responses_str = prev_responses_str.rstrip("=\n")  # optional to drop trailing bar
-
+            '''
             planning_prompt = f"""
 You are the planning module for a pokemon emerald agent speedrun scaffolding. 
 
 Your goal is to use your knowledge of pokemon emerald to add intermediary objectives with navigation tips that help the action agent accomplish its goals and finish the game. Make sure to only include objectives that directly help you accomplish the next goals!
 
-You will be called every 20 or so turns to add objectives to assist the agent to get to the next story objective, you have the most crucial role in the entire scaffolding!
+You will be called every 50 or so turns to add objectives to assist the agent to get to the direct next story objective, you have the most crucial role in the entire scaffolding!
 
 Think about common failure modes for pokemon agents. Sometimes they need explicitly directional hints to avoid loops or missing the right path!
+Also try to break up big objectives into smaller parts, giving detailed steps and instructions that the agent can complete along the way.
+Only try to include new sub-objectives for the immediate next story objective. Including directions for the later story objectives could confuse the agent.
 
 You also have access to the current game frame. Visually inspect it to get a sense of your current location and context.
 
@@ -1031,26 +1033,26 @@ You are managing an action agent for pokemon emerald in a pokemon emerald speedr
 You are called at the start of a turn for the LLM, so the actions you are seeing have already occured. 
 These are the previous responses:
 {prev_responses_str}
-"""
+"""'''
             # Make VLM call for planning module - double-check frame validation before VLM
             self_critique_response = ""
-            if self.state.step_counter > 1:
+            if self.state.step_counter == 1 or self.state.step_counter % 50 == 0:
                 if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                     print("🔍 Making VLM objectives call...")
                     try:
                         response = self.vlm.get_query(frame, self_critique_prompt, "simple_mode", model_name = 'gemini-2.5-pro')
                         print(f"🔍 VLM response received: {response[:100]}..." if len(
                             response) > 100 else f"🔍 VLM response: {response}")
-                        self_critique_response = response
                     except Exception as e:
                         print(f"❌ VLM call failed: {e}")
                         return "WAIT"
                 else:
                     logger.error("🚫 CRITICAL: About to call VLM but frame validation failed - this should never happen!")
                     return "WAIT"
-                # will automatically update objectives'''
+                # will automatically update objectives
+            actions, reasoning, analysis = self._parse_structured_response(response, game_state, json_data=json_data)
 
-
+            '''
             # Create enhanced prompt with objectives, history context and chain of thought request
             prompt = f"""You are playing as the Protagonist Brendan in Pokemon Emerald. 
             Based on the current game frame and state information, think through your next move and choose the best action.
@@ -1098,10 +1100,11 @@ In your response include the following sections:
 
 OBJECTIVES:
 [Make sure to review your current objectives. You have main storyline objectives that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them. These are your highest priority, everything you do should be in service of accomplishing these goals
-You also have access to the following command in this section to sub-objectives: ADD_OBJECTIVE: type:description:target_value (e.g., "ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)" or "ADD_OBJECTIVE: item:Buy Pokeballs:5"). The action model will be able to manually complete these objectives
-This section should only contain calls do the ADD_OBJECTIVE tool at the start of each line, eg
+You also have access to the following command in this section to sub-objectives: ADD_OBJECTIVE: type:description:target_value (e.g., "ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)" or "ADD_OBJECTIVE: item:Buy Pokeballs:5"). You will will be able to manually complete these objectives
+You can also Complete sub-objectives: COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs")
+This section should only contain calls to the tools at the start of each line, eg
 ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)
-]
+COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs]
 
 ACTION:
 [If you are in dialogue, prefer single actions like 'A'. If you are stuck in a loop also prefer single actions, it will give you space to think about each move.
