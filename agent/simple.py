@@ -443,7 +443,7 @@ class SimpleAgent:
     
     def add_objective(self, description: str, objective_type: str, target_value: Any = None) -> str:
         """Add a new objective and return its ID"""
-        obj_id = f"obj_{len(self.state.objectives)}_{int(datetime.now().timestamp())}"
+        obj_id = f"obj{len(self.state.objectives)}"
         objective = Objective(
             id=obj_id,
             description=description,
