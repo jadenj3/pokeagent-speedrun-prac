@@ -1301,9 +1301,7 @@ Context: {context} """
                 if not line:
                     continue
 
-                # Remove common bullet/numbering prefixes (e.g., "- ", "1. ", "* ")
-                normalized_line = re.sub(r'^[\s\-\*\+\•\d\.\)\(>]+', '', line)
-                upper_line = normalized_line.upper()
+                upper_line = line.upper()
 
                 if upper_line.startswith('ADD_OBJECTIVE:'):
                     # Parse format: ADD_OBJECTIVE: type:description:target_value
