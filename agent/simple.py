@@ -1023,7 +1023,7 @@ This section should only contain calls do the ADD_OBJECTIVE tool at the start of
 ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)]
 
 """
-
+            '''
             self_critique_prompt = f"""
 You are managing an action agent for pokemon emerald in a pokemon emerald speedrun. You are the self critique module. You should examine the current objectives, the analysis history of the planning agent, and use your knowledge of pokemon emerald to detect loops, mistaken assumptions, and provide guidance for the action module to complete the main story objectives.
 You are called at the start of a turn for the LLM, so the actions you are seeing have already occured. 
@@ -1046,7 +1046,7 @@ These are the previous responses:
                 else:
                     logger.error("🚫 CRITICAL: About to call VLM but frame validation failed - this should never happen!")
                     return "WAIT"
-                # will automatically update objectives
+                # will automatically update objectives'''
 
 
             # Create enhanced prompt with objectives, history context and chain of thought request
@@ -1087,11 +1087,6 @@ Do not select a movement that is blocked.
 
 **IMPORTANT** To enter doors/stairs/warps CHECK THE MOVEMENT PREVIEW AND USE SINGLE ACTIONS. navigate_to is great for long distances, but it can struggle with entering locations if you are not perfectly aligned with the door or you are stuck on an NPC. The movement preview will have better information for you to use.
 If you want to you can use navigate_to to get close to the door, but afterwards make sure to use single actions.
-
-
-You managed by a planning agent that has access to your analysis and turn history. They will provide a critique of your actions here:
-{self_critique_response}
-You should listen to their advice and follow their instructions, they have a lot of context on your current state and provide useful guidance.
 
 In your response include the following sections:
 
