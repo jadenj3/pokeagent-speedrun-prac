@@ -1118,7 +1118,8 @@ If it does, respond only with one word: YES
                 else:
                     logger.error("🚫 CRITICAL: About to call VLM but frame validation failed - this should never happen!")
                     return "WAIT"
-                if response == 'YES':
+                normalized = response.strip().upper() if response else ""
+                if normalized == 'YES':
                     self.interact_destination_list = []
                 else: #didn't recognize an image, try again.
                     dest_x, dest_y = self.interact_destination_list.pop()
@@ -1372,6 +1373,15 @@ Context: {context} """
 
 
         if nav_match and json_data:
+            dest_x, dest_y = map(int, nav_match.groups())
+
+            path = self.a_star(json_data, dest_x, dest_y)
+            if path:
+                return path
+
+        interact_match = re.search(r"interact_with\s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)",
+                                   response, flags=re.IGNORECASE)
+        if interact_match and json_data:
             directions = {
                 'UP': (0, -1),
                 'DOWN': (0, 1),
@@ -1382,19 +1392,12 @@ Context: {context} """
                 'DOWN_LEFT': (-1, 1),
                 'DOWN_RIGHT': (1, 1)
             }
-            dest_x, dest_y = map(int, nav_match.groups())
+
+            dest_x, dest_y = map(int, interact_match.groups())
+            self.interact_destination_list.clear()
             for dx, dy in directions.values():
                 self.interact_destination_list.append((dest_x + dx, dest_y + dy))
-
-            path = self.a_star(json_data, dest_x, dest_y)
-            if path:
-                return path
-
-        interact_match = re.search(r"interact_with\s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)",
-                                   response, flags=re.IGNORECASE)
-        if interact_match and json_data:
-            dest_x, dest_y = map(int, interact_match.groups())
-            path = build_interact_actions(json_data, dest_x, dest_y)
+            path = self.build_interact_actions(dest_x, dest_y, json_data)
             if path:
                 return path
             else:
