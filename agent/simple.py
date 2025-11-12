@@ -276,7 +276,7 @@ class SimpleAgent:
             },
             {
                 "id": "story_received_pokedex",
-                "description": "Return to Birch's lab and receive the Pokédex",
+                "description": "Return to Birch's lab AND talk to Professor Birch to receive the Pokédex",
                 "objective_type": "item",
                 "target_value": "Pokédex",
                 "milestone_id": "RECEIVED_POKEDEX"
