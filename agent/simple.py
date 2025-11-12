@@ -1170,7 +1170,7 @@ If you want to you can use navigate_to to get close to the door, but afterwards 
 
 Navigation tips:
 - Enter and exit locations through the middle rather than hugging a specific side, this maximizes visibility of the area to locate the exit.
-
+- Unless you are blocked, use the navigate_to() tool as much as possible. This is much faster than single steps.
 In your response include the following sections:
 
 OBJECTIVES:
