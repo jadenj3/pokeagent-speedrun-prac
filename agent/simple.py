@@ -1238,6 +1238,9 @@ Navigation tips:
 - Enter and exit locations through the middle rather than hugging a specific side, this maximizes visibility of the area to locate the exit.
 - Unless you are blocked, use the navigate_to() tool as much as possible. This is much faster than single steps.
 In your response include the following sections:
+NPCs:
+[List all the NPCs you see here. What are their identities (eg Professor Birch, May) inspect them carefully.
+How far are they from you? What is their approximate coordinates?
 
 OBJECTIVES:
 [Make sure to review your current objectives. These are your highest priority, everything you do should be in service of accomplishing these goals
