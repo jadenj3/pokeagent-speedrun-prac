@@ -1099,7 +1099,8 @@ OBJECTIVES:
 [Review your current objectives. You have main storyline objectives (story_*) that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them. 
 You also have access to the following command in this section to sub-objectives: ADD_OBJECTIVE: type:description:target_value (e.g., "ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)" or "ADD_OBJECTIVE: item:Buy Pokeballs:5"). The action model will be able to manually complete these objectives
 This section should only contain calls do the ADD_OBJECTIVE tool at the start of each line, eg
-ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20). You should only add objectives that directly help you accomplish the next story goal.]
+ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20). You should only add objectives that directly help you accomplish the next story goal.
+Only include essential goals. Goals like "level up your pokemon" or "get a free potion" are not helpful.]
 """
 
             self_critique_prompt = f"""
@@ -1110,7 +1111,7 @@ These are the previous responses:
             # Make VLM call for planning module - double-check frame validation before VLM
             self_critique_response = ""
 
-            if self.story_objective_completed:
+            if self.story_objective_completed and self.state.step_counter > 1:
                 if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                     print("🔍 Making VLM objectives call...")
                     try:
