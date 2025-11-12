@@ -1162,7 +1162,6 @@ ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20). You should only add
 Also, avoid duplicate goals here. They will take up unnecessary precious space in the limited goal space.
 Only include essential goals. Goals like "level up your pokemon" or "go here to get a free potion" are not helpful.]
 **IMPORTANT** be very specific with your directions. Eg when designating buildings, prefer directions like "south west, last building" over generic "west side of town".
-CRITICAL: Whenever you find yourself in a town after a combat area, you should add a sub objective to heal your pokemon!
 """
 
             self_critique_prompt = f"""
@@ -1263,8 +1262,7 @@ ALSO IMPORTANT: You interact with warps/stairs by walking into them, not pressin
 To interact with NPCs/Objects you also have access to an interact_with(x,y) tool. You can choose a traversable coordinate that you think contains an NPC and interact with it. GET AS CLOSE AS POSSIBLE TO THE NPC FIRST BEFORE USING THIS TOOL! Navigation is much quicker! 
 ***IMPORTANT RULE***: DO NOT use the interact_with(x,y) tool on any coordinates you previously used it on. CHECK YOUR PREVIOUS ACTIONS FIRST! You likely chose the wrong coordinate if you repeat them!!
 ANOTHER IMPORTANT RULE: When interacting with NPCs, they are present in the traversable tile list. Select from those!!!
-Before choosing your action, inspect your frame. You have a tendency to get stuck on the "Got away safely!" image and stop recognizing you are stuck in dialogue.
-CRITICAL!!!: RUN FROM ANY WILD POKEMON ENCOUNTERS. Save your pokemon for Team Aqua Grunt!!!]
+Before choosing your action, inspect your frame. You have a tendency to get stuck on the "Got away safely!" image and stop recognizing you are stuck in dialogue.]
 
 ANALYSIS:
 [Summarize your current situation. This will be passed onto you as context during your next turn. It's especially important to summarize any dead ends you found and potential alternate paths. This is the only information that gets passed forward in time, so note anything important here. You can be as verbose as you like.
