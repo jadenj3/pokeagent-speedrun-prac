@@ -1131,10 +1131,8 @@ These are the previous responses:
             Based on the current game frame and state information, think through your next move and choose the best action.
 
 Hint: Use the reachable tiles, map preview, and visual frame to determine which coordinate you want to go to, then use the navigate_to(x,y) action to find the optimal path to your destination.
-**IMPORTANT**: navigate_to() doesn't have accurate NPC data, so you have to use your visual information and manually step around the NPC, otherwise you risk being stuck in a loop walking into the NPC.
 
-ALSO IMPORTANT: To interact with NPCs you have to go to an adjacent tile and face them. You don't have this information from memory, so visually inspect the image to see if you are facing the NPC before pressing 'A'.
-You also have to face items to interact with them. Again inspect the image to see if you are facing the item.
+ALSO IMPORTANT: Use the interact_with(x,y) tool to interact with objects and NPCs. You don't need to be near the object to use this tool, it will navigate towards it for you.
 
 Your current story objectives are:
 {objectives_summary}
