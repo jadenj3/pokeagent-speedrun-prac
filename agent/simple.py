@@ -1092,6 +1092,9 @@ You also have access to the current game frame. Visually inspect it to get a sen
 Current story objectives you are trying to accomplish:
 {objectives_summary}
 
+These are the sub-objectives you have added. Avoid duplicate objectives here:
+{added_objectives_summary}
+
 The action agent can only see three at a time, so use these sparingly!!!
 
 Current location:
@@ -1106,6 +1109,7 @@ OBJECTIVES:
 You also have access to the following command in this section to sub-objectives: ADD_OBJECTIVE: type:description:target_value (e.g., "ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)" or "ADD_OBJECTIVE: item:Buy Pokeballs:5"). The action model will be able to manually complete these objectives
 This section should only contain calls do the ADD_OBJECTIVE tool at the start of each line, eg
 ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20). You should only add objectives that directly help you accomplish the next story goal.
+Also, avoid duplicate goals here. They will take up unnecessary precious space in the limited goal space.
 Only include essential goals. Goals like "level up your pokemon" or "get a free potion" are not helpful.]
 """
 
@@ -1118,7 +1122,7 @@ These are the previous responses:
             self_critique_response = ""
 
             if self.story_objective_completed or self.state.step_counter == 1:
-                self._complete_all_added_objectives("Story milestone reached - refreshing planner objectives")
+                #self._complete_all_added_objectives("Story milestone reached - refreshing planner objectives")
                 if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                     print("🔍 Making VLM objectives call...")
                     try:
@@ -1142,9 +1146,6 @@ These are the previous responses:
 Hint: Use the reachable tiles, map preview, and visual frame to determine which coordinate you want to go to, then use the navigate_to(x,y) action to find the optimal path to your destination.
 
 ALSO IMPORTANT: Use the interact_with(x,y) tool to interact with objects and NPCs. You don't need to be near the object to use this tool, it will navigate towards it for you.
-
-Your current story objectives are:
-{objectives_summary}
 
 These are the sub-objectives added by the planning agent. These will help you accomplish the main story objectives:
 {added_objectives_summary}
@@ -1387,7 +1388,7 @@ Context: {context} """
         storyline_active = [obj for obj in active_objectives if obj.storyline]
         if storyline_active:
             lines.append("🎯 ACTIVE STORY OBJECTIVES:")
-            for idx, obj in enumerate(storyline_active[:1], 1):
+            for idx, obj in enumerate(storyline_active[:2], 1):
                 target_str = f" (Target: {obj.target_value})" if obj.target_value else ""
                 lines.append(f"  {idx}. [{obj.objective_type}] {obj.description}{target_str} [ID: {obj.id}]")
         else:
