@@ -985,6 +985,7 @@ class SimpleAgent:
             completed_objectives_list = self.get_completed_objectives()
             objectives_summary = self._format_objectives_for_llm(active_objectives, completed_objectives_list)
             added_objectives_summary, any_active = self._format_added_objectives_for_llm(active_objectives, completed_objectives_list)
+            active_added_objectives_summary, any_active = self._format_active_added_objectives_for_llm(active_objectives, completed_objectives_list)
             # Build pathfinding rules section (only if not in title sequence)
             map_preview = format_movement_preview_for_llm(game_state)
             player_coords = coords or self.get_player_coords(game_state)
@@ -1152,7 +1153,7 @@ Hint: Use the reachable tiles, map preview, and visual frame to determine which 
 ALSO IMPORTANT: Use the interact_with(x,y) tool to interact with objects and NPCs. You don't need to be near the object to use this tool, it will navigate towards it for you.
 
 These are the sub-objectives added by the planning agent. These will help you accomplish the main story objectives:
-{added_objectives_summary}
+{active_added_objectives_summary}
 
 This is your analysis from your previous turn:
 {prev_analysis}
@@ -1430,6 +1431,24 @@ Context: {context} """
             lines.append("✅ RECENTLY COMPLETED SUB OBJECTIVES:")
             for obj in added_completed[-3:]:
                 lines.append(f"  ✓ [{obj.objective_type}] {obj.description}")
+
+        return "\n".join(lines), any_active
+
+
+    def _format_active_added_objectives_for_llm(self, active_objectives: List[Objective],
+                                   completed_objectives: List[Objective]) -> str:
+        """Format objectives for LLM consumption"""
+        lines = []
+        added_active = [obj for obj in active_objectives if not obj.storyline]
+        any_active = True
+        if added_active:
+            lines.append("🎯 ACTIVE SUB OBJECTIVES:")
+            for idx, obj in enumerate(added_active[:5], 1):
+                target_str = f" (Target: {obj.target_value})" if obj.target_value else ""
+                lines.append(f"  {idx}. [{obj.objective_type}] {obj.description}{target_str} [ID: {obj.id}]")
+        else:
+            lines.append("🎯 ACTIVE SUB OBJECTIVES: None - Consider adding some objectives!")
+            any_active = False
 
         return "\n".join(lines), any_active
     
