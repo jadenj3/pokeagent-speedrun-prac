@@ -1074,6 +1074,7 @@ class SimpleAgent:
 You are the planning module for a pokemon emerald agent speedrun scaffolding. 
 
 Your goal is to use your knowledge of pokemon emerald to add intermediary objectives with navigation tips that help the action agent accomplish its goals and finish the game. Make sure to only include objectives that directly help you accomplish the next goals!
+Your goal is to complete the game as fast as possible, so make sure each objective is clear, direct, useful, and informative.
 
 You will be called after every story objective to add objectives to assist the agent to get to the direct next story objective, you have the most crucial role in the entire scaffolding!
 
