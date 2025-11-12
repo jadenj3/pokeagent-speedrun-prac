@@ -1263,7 +1263,7 @@ To interact with NPCs/Objects you also have access to an interact_with(x,y) tool
 ***IMPORTANT RULE***: DO NOT use the interact_with(x,y) tool on any coordinates you previously used it on. CHECK YOUR PREVIOUS ACTIONS FIRST! You likely chose the wrong coordinate if you repeat them!!
 ANOTHER IMPORTANT RULE: When interacting with NPCs, they are present in the traversable tile list. Select from those!!!
 Before choosing your action, inspect your frame. You have a tendency to get stuck on the "Got away safely!" image and stop recognizing you are stuck in dialogue.
-CRITICAL!!!: RUN FROM ANY WILD POKEMON ENCOUNTERS. Save your pokemon for the rival battle!!!]
+CRITICAL!!!: RUN FROM ANY WILD POKEMON ENCOUNTERS. Save your pokemon for Team Aqua Grunt!!!]
 
 ANALYSIS:
 [Summarize your current situation. This will be passed onto you as context during your next turn. It's especially important to summarize any dead ends you found and potential alternate paths. This is the only information that gets passed forward in time, so note anything important here. You can be as verbose as you like.
