@@ -1096,8 +1096,6 @@ Current story objectives you are trying to accomplish:
 These are the sub-objectives you have added. Avoid duplicate objectives here:
 {added_objectives_summary}
 
-The action agent can only see three at a time.
-
 Current location:
 {player_location}
 
