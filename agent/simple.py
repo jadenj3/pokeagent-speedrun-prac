@@ -1179,12 +1179,11 @@ This section should only contain calls to the tools at the start of each line, e
 COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs]
 
 ACTION:
-[If you are in dialogue, prefer single actions like 'A'. If you are stuck in a loop also prefer single actions, it will give you space to think about each move.
+[If you are in dialogue or battle, prefer single actions like 'A'.
 You also have access to the navigate_to(x,y) tool. This will automatically run A* on your selected coordinate to find the optimal way to reach your destination. This is a powerful tool that should be used
 liberally! Using it will also override any other actions you input, so don't include it with other actions.
-When using the navigate_to(x,y) tool, you can only choose from the reachable tiles! The list of reachables tiles is provided above. Lower X means the tile is to your west, while a lower Y means the tile is to your north.
+When using the navigate_to(x,y) tool, you can only choose from the reachable tiles! Other tiles are NOT ALLOWED, YOU WILL BE STUCK. Always check the list of reachable tiles! The list of reachables tiles is provided above. Lower X means the tile is to your west, while a lower Y means the tile is to your north.
 Some important notes: Don't use the navigate_to(x,y) tool when you are in dialogue or battle, you will be stuck.
-The navigate_to tool also doesn't contain information about NPCs, so if you are near an NPC and become stuck, you likely need to use single actions without the tool to sidestep them manually.
 IMPORTANT RULE: Don't interact with NPCs unless you have to. It will likely waste time.
 ALSO IMPORTANT: You interact with warps/stairs by walking into them, not pressing 'A'. They will also show up in your movement preview. Confirm you are in front of them using your movement preview, then walk into them to transition.
 To interact with NPCs/Objects you also have access to an interact_with(x,y) tool. You can choose any coordinate (traversable or not) and if there is an NPC or object there, it will take you there and you will interact with it. You do not have to be next to the object, the tool will navigate for you!
