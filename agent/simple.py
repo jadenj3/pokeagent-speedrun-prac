@@ -1228,7 +1228,7 @@ And your current coordinates:
 
 
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT, navigate_to(x,y), interact_with(x,y)
-Remember: if you want to interact with an object or npc, you should always use the interact_with(x,y) tool!!
+Remember: To interact with an npc, get as close as possible with the navigate_to tool, then use the interact_with tool!!
 Do not select a movement that is blocked. REMEMBER, BROWN LEDGES ARE BLOCKED!
 
 **IMPORTANT** To enter doors/stairs/warps CHECK THE MOVEMENT PREVIEW AND USE SINGLE ACTIONS. navigate_to is great for long distances, but it can struggle with entering locations if you are not perfectly aligned with the door or you are stuck on an NPC. The movement preview will have better information for you to use.
@@ -1257,7 +1257,7 @@ When using the navigate_to(x,y) tool, you can only choose from the reachable til
 Some important notes: Don't use the navigate_to(x,y) tool when you are in dialogue or battle, you will be stuck.
 IMPORTANT RULE: Don't interact with NPCs unless you have to. It will likely waste time.
 ALSO IMPORTANT: You interact with warps/stairs by walking into them, not pressing 'A'. They will also show up in your movement preview. Confirm you are in front of them using your movement preview, then walk into them to transition.
-To interact with NPCs/Objects you also have access to an interact_with(x,y) tool. You can choose a traversable coordinate and if there is an NPC or object there, it will take you there and you will interact with it. You do not have to be next to the object, the tool will navigate for you!
+To interact with NPCs/Objects you also have access to an interact_with(x,y) tool. You can choose a traversable coordinate that you think contains an NPC and interact with it. GET AS CLOSE AS POSSIBLE TO THE NPC FIRST BEFORE USING THIS TOOL! Navigation is much quicker! 
 ***IMPORTANT RULE***: DO NOT use the interact_with(x,y) tool on any coordinates you previously used it on. CHECK YOUR PREVIOUS ACTIONS FIRST! You likely chose the wrong coordinate if you repeat them!!
 ANOTHER IMPORTANT RULE: When interacting with NPCs, they are present in the traversable tile list. Select from those!!!
 Before choosing your action, inspect your frame. You have a tendency to get stuck on the "Got away safely!" image and stop recognizing you are stuck in dialogue.]
