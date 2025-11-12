@@ -1162,6 +1162,7 @@ ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20). You should only add
 Also, avoid duplicate goals here. They will take up unnecessary precious space in the limited goal space.
 Only include essential goals. Goals like "level up your pokemon" or "go here to get a free potion" are not helpful.]
 **IMPORTANT** be very specific with your directions. Eg when designating buildings, prefer directions like "south west, last building" over generic "west side of town".
+CRITICAL: Whenever you find yourself in a town after a combat area, you should add a sub objective to heal your pokemon!
 """
 
             self_critique_prompt = f"""
