@@ -1267,8 +1267,7 @@ CRITICAL!!!: RUN FROM ANY WILD POKEMON ENCOUNTERS. Save your pokemon for the riv
 
 ANALYSIS:
 [Summarize your current situation. This will be passed onto you as context during your next turn. It's especially important to summarize any dead ends you found and potential alternate paths. This is the only information that gets passed forward in time, so note anything important here. You can be as verbose as you like.
-Very important: Avoid mentioning coordinates at all here, you tend to hallucinate and confuse yourself, ending up in an eternal loop]
-Context: {context} """
+Very important: Avoid mentioning coordinates at all here, you tend to hallucinate and confuse yourself, ending up in an eternal loop]"""
             
             # Print complete prompt to terminal for debugging
             '''
