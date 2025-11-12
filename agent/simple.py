@@ -1112,7 +1112,7 @@ These are the previous responses:
             # Make VLM call for planning module - double-check frame validation before VLM
             self_critique_response = ""
 
-            if self.state.step_counter == 1 or self.story_objective_completed:
+            if self.story_objective_completed:
                 if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                     print("🔍 Making VLM objectives call...")
                     try:
