@@ -1083,6 +1083,8 @@ Current story objectives you are trying to accomplish:
 These are the objectives you have currently added (and potentially some that were recently completed):
 {added_objectives_summary}
 
+The action agent can only see three at a time, so use these sparingly!!!
+
 Current location:
 {player_location}
 
