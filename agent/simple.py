@@ -1140,6 +1140,8 @@ These are the previous responses:
                 # will automatically update objectives
                 actions, reasoning, analysis = self._parse_structured_response(response, game_state, json_data=json_data)
             self.story_objective_completed = False
+            if self.state.step_counter < 2:
+                return "WAIT"
 
             # Create enhanced prompt with objectives, history context and chain of thought request
             prompt = f"""You are playing as the Protagonist Brendan in Pokemon Emerald. 
