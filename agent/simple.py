@@ -1152,8 +1152,6 @@ These are the sub-objectives you have added. Avoid duplicate objectives here:
 Current location:
 {player_location}
 
-When your next objective is to confront roxanne, make sure to add some objectives to catch additional pokemon!
-
 You should format your response as follows.
 
 OBJECTIVES:
@@ -1162,7 +1160,7 @@ You also have access to the following command in this section to sub-objectives:
 This section should only contain calls do the ADD_OBJECTIVE tool at the start of each line, eg
 ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20). You should only add objectives that directly help you accomplish the next story goal.
 Also, avoid duplicate goals here. They will take up unnecessary precious space in the limited goal space.
-Only include essential goals. Goals like "level up your pokemon" or "get a free potion" are not helpful.]
+Only include essential goals. Goals like "level up your pokemon" or "go here to get a free potion" are not helpful.]
 **IMPORTANT** be very specific with your directions. Eg when designating buildings, prefer directions like "south west, last building" over generic "west side of town".
 """
 
