@@ -800,7 +800,7 @@ class SimpleAgent:
 
         return ['A']  # No path found
 
-    def build_interact_actions(self, json_data, dest_x, dest_y):
+    def build_interact_actions(self, dest_x, dest_y, json_data):
         coord = (dest_x, dest_y)
         tile_lookup = {(tile["x"], tile["y"]): tile for tile in json_data["tiles"]}
         tile = tile_lookup.get(coord)
