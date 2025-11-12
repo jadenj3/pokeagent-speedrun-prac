@@ -1095,7 +1095,7 @@ Current story objectives you are trying to accomplish:
 These are the sub-objectives you have added. Avoid duplicate objectives here:
 {added_objectives_summary}
 
-The action agent can only see three at a time, so use these sparingly!!!
+The action agent can only see three at a time.
 
 Current location:
 {player_location}
@@ -1111,6 +1111,7 @@ This section should only contain calls do the ADD_OBJECTIVE tool at the start of
 ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20). You should only add objectives that directly help you accomplish the next story goal.
 Also, avoid duplicate goals here. They will take up unnecessary precious space in the limited goal space.
 Only include essential goals. Goals like "level up your pokemon" or "get a free potion" are not helpful.]
+**IMPORTANT** be very specific with your directions. Eg when designating buildings, prefer directions like "south west, last building" over generic "west side of town".
 """
 
             self_critique_prompt = f"""
@@ -1187,7 +1188,10 @@ OBJECTIVES:
 You can also Complete these objectives: COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs")
 This section should only contain calls to the tools at the start of each line, eg
 COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs
-Important: You cannot add objectives, only complete them.]
+Important: You cannot add objectives, only complete them.
+Make sure you are confident you successfully completed the objectives before marking them complete. For example if you have an objective to talk to an NPC, you should only
+mark the objective complete on the turn you see the dialogue box with that NPC. You should also visually confirm you entered the right location before marking location objectives as complete.
+Don't mark them pre-emptively as you are executing the action.]
 
 ACTION:
 [If you are in dialogue or battle, prefer single actions like 'A'.
