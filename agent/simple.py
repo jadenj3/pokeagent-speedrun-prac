@@ -1092,9 +1092,6 @@ You also have access to the current game frame. Visually inspect it to get a sen
 Current story objectives you are trying to accomplish:
 {objectives_summary}
 
-These are the objectives you have currently added (and potentially some that were recently completed):
-{added_objectives_summary}
-
 The action agent can only see three at a time, so use these sparingly!!!
 
 Current location:
