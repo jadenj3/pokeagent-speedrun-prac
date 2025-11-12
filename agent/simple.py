@@ -1207,7 +1207,8 @@ IMPORTANT RULE: Don't interact with NPCs unless you have to. It will likely wast
 ALSO IMPORTANT: You interact with warps/stairs by walking into them, not pressing 'A'. They will also show up in your movement preview. Confirm you are in front of them using your movement preview, then walk into them to transition.
 To interact with NPCs/Objects you also have access to an interact_with(x,y) tool. You can choose a traversable coordinate and if there is an NPC or object there, it will take you there and you will interact with it. You do not have to be next to the object, the tool will navigate for you!
 ***IMPORTANT RULE***: DO NOT use the interact_with(x,y) tool on any coordinates you previously used it on. CHECK YOUR PREVIOUS ACTIONS FIRST! You likely chose the wrong coordinate if you repeat them!!
-ANOTHER IMPORTANT RULE: When interacting with NPCs, they are present in the traversable tile list. Select from those!!!]
+ANOTHER IMPORTANT RULE: When interacting with NPCs, they are present in the traversable tile list. Select from those!!!
+Before choosing your action, inspect your frame. You have a tendency to get stuck on the "Got away safely!" image and stop recognizing you are stuck in dialogue.]
 
 ANALYSIS:
 [Summarize your current situation. This will be passed onto you as context during your next turn. It's especially important to summarize any dead ends you found and potential alternate paths. This is the only information that gets passed forward in time, so note anything important here. You can be as verbose as you like.
@@ -1339,7 +1340,21 @@ Context: {context} """
 
 
         if nav_match and json_data:
+            directions = {
+                'UP': (0, -1),
+                'DOWN': (0, 1),
+                'LEFT': (-1, 0),
+                'RIGHT': (1, 0),
+                'UP_LEFT': (-1, -1),
+                'UP_RIGHT': (1, -1),
+                'DOWN_LEFT': (-1, 1),
+                'DOWN_RIGHT': (1, 1)
+            }
             dest_x, dest_y = map(int, nav_match.groups())
+            destination_list = [(dest_x, dest_y)]  # Center
+            for dx, dy in directions.values():
+                destination_list.append((dest_x + dx, dest_y + dy))
+
             path = self.a_star(json_data, dest_x, dest_y)
             if path:
                 return path
