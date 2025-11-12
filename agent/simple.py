@@ -173,6 +173,8 @@ class SimpleAgent:
 
         self.last_turn_actions = []
 
+        self.interact_destination_list = []
+
     def _complete_all_added_objectives(self, reason: str = "Reset before planner update"):
         """Mark all non-storyline objectives as completed (used when refreshing planner guidance)."""
         any_completed = False
@@ -798,6 +800,26 @@ class SimpleAgent:
 
         return ['A']  # No path found
 
+    def build_interact_actions(self, json_data, dest_x, dest_y):
+        coord = (dest_x, dest_y)
+        tile_lookup = {(tile["x"], tile["y"]): tile for tile in json_data["tiles"]}
+        tile = tile_lookup.get(coord)
+        if tile:
+            tile["walkable"] = True
+            tile["type"] = tile.get("type") or "walkable"
+        else:
+            json_data["tiles"].append({
+                "x": coord[0],
+                "y": coord[1],
+                "type": "walkable",
+                "walkable": True
+            })
+        path = self.a_star(json_data, dest_x, dest_y)
+        if not path:
+            return []
+        path.append("A")
+        return path
+
     def reachable_tiles(self, json_data):
         """Return structured info about reachable tiles, highlighting doors/stairs/warps."""
         summary = {
@@ -1057,6 +1079,8 @@ class SimpleAgent:
             reachable_tiles_text = reachable_tiles_info["text"]
 
             player_location = game_state.get("player", {}).get("location", "Unknown Location")
+            if player_location == 'Map_18_0B':
+                player_location = 'PETALBURG_WOODS'
             pathfinding_rules = ""
             if context != "title":
                 pathfinding_rules = ""
@@ -1074,6 +1098,33 @@ class SimpleAgent:
                 for resp in recent_responses
             )
             prev_responses_str = prev_responses_str.rstrip("=\n")  # optional to drop trailing bar
+            image_recognition_prompt = f"""
+            
+You are playing pokemon emerald. Does this image contain a dialogue box?
+
+If it does, respond only with one word: YES
+
+"""
+            if len(self.interact_destination_list) > 0: #interaction list exists, start searching
+                if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
+                    print("🔍 Making VLM objectives call...")
+                    try:
+                        response = self.vlm.get_query(frame, image_recognition_prompt, "simple_mode", model_name = 'gemini-2.5-pro')
+                        print(f"🔍 VLM response received: {response[:100]}..." if len(
+                            response) > 100 else f"🔍 VLM response: {response}")
+                    except Exception as e:
+                        print(f"❌ VLM call failed: {e}")
+                        return "WAIT"
+                else:
+                    logger.error("🚫 CRITICAL: About to call VLM but frame validation failed - this should never happen!")
+                    return "WAIT"
+                if response == 'YES':
+                    self.interact_destination_list = []
+                else: #didn't recognize an image, try again.
+                    dest_x, dest_y = self.interact_destination_list.pop()
+                    path = self.build_interact_actions(dest_x, dest_y, json_data)
+                    return path
+
 
             planning_prompt = f"""
 You are the planning module for a pokemon emerald agent speedrun scaffolding. 
@@ -1318,25 +1369,6 @@ Context: {context} """
 
         nav_match = re.search(r"navigate_to\s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)",
                               response, flags=re.IGNORECASE)
-        def build_interact_actions(json_data, dest_x, dest_y):
-            coord = (dest_x, dest_y)
-            tile_lookup = {(tile["x"], tile["y"]): tile for tile in json_data["tiles"]}
-            tile = tile_lookup.get(coord)
-            if tile:
-                tile["walkable"] = True
-                tile["type"] = tile.get("type") or "walkable"
-            else:
-                json_data["tiles"].append({
-                    "x": coord[0],
-                    "y": coord[1],
-                    "type": "walkable",
-                    "walkable": True
-                })
-            path = self.a_star(json_data, dest_x, dest_y)
-            if not path:
-                return []
-            path.append("A")
-            return path
 
 
         if nav_match and json_data:
@@ -1351,9 +1383,8 @@ Context: {context} """
                 'DOWN_RIGHT': (1, 1)
             }
             dest_x, dest_y = map(int, nav_match.groups())
-            destination_list = [(dest_x, dest_y)]  # Center
             for dx, dy in directions.values():
-                destination_list.append((dest_x + dx, dest_y + dy))
+                self.interact_destination_list.append((dest_x + dx, dest_y + dy))
 
             path = self.a_star(json_data, dest_x, dest_y)
             if path:
