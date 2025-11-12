@@ -1121,6 +1121,8 @@ These are the previous responses:
 """
             # Make VLM call for planning module - double-check frame validation before VLM
             self_critique_response = ""
+            if self.step_counter == 0:
+                return "WAIT"
 
             if self.state.step_counter == 1 or not any_active:
                 #self._complete_all_added_objectives("Story milestone reached - refreshing planner objectives")
