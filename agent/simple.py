@@ -984,7 +984,7 @@ class SimpleAgent:
             active_objectives = self.get_active_objectives()
             completed_objectives_list = self.get_completed_objectives()
             objectives_summary = self._format_objectives_for_llm(active_objectives, completed_objectives_list)
-            added_objectives_summary = self._format_added_objectives_for_llm(active_objectives, completed_objectives_list)
+            added_objectives_summary, any_active = self._format_added_objectives_for_llm(active_objectives, completed_objectives_list)
             # Build pathfinding rules section (only if not in title sequence)
             map_preview = format_movement_preview_for_llm(game_state)
             player_coords = coords or self.get_player_coords(game_state)
@@ -1084,8 +1084,8 @@ You will be called after every story objective to add objectives to assist the a
 
 Think about common failure modes for pokemon agents. Sometimes they need explicitly directional hints and context to avoid loops or missing the right path!
 Also try to break up big objectives into smaller parts, giving detailed steps and directions that the agent can complete along the way.
-Only try to include new sub-objectives for the immediate next story objective.
-Be scarce with these objectives, but provide essential steps that are missing from the current story objectives! The model will be able to complete them sequentially.
+Provide essential steps and break up large objectives into smaller sequential parts! The model will be able to complete these objectives sequentially.
+You will be called after all the current sub objectives are marked complete by the action agent.
 
 You also have access to the current game frame. Visually inspect it to get a sense of your current location and context.
 
@@ -1121,7 +1121,7 @@ These are the previous responses:
             # Make VLM call for planning module - double-check frame validation before VLM
             self_critique_response = ""
 
-            if self.story_objective_completed or self.state.step_counter == 1:
+            if self.state.step_counter == 1 or not any_active:
                 #self._complete_all_added_objectives("Story milestone reached - refreshing planner objectives")
                 if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                     print("🔍 Making VLM objectives call...")
@@ -1408,6 +1408,7 @@ Context: {context} """
         """Format objectives for LLM consumption"""
         lines = []
         added_active = [obj for obj in active_objectives if not obj.storyline]
+        any_active = True
         if added_active:
             lines.append("🎯 ACTIVE SUB OBJECTIVES:")
             for idx, obj in enumerate(added_active[:5], 1):
@@ -1415,6 +1416,7 @@ Context: {context} """
                 lines.append(f"  {idx}. [{obj.objective_type}] {obj.description}{target_str} [ID: {obj.id}]")
         else:
             lines.append("🎯 ACTIVE SUB OBJECTIVES: None - Consider adding some objectives!")
+            any_active = False
 
         added_completed = [obj for obj in completed_objectives if not obj.storyline]
         if added_completed:
@@ -1422,7 +1424,7 @@ Context: {context} """
             for obj in added_completed[-3:]:
                 lines.append(f"  ✓ [{obj.objective_type}] {obj.description}")
 
-        return "\n".join(lines)
+        return "\n".join(lines), any_active
     
     def _parse_structured_response(self, response: str, game_state: Dict[str, Any] = None, json_data = None) -> Tuple[List[str], str]:
         """Parse structured chain-of-thought response and extract actions and reasoning"""
