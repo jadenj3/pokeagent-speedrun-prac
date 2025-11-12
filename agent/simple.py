@@ -872,7 +872,7 @@ class SimpleAgent:
                     base += f" → {dest_name}"
             return base
 
-        lines = [f"Reachable tiles in range (total {summary['total']}):"]
+        lines = []
 
         conductive_tiles = []
         for entry in reachable_list:
@@ -881,22 +881,21 @@ class SimpleAgent:
                 conductive_tiles.append(_fmt_entry(entry))
 
         if conductive_tiles:
-            lines.append("Nearby walkable tiles:")
             for coord in conductive_tiles:
-                lines.append(f"  • {coord}")
+                lines.append(f"{coord}")
 
         if doors:
             lines.append("Doors:")
             for entry in doors[:5]:
-                lines.append(f"  • {_fmt_entry(entry)}")
+                lines.append(f"{_fmt_entry(entry)}")
         if stairs:
             lines.append("Stairs:")
             for entry in stairs[:5]:
-                lines.append(f"  • {_fmt_entry(entry)}")
+                lines.append(f"{_fmt_entry(entry)}")
         if warps:
             lines.append("Warps:")
             for entry in warps[:5]:
-                lines.append(f"  • {_fmt_entry(entry)}")
+                lines.append(f"{_fmt_entry(entry)}")
 
         summary["text"] = "\n".join(lines)
 
