@@ -1257,12 +1257,13 @@ You also have access to the navigate_to(x,y) tool. This will automatically run A
 liberally! Using it will also override any other actions you input, so don't include it with other actions.
 When using the navigate_to(x,y) tool, you can only choose from the reachable tiles! Other tiles are NOT ALLOWED, YOU WILL BE STUCK. Always check the list of reachable tiles! The list of reachables tiles is provided above. Lower X means the tile is to your west, while a lower Y means the tile is to your north.
 Some important notes: Don't use the navigate_to(x,y) tool when you are in dialogue or battle, you will be stuck.
-IMPORTANT RULE: Don't interact with NPCs unless you have to. It will likely waste time.
+Don't interact with NPCs unless you have to. It will likely waste time.
 ALSO IMPORTANT: You interact with warps/stairs by walking into them, not pressing 'A'. They will also show up in your movement preview. Confirm you are in front of them using your movement preview, then walk into them to transition.
 To interact with NPCs/Objects you also have access to an interact_with(x,y) tool. You can choose a traversable coordinate that you think contains an NPC and interact with it. GET AS CLOSE AS POSSIBLE TO THE NPC FIRST BEFORE USING THIS TOOL! Navigation is much quicker! 
 ***IMPORTANT RULE***: DO NOT use the interact_with(x,y) tool on any coordinates you previously used it on. CHECK YOUR PREVIOUS ACTIONS FIRST! You likely chose the wrong coordinate if you repeat them!!
 ANOTHER IMPORTANT RULE: When interacting with NPCs, they are present in the traversable tile list. Select from those!!!
-Before choosing your action, inspect your frame. You have a tendency to get stuck on the "Got away safely!" image and stop recognizing you are stuck in dialogue.]
+Before choosing your action, inspect your frame. You have a tendency to get stuck on the "Got away safely!" image and stop recognizing you are stuck in dialogue.
+CRITICAL!!!: RUN FROM ANY WILD POKEMON ENCOUNTERS. Save your pokemon for the rival battle!!!]
 
 ANALYSIS:
 [Summarize your current situation. This will be passed onto you as context during your next turn. It's especially important to summarize any dead ends you found and potential alternate paths. This is the only information that gets passed forward in time, so note anything important here. You can be as verbose as you like.
