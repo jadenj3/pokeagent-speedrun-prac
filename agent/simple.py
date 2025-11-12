@@ -1078,9 +1078,9 @@ Your goal is to complete the game as fast as possible, so make sure each objecti
 You will be called after every story objective to add objectives to assist the agent to get to the direct next story objective, you have the most crucial role in the entire scaffolding!
 
 Think about common failure modes for pokemon agents. Sometimes they need explicitly directional hints and context to avoid loops or missing the right path!
-Also try to break up big objectives into smaller parts, giving detailed steps and instructions that the agent can complete along the way.
-Only try to include new sub-objectives for the immediate next story objective. Including directions for the later story objectives could confuse the agent.
-Add as many as useful objectives you can think of! The model will be able to complete them sequentially.
+Also try to break up big objectives into smaller parts, giving detailed steps and directions that the agent can complete along the way.
+Only try to include new sub-objectives for the immediate next story objective.
+Be scarce with these objectives, but provide essential steps that are missing from the current story objectives! The model will be able to complete them sequentially.
 
 You also have access to the current game frame. Visually inspect it to get a sense of your current location and context.
 
@@ -1376,7 +1376,7 @@ Context: {context} """
         storyline_active = [obj for obj in active_objectives if obj.storyline]
         if storyline_active:
             lines.append("🎯 ACTIVE STORY OBJECTIVES:")
-            for idx, obj in enumerate(storyline_active[:2], 1):
+            for idx, obj in enumerate(storyline_active[:1], 1):
                 target_str = f" (Target: {obj.target_value})" if obj.target_value else ""
                 lines.append(f"  {idx}. [{obj.objective_type}] {obj.description}{target_str} [ID: {obj.id}]")
         else:
