@@ -1108,7 +1108,6 @@ COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_12
 You are managing an action agent for pokemon emerald in a pokemon emerald speedrun. You are the self critique module. You should examine the current objectives, the analysis history of the planning agent, and use your knowledge of pokemon emerald to detect loops, mistaken assumptions, and provide guidance for the action module to complete the main story objectives.
 You are called at the start of a turn for the LLM, so the actions you are seeing have already occured. 
 These are the previous responses:
-{prev_responses_str}
 """
             # Make VLM call for planning module - double-check frame validation before VLM
             self_critique_response = ""
@@ -1127,7 +1126,7 @@ These are the previous responses:
                     logger.error("🚫 CRITICAL: About to call VLM but frame validation failed - this should never happen!")
                     return "WAIT"
                 # will automatically update objectives
-            actions, reasoning, analysis = self._parse_structured_response(response, game_state, json_data=json_data)
+                actions, reasoning, analysis = self._parse_structured_response(response, game_state, json_data=json_data)
             self.story_objective_completed = False
 
             # Create enhanced prompt with objectives, history context and chain of thought request
