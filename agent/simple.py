@@ -1183,10 +1183,11 @@ Navigation tips:
 In your response include the following sections:
 
 OBJECTIVES:
-[Make sure to review your current objectives. You have main storyline objectives that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them. These are your highest priority, everything you do should be in service of accomplishing these goals
-You can also Complete sub-objectives: COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs")
+[Make sure to review your current objectives. These are your highest priority, everything you do should be in service of accomplishing these goals
+You can also Complete these objectives: COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs")
 This section should only contain calls to the tools at the start of each line, eg
-COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs]
+COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs
+Important: You cannot add objectives, only complete them.]
 
 ACTION:
 [If you are in dialogue or battle, prefer single actions like 'A'.
