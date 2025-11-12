@@ -1147,6 +1147,9 @@ Your current story objectives are:
 These are the sub-objectives added by the planning agent. These will help you accomplish the main story objectives:
 {added_objectives_summary}
 
+This is your analysis from your previous turn:
+{prev_analysis}
+
 Your current location is:
 {player_location}
 
