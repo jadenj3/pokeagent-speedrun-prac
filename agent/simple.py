@@ -269,7 +269,7 @@ class SimpleAgent:
             },
             {
                 "id": "story_route_103",
-                "description": "Travel to Route 103 to meet rival. You MUST talk to your rival here at (10,3)!",
+                "description": "Travel to Route 103 to meet rival. You MUST talk to your rival here!!",
                 "objective_type": "location",
                 "target_value": "Route 103",
                 "milestone_id": "ROUTE_103"
