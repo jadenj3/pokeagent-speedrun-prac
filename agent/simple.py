@@ -1109,7 +1109,7 @@ These are the previous responses:
 """
             # Make VLM call for planning module - double-check frame validation before VLM
             self_critique_response = ""
-            '''
+
             if self.story_objective_completed:
                 if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                     print("🔍 Making VLM objectives call...")
@@ -1125,7 +1125,7 @@ These are the previous responses:
                     return "WAIT"
                 # will automatically update objectives
                 actions, reasoning, analysis = self._parse_structured_response(response, game_state, json_data=json_data)
-            self.story_objective_completed = False'''
+            self.story_objective_completed = False
 
             # Create enhanced prompt with objectives, history context and chain of thought request
             prompt = f"""You are playing as the Protagonist Brendan in Pokemon Emerald. 
@@ -1138,7 +1138,7 @@ ALSO IMPORTANT: Use the interact_with(x,y) tool to interact with objects and NPC
 Your current story objectives are:
 {objectives_summary}
 
-These are the sub-objectives added by you. These will help you accomplish the main story objectives:
+These are the sub-objectives added by the planning agent. These will help you accomplish the main story objectives:
 {added_objectives_summary}
 
 Your current location is:
@@ -1157,6 +1157,9 @@ Your action last turn is:
 And your current coordinates:
 {current_player_coords}
 
+This is your analysis from your previous turn, it may be helpful to detect loops or decide what you want to do next:
+{prev_analysis}
+
 
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT, navigate_to(x,y), interact_with(x,y)
 Remember: if you want to interact with an object or npc, you should always use the interact_with(x,y) tool!!
@@ -1172,11 +1175,9 @@ In your response include the following sections:
 
 OBJECTIVES:
 [Make sure to review your current objectives. You have main storyline objectives that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them. These are your highest priority, everything you do should be in service of accomplishing these goals
-You also have access to the following command in this section to sub-objectives: ADD_OBJECTIVE: type:description:target_value (e.g., "ADD_OBJECTIVE: location:Find Pokemon Center in town:center" or "ADD_OBJECTIVE: item:Buy Pokeballs:5"). Don't add coordinates here!!!
 You can also Complete sub-objectives: COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs")
 This section should only contain calls to the tools at the start of each line, eg
-COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs
-ADD_OBJECTIVE: location:Find Pokemon Center in town:Center]
+COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs]
 
 ACTION:
 [If you are in dialogue or battle, prefer single actions like 'A'.
