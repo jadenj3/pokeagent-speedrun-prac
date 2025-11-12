@@ -1205,8 +1205,9 @@ When using the navigate_to(x,y) tool, you can only choose from the reachable til
 Some important notes: Don't use the navigate_to(x,y) tool when you are in dialogue or battle, you will be stuck.
 IMPORTANT RULE: Don't interact with NPCs unless you have to. It will likely waste time.
 ALSO IMPORTANT: You interact with warps/stairs by walking into them, not pressing 'A'. They will also show up in your movement preview. Confirm you are in front of them using your movement preview, then walk into them to transition.
-To interact with NPCs/Objects you also have access to an interact_with(x,y) tool. You can choose any coordinate (traversable or not) and if there is an NPC or object there, it will take you there and you will interact with it. You do not have to be next to the object, the tool will navigate for you!
-***IMPORTANT RULE***: DO NOT use the interact_with(x,y) tool on any coordinates you previously used it on. CHECK YOUR PREVIOUS ACTIONS FIRST! You likely chose the wrong coordinate if you repeat them!!]
+To interact with NPCs/Objects you also have access to an interact_with(x,y) tool. You can choose a traversable coordinate and if there is an NPC or object there, it will take you there and you will interact with it. You do not have to be next to the object, the tool will navigate for you!
+***IMPORTANT RULE***: DO NOT use the interact_with(x,y) tool on any coordinates you previously used it on. CHECK YOUR PREVIOUS ACTIONS FIRST! You likely chose the wrong coordinate if you repeat them!!
+ANOTHER IMPORTANT RULE: When interacting with NPCs, they are present in the traversable tile list. Select from those!!!]
 
 ANALYSIS:
 [Summarize your current situation. This will be passed onto you as context during your next turn. It's especially important to summarize any dead ends you found and potential alternate paths. This is the only information that gets passed forward in time, so note anything important here. You can be as verbose as you like.
