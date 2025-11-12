@@ -1157,6 +1157,9 @@ Your action last turn is:
 And your current coordinates:
 {current_player_coords}
 
+This is your analysis from your previous turn, it may be helpful to detect loops or decide what you want to do next:
+{prev_analysis}
+
 
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT, navigate_to(x,y), interact_with(x,y)
 Remember: if you want to interact with an object or npc, you should always use the interact_with(x,y) tool!!
