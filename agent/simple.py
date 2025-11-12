@@ -1075,11 +1075,12 @@ You are the planning module for a pokemon emerald agent speedrun scaffolding.
 
 Your goal is to use your knowledge of pokemon emerald to add intermediary objectives with navigation tips that help the action agent accomplish its goals and finish the game. Make sure to only include objectives that directly help you accomplish the next goals!
 
-You will be called every 50 or so turns to add objectives to assist the agent to get to the direct next story objective, you have the most crucial role in the entire scaffolding!
+You will be called after every story objective to add objectives to assist the agent to get to the direct next story objective, you have the most crucial role in the entire scaffolding!
 
-Think about common failure modes for pokemon agents. Sometimes they need explicitly directional hints to avoid loops or missing the right path!
+Think about common failure modes for pokemon agents. Sometimes they need explicitly directional hints and context to avoid loops or missing the right path!
 Also try to break up big objectives into smaller parts, giving detailed steps and instructions that the agent can complete along the way.
 Only try to include new sub-objectives for the immediate next story objective. Including directions for the later story objectives could confuse the agent.
+Add as many as useful objectives you can think of! The model will be able to complete them sequentially.
 
 You also have access to the current game frame. Visually inspect it to get a sense of your current location and context.
 
@@ -1088,6 +1089,9 @@ Current story objectives you are trying to accomplish:
 
 These are the objectives you have currently added (and potentially some that were recently completed):
 {added_objectives_summary}
+
+Current location:
+{player_location}
 
 You should format your response as follows.
 
@@ -1108,7 +1112,7 @@ These are the previous responses:
 """
             # Make VLM call for planning module - double-check frame validation before VLM
             self_critique_response = ""
-            '''
+
             if self.state.step_counter == 1 or self.story_objective_completed:
                 if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                     print("🔍 Making VLM objectives call...")
@@ -1124,7 +1128,7 @@ These are the previous responses:
                     return "WAIT"
                 # will automatically update objectives
             actions, reasoning, analysis = self._parse_structured_response(response, game_state, json_data=json_data)
-            self.story_objective_completed = False'''
+            self.story_objective_completed = False
 
             # Create enhanced prompt with objectives, history context and chain of thought request
             prompt = f"""You are playing as the Protagonist Brendan in Pokemon Emerald. 
@@ -1137,7 +1141,7 @@ ALSO IMPORTANT: Use the interact_with(x,y) tool to interact with objects and NPC
 Your current story objectives are:
 {objectives_summary}
 
-Some intermediary objectives you have added are here:
+These are the sub-objectives added by the planning agent. These will help you accomplish the main story objectives:
 {added_objectives_summary}
 
 Your current location is:
@@ -1168,10 +1172,8 @@ In your response include the following sections:
 
 OBJECTIVES:
 [Make sure to review your current objectives. You have main storyline objectives that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them. These are your highest priority, everything you do should be in service of accomplishing these goals
-You also have access to the following command in this section to sub-objectives: ADD_OBJECTIVE: type:description:target_value (e.g., "ADD_OBJECTIVE: location:Find Pokemon Center in town:Center" or "ADD_OBJECTIVE: item:Buy Pokeballs:5"). You will will be able to manually complete these objectives
 You can also Complete sub-objectives: COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs")
 This section should only contain calls to the tools at the start of each line, eg
-ADD_OBJECTIVE: location:Find Pokemon Center in town:Center. **DO NOT INCLUDE COORDINATES IN YOUR OBJECTIVE**
 COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs]
 
 ACTION:
