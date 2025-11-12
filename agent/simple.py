@@ -269,7 +269,7 @@ class SimpleAgent:
             },
             {
                 "id": "story_route_103",
-                "description": "Travel to Route 103 to meet rival. You MUST talk to your rival here. You also MUST battle your rival!",
+                "description": "Travel to Route 103 to meet rival. You MUST talk to your rival here at (10,3)!",
                 "objective_type": "location",
                 "target_value": "Route 103",
                 "milestone_id": "ROUTE_103"
@@ -978,7 +978,7 @@ class SimpleAgent:
             # Get relevant history and stuck detection
             history_summary = self.get_relevant_history_summary(context, coords)
             stuck_warning = self.get_stuck_warning(coords, context, game_state)
-            recent_actions_str = ', '.join(list(self.state.recent_actions)[-1:]) if self.state.recent_actions else 'None'
+            recent_actions_str = ', '.join(list(self.state.recent_actions)[-5:]) if self.state.recent_actions else 'None'
             
             # Format objectives for LLM
             active_objectives = self.get_active_objectives()
@@ -1168,7 +1168,7 @@ Movement preview (check this to make sure you aren't selecting a blocked action)
 {map_preview}
 IMPORTANT: The movement preview doesn't show NPCs, so look for visual confirmation if you think an NPC is blocking your path. If you are blocked by an NPC you should move around them, they only block a single tile. If you need to complete a story segment to move an npc, it will show up in your objectives.
 
-Your action last turn is:
+Your most recent actions are:
 {recent_actions_str}
 
 And your current coordinates:
@@ -1206,7 +1206,7 @@ Some important notes: Don't use the navigate_to(x,y) tool when you are in dialog
 IMPORTANT RULE: Don't interact with NPCs unless you have to. It will likely waste time.
 ALSO IMPORTANT: You interact with warps/stairs by walking into them, not pressing 'A'. They will also show up in your movement preview. Confirm you are in front of them using your movement preview, then walk into them to transition.
 To interact with NPCs/Objects you also have access to an interact_with(x,y) tool. You can choose any coordinate (traversable or not) and if there is an NPC or object there, it will take you there and you will interact with it. You do not have to be next to the object, the tool will navigate for you!
-***IMPORTANT RULE***: DO NOT use the interact_with(x,y) tool on the same coordinate twice in a row. CHECK YOUR PREVIOUS ACTIONS FIRST! You likely chose the wrong coordinate!!]
+***IMPORTANT RULE***: DO NOT use the interact_with(x,y) tool on any coordinates you previously used it on. CHECK YOUR PREVIOUS ACTIONS FIRST! You likely chose the wrong coordinate if you repeat them!!]
 
 ANALYSIS:
 [Summarize your current situation. This will be passed onto you as context during your next turn. It's especially important to summarize any dead ends you found and potential alternate paths. This is the only information that gets passed forward in time, so note anything important here. You can be as verbose as you like.
