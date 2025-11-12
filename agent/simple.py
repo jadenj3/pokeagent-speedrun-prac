@@ -877,7 +877,7 @@ class SimpleAgent:
         conductive_tiles = []
         for entry in reachable_list:
             tile_type = entry.get("type", "").lower()
-            if tile_type not in {"door", "stairs"} and not entry.get("warp_destination") and len(conductive_tiles) < 10:
+            if tile_type not in {"door", "stairs"} and not entry.get("warp_destination"):
                 conductive_tiles.append(_fmt_entry(entry))
 
         if conductive_tiles:
@@ -886,15 +886,15 @@ class SimpleAgent:
 
         if doors:
             lines.append("Doors:")
-            for entry in doors[:5]:
+            for entry in doors:
                 lines.append(f"{_fmt_entry(entry)}")
         if stairs:
             lines.append("Stairs:")
-            for entry in stairs[:5]:
+            for entry in stairs:
                 lines.append(f"{_fmt_entry(entry)}")
         if warps:
             lines.append("Warps:")
-            for entry in warps[:5]:
+            for entry in warps:
                 lines.append(f"{_fmt_entry(entry)}")
 
         summary["text"] = "\n".join(lines)
