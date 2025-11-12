@@ -1099,9 +1099,7 @@ OBJECTIVES:
 [Review your current objectives. You have main storyline objectives (story_*) that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them. 
 You also have access to the following command in this section to sub-objectives: ADD_OBJECTIVE: type:description:target_value (e.g., "ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)" or "ADD_OBJECTIVE: item:Buy Pokeballs:5"). The action model will be able to manually complete these objectives
 This section should only contain calls do the ADD_OBJECTIVE tool at the start of each line, eg
-ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20). You should only add objectives that directly help you accomplish the next story goal.
-You can also complete added objectives, eg
-COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs")]
+ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20). You should only add objectives that directly help you accomplish the next story goal.]
 """
 
             self_critique_prompt = f"""
