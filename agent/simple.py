@@ -172,7 +172,19 @@ class SimpleAgent:
         self.response_history = deque(maxlen=50)
 
         self.last_turn_actions = []
-    
+
+    def _complete_all_added_objectives(self, reason: str = "Reset before planner update"):
+        """Mark all non-storyline objectives as completed (used when refreshing planner guidance)."""
+        any_completed = False
+        for obj in self.state.objectives:
+            if not obj.storyline and not obj.completed:
+                obj.completed = True
+                obj.completed_at = datetime.now()
+                obj.progress_notes = reason
+                any_completed = True
+        if any_completed:
+            self.state.objectives_updated = True
+
     def set_reasoning_effort(self, effort: Optional[str]):
         """Adjust reasoning effort for subsequent model calls."""
         valid_values = {None, "low", "medium", "high"}
@@ -1107,6 +1119,7 @@ These are the previous responses:
             self_critique_response = ""
 
             if self.story_objective_completed or self.state.step_counter == 1:
+                self._complete_all_added_objectives("Story milestone reached - refreshing planner objectives")
                 if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                     print("🔍 Making VLM objectives call...")
                     try:
