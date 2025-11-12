@@ -1154,10 +1154,10 @@ In your response include the following sections:
 
 OBJECTIVES:
 [Make sure to review your current objectives. You have main storyline objectives that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them. These are your highest priority, everything you do should be in service of accomplishing these goals
-You also have access to the following command in this section to sub-objectives: ADD_OBJECTIVE: type:description:target_value (e.g., "ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)" or "ADD_OBJECTIVE: item:Buy Pokeballs:5"). You will will be able to manually complete these objectives
+You also have access to the following command in this section to sub-objectives: ADD_OBJECTIVE: type:description:target_value (e.g., "ADD_OBJECTIVE: location:Find Pokemon Center in town:Center" or "ADD_OBJECTIVE: item:Buy Pokeballs:5"). You will will be able to manually complete these objectives
 You can also Complete sub-objectives: COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs")
 This section should only contain calls to the tools at the start of each line, eg
-ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)
+ADD_OBJECTIVE: location:Find Pokemon Center in town:Center. **DO NOT INCLUDE COORDINATES IN YOUR OBJECTIVE**
 COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs]
 
 ACTION:
