@@ -1097,6 +1097,8 @@ The action agent can only see three at a time, so use these sparingly!!!
 Current location:
 {player_location}
 
+When your next objective is to confront roxanne, make sure to add some objectives to catch additional pokemon!
+
 You should format your response as follows.
 
 OBJECTIVES:
