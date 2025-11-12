@@ -872,16 +872,32 @@ class SimpleAgent:
                     base += f" → {dest_name}"
             return base
 
-        lines = [f"Reachable tiles: {summary['total']}"]
-        sample_coords = [_fmt_entry(entry) for entry in reachable_list[:20]]
-        if sample_coords:
-            lines.append("Sample: " + ", ".join(sample_coords))
+        lines = [f"Reachable tiles in range (total {summary['total']}):"]
+
+        conductive_tiles = []
+        for entry in reachable_list:
+            tile_type = entry.get("type", "").lower()
+            if tile_type not in {"door", "stairs"} and not entry.get("warp_destination") and len(conductive_tiles) < 10:
+                conductive_tiles.append(_fmt_entry(entry))
+
+        if conductive_tiles:
+            lines.append("Nearby walkable tiles:")
+            for coord in conductive_tiles:
+                lines.append(f"  • {coord}")
+
         if doors:
-            lines.append("Doors: " + ", ".join(_fmt_entry(entry) for entry in doors))
+            lines.append("Doors:")
+            for entry in doors[:5]:
+                lines.append(f"  • {_fmt_entry(entry)}")
         if stairs:
-            lines.append("Stairs: " + ", ".join(_fmt_entry(entry) for entry in stairs))
+            lines.append("Stairs:")
+            for entry in stairs[:5]:
+                lines.append(f"  • {_fmt_entry(entry)}")
         if warps:
-            lines.append("Warps: " + ", ".join(_fmt_entry(entry) for entry in warps))
+            lines.append("Warps:")
+            for entry in warps[:5]:
+                lines.append(f"  • {_fmt_entry(entry)}")
+
         summary["text"] = "\n".join(lines)
 
         return summary
