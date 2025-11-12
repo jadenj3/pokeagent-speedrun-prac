@@ -1402,16 +1402,16 @@ Context: {context} """
         lines = []
         added_active = [obj for obj in active_objectives if not obj.storyline]
         if added_active:
-            lines.append("🎯 ACTIVE ADDED OBJECTIVES:")
+            lines.append("🎯 ACTIVE SUB OBJECTIVES:")
             for idx, obj in enumerate(added_active[:5], 1):
                 target_str = f" (Target: {obj.target_value})" if obj.target_value else ""
                 lines.append(f"  {idx}. [{obj.objective_type}] {obj.description}{target_str} [ID: {obj.id}]")
         else:
-            lines.append("🎯 ACTIVE ADDED OBJECTIVES: None - Consider adding some objectives!")
+            lines.append("🎯 ACTIVE SUB OBJECTIVES: None - Consider adding some objectives!")
 
         added_completed = [obj for obj in completed_objectives if not obj.storyline]
         if added_completed:
-            lines.append("✅ RECENTLY COMPLETED ADDED OBJECTIVES:")
+            lines.append("✅ RECENTLY COMPLETED SUB OBJECTIVES:")
             for obj in added_completed[-3:]:
                 lines.append(f"  ✓ [{obj.objective_type}] {obj.description}")
 
