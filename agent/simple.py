@@ -46,7 +46,7 @@ import heapq
 from utils.state_formatter import (
     format_state_for_llm,
     format_movement_preview_for_llm,
-    _format_map_info, _format_party_info,
+    _format_map_info, _format_party_info, _format_world_map_display,
 )
 
 logger = logging.getLogger(__name__)
@@ -1059,6 +1059,8 @@ class SimpleAgent:
             else:
                 inventory_str = "None"
 
+            ascii_map = _format_world_map_display(game_state)
+
             def calculate_blocked_tiles(prev_coord, curr_coord, last_actions):
                 if 'A' in last_actions:
                     return []
@@ -1260,6 +1262,10 @@ ALSO IMPORTANT: Use the interact_with(x,y) tool to interact with objects and NPC
 
 These are the sub-objectives added by the planning agent. These will help you accomplish the main story objectives:
 {active_added_objectives_summary}
+
+
+This is an ascii map of your current location, use this to see if you are going in the right direction or are encountering dead ends:
+{ascii_map}
 
 This is your analysis from your previous turn(s):
 {prev_analysis}
