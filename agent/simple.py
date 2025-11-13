@@ -1047,7 +1047,7 @@ class SimpleAgent:
                     item_lines.append(f"{name} x{qty} ({bag})")
                 inventory_str = "\n".join(item_lines)
             else:
-                inventory_str = "=== INVENTORY ===\nNone"
+                inventory_str = "None"
 
             def calculate_blocked_tiles(prev_coord, curr_coord, last_actions):
                 if 'A' in last_actions:
