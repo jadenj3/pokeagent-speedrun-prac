@@ -1290,9 +1290,17 @@ Navigation tips:
 - Unless you are blocked, use the navigate_to() tool as much as possible. This is much faster than single steps.
 In your response include the following sections:
 
+Battle tips:
+- Inspect the game frame and history for your current selection. Be careful not to get stuck in a loop! (eg checking your bag repeatedly, or attempting to fleeing from a battle you cannot flee from)
+
+You should format your response as follows:
+
 NPCS:
 [List all the NPCs you see here. What are their identities (eg Professor Birch, May) inspect them carefully.
 How far are they from you? What is their approximate coordinates?
+
+IMAGE DESCRIPTION:
+[Describe your current game frame. Double check the image. What do you see? If you're in battle, which option do you have selected?]
 
 OBJECTIVES:
 [Make sure to review your current objectives. These are your highest priority, everything you do should be in service of accomplishing these goals
