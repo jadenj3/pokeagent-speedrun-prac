@@ -1407,35 +1407,24 @@ class MapStitcher:
             List of display lines ready for formatting
         """
         lines = []
-        
+
         # Get stored map data for this location
         location_grid = self.get_location_grid(location_name, simplified=True)
-        
+
         if not location_grid:
             # No map data available - return empty to trigger memory fallback
             return []
-        
+
         # For accumulated maps, show the full explored area
-        # Compute bounds using only known tiles (ignore unknown placeholders)
-        all_positions = list(location_grid.keys())
-        if not all_positions:
-            return []
+        # Get the dimensions of the explored area
+        max_x = max(x for x, y in location_grid.keys()) if location_grid else 0
+        max_y = max(y for x, y in location_grid.keys()) if location_grid else 0
+        min_x = min(x for x, y in location_grid.keys()) if location_grid else 0
+        min_y = min(y for x, y in location_grid.keys()) if location_grid else 0
 
-        def _is_known_tile(pos):
-            tile_val = location_grid.get(pos)
-            return tile_val not in (None, ' ', '?')
-
-        known_positions = [pos for pos in all_positions if _is_known_tile(pos)]
-
-        target_positions = known_positions if known_positions else all_positions
-        max_x = max(x for x, _ in target_positions)
-        max_y = max(y for _, y in target_positions)
-        min_x = min(x for x, _ in target_positions)
-        min_y = min(y for _, y in target_positions)
-        
         explored_width = max_x - min_x + 1
         explored_height = max_y - min_y + 1
-        
+
         # Show the full accumulated map (up to reasonable size)
         # Don't try to focus on player for accumulated maps
         if explored_width <= 30 and explored_height <= 30:
@@ -1446,11 +1435,13 @@ class MapStitcher:
             # Very large area, limit to 30x30 for readability
             display_radius = 15
             display_size = 30
-        
+
         display_center = display_radius  # Player at center
-        
+
         # For accumulated maps, just use the entire grid without focusing
         # This shows the full explored area
+        all_positions = list(location_grid.keys())
+
         # Find player position in the grid if available
         local_player_pos = None
         if player_pos:
@@ -1463,7 +1454,7 @@ class MapStitcher:
                     if area.location_name and location_name and area.location_name.lower() == location_name.lower():
                         map_area = area
                         break
-                
+
                 if map_area:
                     # Use the stored player position from the map area if available
                     if hasattr(map_area, 'player_last_position') and map_area.player_last_position:
@@ -1472,72 +1463,78 @@ class MapStitcher:
                         if last_px >= 0 and last_px < 1000 and last_py >= 0 and last_py < 1000 and last_px != 0xFFFF and last_py != 0xFFFF:
                             player_pos = map_area.player_last_position
                             px, py = player_pos
-                    
+
                     if hasattr(map_area, 'origin_offset') and map_area.origin_offset:
                         # Convert player world coordinates to grid-relative coordinates
                         offset_x = map_area.origin_offset.get('x', 0)
                         offset_y = map_area.origin_offset.get('y', 0)
-                        
+
                         # Calculate player's position relative to the explored bounds
                         grid_player_x = px + offset_x
                         grid_player_y = py + offset_y
-                        
+
                         # Convert to relative coordinates in the location_grid
                         if hasattr(map_area, 'explored_bounds'):
                             bounds = map_area.explored_bounds
                             rel_x = grid_player_x - bounds['min_x']
                             rel_y = grid_player_y - bounds['min_y']
-                            
+
                             # Check if player is within the displayed area
                             if 0 <= rel_x <= (max_x - min_x) and 0 <= rel_y <= (max_y - min_y):
                                 local_player_pos = (rel_x, rel_y)
                                 logger.debug(f"Player at relative position {local_player_pos} in {location_name}")
                             else:
                                 logger.debug(f"Player at {player_pos} is outside displayed area of {location_name}")
-        
-        # Bounds already computed above using target_positions
-        
+
+        if not all_positions:
+            return []
+
+        min_x = min(pos[0] for pos in all_positions)
+        max_x = max(pos[0] for pos in all_positions)
+        min_y = min(pos[1] for pos in all_positions)
+        max_y = max(pos[1] for pos in all_positions)
+
         # Minimal trimming - only remove completely empty space
         # Don't trim '?' as those are unexplored areas we want to show
         # Don't aggressively trim walls as they show room boundaries
-        
-        # Only trim rows that are completely empty (no known tiles)
-        empty_trim_values = {' ', None, '?'}
+
+        # Only trim rows that are completely empty (all spaces/None)
         while min_y < max_y:
             row_tiles = [location_grid.get((x, min_y), ' ') for x in range(min_x, max_x + 1)]
-            if any(t not in empty_trim_values for t in row_tiles):
+            # Keep the row if it has ANY content (including ? and #)
+            if any(t not in [' ', None] for t in row_tiles):
                 break
             min_y += 1
-        
+
         # Check bottom rows - only trim completely empty
         while max_y > min_y:
             row_tiles = [location_grid.get((x, max_y), ' ') for x in range(min_x, max_x + 1)]
-            if any(t not in empty_trim_values for t in row_tiles):
+            if any(t not in [' ', None] for t in row_tiles):
                 break
             max_y -= 1
-        
+
         # Check left columns - only trim completely empty
         while min_x < max_x:
             col_tiles = [location_grid.get((min_x, y), ' ') for y in range(min_y, max_y + 1)]
-            if any(t not in empty_trim_values for t in col_tiles):
+            if any(t not in [' ', None] for t in col_tiles):
                 break
             min_x += 1
-        
+
         # Check right columns - only trim completely empty
         while max_x > min_x:
             col_tiles = [location_grid.get((max_x, y), ' ') for y in range(min_y, max_y + 1)]
-            if any(t not in empty_trim_values for t in col_tiles):
+            if any(t not in [' ', None] for t in col_tiles):
                 break
             max_x -= 1
-        
+
         # Build portal positions from connections
         portal_positions = {}
-        
+
         lines.append(f"\n--- MAP: {location_name.upper()} ---")
-        
+
         # Track symbols actually used in the display
         symbols_used_in_display = set()
-        
+
         # Create the map display with GAME coordinates (relative to player position)
         # Calculate actual game coordinate ranges to display
         if local_player_pos and player_pos:
@@ -1575,7 +1572,7 @@ class MapStitcher:
             for x in range(min_x, max_x + 1):
                 # Check if this is an edge position
                 is_edge = (x == min_x or x == max_x or y == min_y or y == max_y)
-                
+
                 # Check for NPCs at this position
                 npc_at_pos = None
                 if npcs:
@@ -1585,7 +1582,7 @@ class MapStitcher:
                         if npc_x == x and npc_y == y:
                             npc_at_pos = npc
                             break
-                
+
                 if local_player_pos and (x, y) == local_player_pos:
                     symbol = "P"
                     row += symbol
@@ -1596,7 +1593,7 @@ class MapStitcher:
                     symbols_used_in_display.add(symbol)
                 elif (x, y) in location_grid:
                     tile = location_grid[(x, y)]
-                    
+
                     # Special handling for Brendan's House 2F background events
                     # These are wall tiles with scripts attached, not special tile behaviors
                     if location_name and "BRENDAN" in location_name.upper() and "2F" in location_name.upper():
@@ -1660,7 +1657,7 @@ class MapStitcher:
                                     portal_positions[(x, y)] = conn_name
                                     portal_added = True
                                     break
-                        
+
                         if not portal_added:
                             row += tile
                             symbols_used_in_display.add(tile)
@@ -1668,16 +1665,16 @@ class MapStitcher:
                         row += tile
                         symbols_used_in_display.add(tile)
                 else:
-                    # Position not in grid - mark as unknown to keep alignment consistent
-                    row += "?"
-                    symbols_used_in_display.add("?")
-            
+                    # Position not in grid - just show as space
+                    # The grid already has '?' symbols where needed from get_location_grid
+                    row += " "
+
             # Add spacing between characters for square aspect ratio
             # Most terminals have characters ~2x taller than wide, so spacing helps
-            spaced_row = "".join(row)
+            spaced_row = " ".join(row)
             # Prepend the Y-axis label (don't join it with the row to avoid extra space)
             lines.append(y_label + spaced_row)
-        
+
         # Add coordinate system explanation
         if local_player_pos and player_pos:
             game_x, game_y = player_pos
@@ -1691,10 +1688,10 @@ class MapStitcher:
         legend_lines.append("  Movement: P=Player")
         if npcs:
             legend_lines.append("            N=NPC/Trainer")
-        
+
         # Use the symbols actually displayed instead of just location_grid values
         visible_symbols = symbols_used_in_display
-        
+
         terrain_items = []
         symbol_meanings = {
             ".": ".=Walkable path",
@@ -1722,14 +1719,14 @@ class MapStitcher:
             "B": "B=Notebook",
             "?": "?=Unknown"
         }
-        
+
         for symbol, meaning in symbol_meanings.items():
             if symbol in visible_symbols:
                 terrain_items.append(meaning)
-        
+
         if terrain_items:
             legend_lines.append(f"  Terrain: {', '.join(terrain_items)}")
-        
+
         # Add portal markers to legend if any
         if portal_positions:
             unique_portals = {}
@@ -1743,15 +1740,15 @@ class MapStitcher:
                     unique_portals["↑"] = dest
                 elif y == max_y:
                     unique_portals["↓"] = dest
-            
+
             if unique_portals:
                 portal_items = []
                 for symbol, dest in unique_portals.items():
                     portal_items.append(f"{symbol}={dest}")
                 legend_lines.append(f"  Exits: {', '.join(portal_items)}")
-        
+
         lines.extend(legend_lines)
-        
+
         # Add explicit portal connections with coordinates
         if connections:
             lines.append("")
@@ -1760,14 +1757,15 @@ class MapStitcher:
                 to_location = conn.get('to', 'Unknown')
                 from_pos = conn.get('from_pos', [])
                 to_pos = conn.get('to_pos', [])
-                
+
                 if from_pos and to_pos and len(from_pos) >= 2 and len(to_pos) >= 2:
-                    lines.append(f"  {location_name} ({from_pos[0]},{from_pos[1]}) → {to_location} ({to_pos[0]},{to_pos[1]})")
+                    lines.append(
+                        f"  {location_name} ({from_pos[0]},{from_pos[1]}) → {to_location} ({to_pos[0]},{to_pos[1]})")
                 elif from_pos and len(from_pos) >= 2:
                     lines.append(f"  {location_name} ({from_pos[0]},{from_pos[1]}) → {to_location}")
                 else:
                     lines.append(f"  → {to_location}")
-        
+
         return lines
     
     def _tile_to_symbol(self, tile, location_name: str = None) -> str:
