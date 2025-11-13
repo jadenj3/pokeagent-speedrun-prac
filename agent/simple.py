@@ -1124,6 +1124,14 @@ class SimpleAgent:
                 loop_warning = "⚠️ You are revisiting the same coordinates repeatedly. Pick a direction you haven't tried yet (use the map and movement preview)."
             battle_info = game_state.get("game", {}).get("battle_info") or {}
             trainer_battle_text = "WARNING: You appear to be in a Trainer battle. REMEMBER: You cannot run from a trainer battle!" if battle_info.get("is_trainer_battle") else ""
+            battle_prompt = f"""
+IMAGE DESCRIPTION:
+[Describe your current game frame. Double check the image. What do you see? If you're in battle, which option do you have selected?]
+"""
+            if battle_info:
+                battle_text = battle_prompt
+            else:
+                battle_text = ""
             if len(self.prev_analysis) > 0:
                 prev_analysis = self.prev_analysis[-1]
             else:
@@ -1133,6 +1141,7 @@ class SimpleAgent:
                 f"{resp.strip()}\n{'=' * 80}"
                 for resp in recent_responses
             )
+
             prev_responses_str = prev_responses_str.rstrip("=\n")  # optional to drop trailing bar
             image_recognition_prompt = f"""
             
@@ -1289,18 +1298,17 @@ Navigation tips:
 - Enter and exit locations through the middle rather than hugging a specific side, this maximizes visibility of the area to locate the exit.
 - Unless you are blocked, use the navigate_to() tool as much as possible. This is much faster than single steps.
 In your response include the following sections:
+- Check your current location in your prompt. It accurately contains your current location!
 
 Battle tips:
 - Inspect the game frame and history for your current selection. Be careful not to get stuck in a loop! (eg checking your bag repeatedly, or attempting to fleeing from a battle you cannot flee from)
 
 You should format your response as follows:
+{battle_text}
 
 NPCS:
 [List all the NPCs you see here. What are their identities (eg Professor Birch, May) inspect them carefully.
 How far are they from you? What is their approximate coordinates?
-
-IMAGE DESCRIPTION:
-[Describe your current game frame. Double check the image. What do you see? If you're in battle, which option do you have selected?]
 
 OBJECTIVES:
 [Make sure to review your current objectives. These are your highest priority, everything you do should be in service of accomplishing these goals
