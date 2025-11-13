@@ -1247,7 +1247,7 @@ These are the previous responses:
 
 Hint: Use the reachable tiles, map preview, and visual frame to determine which coordinate you want to go to, then use the navigate_to(x,y) action to find the optimal path to your destination.
 
-ALSO IMPORTANT: Use the interact_with(x,y) tool to interact with objects and NPCs. However, it should still be a traversable tile.
+ALSO IMPORTANT: Use the interact_with(x,y) tool to interact with objects and NPCs. Remember, select the coordinates of the object itself.
 
 These are the sub-objectives added by the planning agent. These will help you accomplish the main story objectives:
 {active_added_objectives_summary}
