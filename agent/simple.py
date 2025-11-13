@@ -1321,6 +1321,9 @@ Battle tips:
 You should format your response as follows:
 {battle_text}
 
+INSPECT MAP:
+[Look at the ascii map provided above. Are you in any dead ends? Which direction should you go next?]
+
 NPCS:
 [List all the NPCs you see here. What are their identities (eg Professor Birch, May) inspect them carefully.
 How far are they from you? What is their approximate coordinates?
