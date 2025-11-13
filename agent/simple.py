@@ -1248,7 +1248,7 @@ These are the sub-objectives added by the planning agent. These will help you ac
 {active_added_objectives_summary}
 
 This is your analysis from your previous turn:
-{prev_analysis}
+{self.prev_analysis[-1]}
 
 Your current location is:
 {player_location}
