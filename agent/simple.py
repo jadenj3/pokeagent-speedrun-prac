@@ -1078,14 +1078,6 @@ class SimpleAgent:
             reachable_tiles_info = self.reachable_tiles(json_data)
             reachable_tiles_text = reachable_tiles_info["text"]
 
-            npc_lines = []
-            for npc in json_data.get("npcs", []):
-                nx = npc.get("x")
-                ny = npc.get("y")
-                if nx is not None and ny is not None:
-                    npc_lines.append(f"{nx},{ny}")
-            npc_summary = "\n".join(npc_lines) if npc_lines else "None"
-
             player_location = game_state.get("player", {}).get("location", "Unknown Location")
             if player_location == 'Map_18_0B':
                 player_location = 'PETALBURG_WOODS'
@@ -1160,6 +1152,9 @@ These are the sub-objectives you have added. Avoid duplicate objectives here:
 Current location:
 {player_location}
 
+Rest of your state:
+{formatted_state}
+
 You should format your response as follows.
 
 OBJECTIVES:
@@ -1222,9 +1217,6 @@ Your current location is:
 The current reachable tiles from your location are:
 {reachable_tiles_text}
 
-Nearby NPC tiles:
-{npc_summary}
-
 Movement preview (check this to make sure you aren't selecting a blocked action):
 {map_preview}
 IMPORTANT: The movement preview doesn't show NPCs, so look for visual confirmation if you think an NPC is blocking your path. If you are blocked by an NPC you should move around them, they only block a single tile. If you need to complete a story segment to move an npc, it will show up in your objectives.
@@ -1235,13 +1227,9 @@ Your most recent actions are:
 And your current coordinates:
 {current_player_coords}
 
-Rest of your state:
-{formatted_state}
-
 
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT, navigate_to(x,y), interact_with(x,y)
 Remember: To interact with an npc, get as close as possible with the navigate_to tool, then use the interact_with tool!!
-Check your nearby NPC tiles list!! It will tell you the coordinates of nearby NPCs!
 Do not select a movement that is blocked. REMEMBER, BROWN LEDGES ARE BLOCKED!
 
 **IMPORTANT** To enter doors/stairs/warps CHECK THE MOVEMENT PREVIEW AND USE SINGLE ACTIONS. navigate_to is great for long distances, but it can struggle with entering locations if you are not perfectly aligned with the door or you are stuck on an NPC. The movement preview will have better information for you to use.
@@ -1254,7 +1242,7 @@ In your response include the following sections:
 
 NPCS:
 [List all the NPCs you see here. What are their identities (eg Professor Birch, May) inspect them carefully.
-How far are they from you? What are their approximate coordinates?]
+How far are they from you? What is their approximate coordinates?
 
 OBJECTIVES:
 [Make sure to review your current objectives. These are your highest priority, everything you do should be in service of accomplishing these goals
@@ -1274,9 +1262,9 @@ When using the navigate_to(x,y) tool, you can only choose from the reachable til
 Some important notes: Don't use the navigate_to(x,y) tool when you are in dialogue or battle, you will be stuck.
 Don't interact with NPCs unless you have to. It will likely waste time.
 ALSO IMPORTANT: You interact with warps/stairs by walking into them, not pressing 'A'. They will also show up in your movement preview. Confirm you are in front of them using your movement preview, then walk into them to transition.
-To interact with NPCs/Objects you also have access to an interact_with(x,y) tool. You can choose from the list of NPCs above, it contains their coordinates. GET AS CLOSE AS POSSIBLE TO THE NPC FIRST BEFORE USING THIS TOOL! Navigation is much quicker! 
+To interact with NPCs/Objects you also have access to an interact_with(x,y) tool. You can choose a traversable coordinate that you think contains an NPC and interact with it. GET AS CLOSE AS POSSIBLE TO THE NPC FIRST BEFORE USING THIS TOOL! Navigation is much quicker! 
 ***IMPORTANT RULE***: DO NOT use the interact_with(x,y) tool on any coordinates you previously used it on. CHECK YOUR PREVIOUS ACTIONS FIRST! You likely chose the wrong coordinate if you repeat them!!
-ANOTHER IMPORTANT RULE: When interacting with NPCs, they are present the NPC list above. Make sure you select a coordinate from there!!
+ANOTHER IMPORTANT RULE: When interacting with NPCs, they are present in the traversable tile list. Select from those!!!
 Before choosing your action, inspect your frame. You have a tendency to get stuck on the "Got away safely!" image and stop recognizing you are stuck in dialogue.]
 
 ANALYSIS:

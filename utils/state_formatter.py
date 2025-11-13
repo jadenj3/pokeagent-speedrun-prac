@@ -872,7 +872,7 @@ def _format_map_info(map_info, player_data=None, include_debug_info=False, inclu
                 "location": location_name if location_name else "Unknown",
                 "player_position": {"x": player_coords[0], "y": player_coords[1]} if player_coords else None,
                 "tiles": tiles_list,
-                "npcs": npc_list  # expose NPC positions for downstream tools
+                "npcs": npc_list
             }
 
             # Console debug: Print interesting tile locations
