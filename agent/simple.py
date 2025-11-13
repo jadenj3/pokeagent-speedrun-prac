@@ -1058,8 +1058,7 @@ class SimpleAgent:
                 inventory_str = "\n".join(item_lines)
             else:
                 inventory_str = "None"
-            player_data = game_data.get('player', {})
-            ascii_map = _format_map_info(game_data.get('map', {}), player_data=player_data, include_npcs=True, full_state_data=game_data)
+            ascii_map = _format_map_info(map_info, player_data, include_npcs=True, full_state_data=game_state, use_json_map=False)
 
             def calculate_blocked_tiles(prev_coord, curr_coord, last_actions):
                 if 'A' in last_actions:
