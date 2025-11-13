@@ -1125,7 +1125,8 @@ class SimpleAgent:
             battle_info = game_state.get("game", {}).get("battle_info") or {}
             trainer_battle_text = "WARNING: You appear to be in a Trainer battle. REMEMBER: You cannot run from a trainer battle!" if battle_info.get("is_trainer_battle") else ""
             battle_prompt = f"""
-            
+            You are currently in battle. Inspect your current selection carefully. 
+            Remember, you can't run from trainer battles. You must fight those!
 """
             if battle_info:
                 battle_text = battle_prompt
@@ -1267,10 +1268,10 @@ Your current location is:
 {player_location}
 
 The current reachable tiles from your location are:
-{reachable_tiles_text if not battle_info}
+{reachable_tiles_text if not battle_info else ""}
 
 Movement preview (check this to make sure you aren't selecting a blocked action):
-{map_preview if not battle_info}
+{map_preview if not battle_info else ""}
 IMPORTANT: The movement preview doesn't show NPCs, so look for visual confirmation if you think an NPC is blocking your path. If you are blocked by an NPC you should move around them, they only block a single tile. If you need to complete a story segment to move an npc, it will show up in your objectives.
 
 Your most recent actions are:
@@ -1280,7 +1281,7 @@ And your current coordinates:
 {current_player_coords}
 
 Known Portal Connections:
-{portal_summary if not battle_info}
+{portal_summary if not battle_info else ""}
 
 Note the coordinates still have to be in the traversable tile list for you to use the navigate_to(x,y) tool.
 But the connections can be helpful for figuring out directions.
