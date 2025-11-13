@@ -1037,6 +1037,18 @@ class SimpleAgent:
                 portal_lines.append(f"{dest} via {pos}")
             portal_summary = "\n".join(portal_lines) if portal_lines else "None"
 
+            items = game_data.get("items") or []
+            if items:
+                item_lines = ["=== INVENTORY ==="]
+                for item in items[:20]:
+                    name = item.get("name", "Unknown")
+                    qty = item.get("quantity", 1)
+                    bag = item.get("bag", "Items")
+                    item_lines.append(f"{name} x{qty} ({bag})")
+                inventory_str = "\n".join(item_lines)
+            else:
+                inventory_str = "=== INVENTORY ===\nNone"
+
             def calculate_blocked_tiles(prev_coord, curr_coord, last_actions):
                 if 'A' in last_actions:
                     return []
@@ -1171,6 +1183,8 @@ Known Portal Connections:
 Pokemon party status:
 {party_block}
 
+This is your current inventory:
+{inventory_str}
 
 You should format your response as follows.
 
