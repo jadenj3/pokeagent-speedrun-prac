@@ -1152,6 +1152,9 @@ These are the sub-objectives you have added. Avoid duplicate objectives here:
 Current location:
 {player_location}
 
+Rest of your state:
+{formatted_state}
+
 You should format your response as follows.
 
 OBJECTIVES:
