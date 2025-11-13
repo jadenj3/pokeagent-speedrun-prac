@@ -1212,7 +1212,7 @@ Known Portal Connections:
 
 {party_block}
 
-This is your current inventory:
+This is your current inventory: #
 {inventory_str}
 
 You should format your response as follows.
