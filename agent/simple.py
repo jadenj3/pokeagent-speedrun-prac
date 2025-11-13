@@ -1258,7 +1258,7 @@ These are the previous responses:
                     logger.error("🚫 CRITICAL: About to call VLM but frame validation failed - this should never happen!")
                     return "WAIT"
                 # will automatically update objectives
-                actions, reasoning, analysis = self._parse_structured_response(response, game_state, json_data=json_data)
+                actions, reasoning, analysis, deadend = self._parse_structured_response(response, game_state, json_data=json_data)
             self.story_objective_completed = False
             if self.state.step_counter < 3:
                 return "WAIT"
@@ -1609,7 +1609,7 @@ Very important: Avoid mentioning coordinates at all here, you tend to hallucinat
 
         return "\n".join(lines), any_active
     
-    def _parse_structured_response(self, response: str, game_state: Dict[str, Any] = None, json_data = None) -> Tuple[List[str], str]:
+    def _parse_structured_response(self, response: str, game_state: Dict[str, Any] = None, json_data = None) -> Tuple[List[str], str, str, str]:
         """Parse structured chain-of-thought response and extract actions and reasoning"""
         try:
             # Extract sections from structured response
@@ -1703,7 +1703,7 @@ Very important: Avoid mentioning coordinates at all here, you tend to hallucinat
         except Exception as e:
             logger.warning(f"Error parsing structured response: {e}")
             # Fall back to basic action parsing
-            return self._parse_actions(response, game_state, json_data), "Error parsing reasoning", ""
+            return self._parse_actions(response, game_state, json_data), "Error parsing reasoning", "", ""
     
     def _process_objectives_from_response(self, objectives_text: str):
         """Process objective management commands from LLM response"""
