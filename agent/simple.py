@@ -1182,6 +1182,8 @@ You also have access to the current game frame. Visually inspect it to get a sen
 Current story objectives you are trying to accomplish:
 {objectives_summary}
 
+IMPORTANT: If you see coordinates in the story objective, your sub-objective should contain them as well. (eg interact with clock  at 5,1)
+
 These are the sub-objectives you have added. Avoid duplicate objectives here:
 {added_objectives_summary}
 
