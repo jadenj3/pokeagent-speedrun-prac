@@ -1027,6 +1027,15 @@ class SimpleAgent:
             map_only_sections, json_data = _format_map_info(map_info, player_data, include_npcs=True, full_state_data=game_state, use_json_map=True)
             map_only = "\n".join(map_only_sections) if map_only_sections else ""
             recent_coords = [entry.player_coords for entry in list(self.state.history)[-5:]]
+            stitched = map_info.get("stitched_map_info", {})
+            current_area = stitched.get("current_area", {})
+            connections = current_area.get("connections", [])
+            portal_lines = []
+            for conn in connections:
+                dest = conn.get("to_location") or conn.get("to_map_id")
+                pos = conn.get("from_position")
+                portal_lines.append(f"{dest} via {pos}")
+            portal_summary = "\n".join(portal_lines) if portal_lines else "None"
 
             def calculate_blocked_tiles(prev_coord, curr_coord, last_actions):
                 if 'A' in last_actions:
@@ -1156,8 +1165,12 @@ These are the sub-objectives you have added. Avoid duplicate objectives here:
 Current location:
 {player_location}
 
-Rest of your state:
-{formatted_state}
+Known Portal Connections:
+{portal_summary}
+
+Pokemon party status:
+{party_block}
+
 
 You should format your response as follows.
 
@@ -1169,6 +1182,7 @@ ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20). You should only add
 Also, avoid duplicate goals here. They will take up unnecessary precious space in the limited goal space.
 Only include essential goals. Goals like "level up your pokemon" or "go here to get a free potion" are not helpful.]
 **IMPORTANT** be very specific with your directions. Eg when designating buildings, prefer directions like "south west, last building" over generic "west side of town".
+CRUCIAL: Look at your pokemon party. If they are not powerful enough or do not have enough hp to accomplish your next objectives, add an earlier objective to level them up, catch more pokemon, or heal them.]
 """
 
             self_critique_prompt = f"""
@@ -1231,8 +1245,16 @@ Your most recent actions are:
 And your current coordinates:
 {current_player_coords}
 
+Known Portal Connections:
+{portal_summary}
+
+Note the coordinates still have to be in the traversable tile list for you to use the navigate_to(x,y) tool.
+But the connections can be helpful for figuring out directions.
+
 Pokemon party status:
 {party_block}
+
+
 
 
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT, navigate_to(x,y), interact_with(x,y)
