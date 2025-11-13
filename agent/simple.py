@@ -1180,7 +1180,6 @@ Current location:
 Known Portal Connections:
 {portal_summary}
 
-Pokemon party status:
 {party_block}
 
 This is your current inventory:
@@ -1265,7 +1264,6 @@ Known Portal Connections:
 Note the coordinates still have to be in the traversable tile list for you to use the navigate_to(x,y) tool.
 But the connections can be helpful for figuring out directions.
 
-Pokemon party status:
 {party_block}
 
 
