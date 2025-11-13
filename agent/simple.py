@@ -719,6 +719,9 @@ class SimpleAgent:
             context = self.get_game_context(game_state)
             if context == "battle":
                 summary_parts.append("In battle")
+                battle_info = game_state.get("game", {}).get("battle_info") or {}
+                if battle_info.get("is_trainer_battle"):
+                    summary_parts.append("Trainer battle")
             elif context == "dialogue":
                 dialogue_text = game_info.get("dialogue", {}).get("text", "")
                 if dialogue_text:
@@ -1112,10 +1115,8 @@ class SimpleAgent:
             loop_warning = ""
             if len(set(recent_coords[-6:])) <= 3 and len(recent_coords) >= 6:
                 loop_warning = "⚠️ You are revisiting the same coordinates repeatedly. Pick a direction you haven't tried yet (use the map and movement preview)."
-            if len(self.prev_analysis) > 0:
-                prev_analysis = self.prev_analysis[-1]
-            else:
-                prev_analysis = "No previous analysis yet"
+            battle_info = game_state.get("game", {}).get("battle_info") or {}
+            trainer_battle_text = "WARNING: You appear to be in a Trainer battle. REMEMBER: You cannot run from a trainer battle!" if battle_info.get("is_trainer_battle") else ""
 
             recent_responses = list(self.response_history)[-3:]  # or whatever count you want
             prev_responses_str = "\n".join(
@@ -1266,7 +1267,7 @@ But the connections can be helpful for figuring out directions.
 
 {party_block}
 
-
+{trainer_battle_text}
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT, navigate_to(x,y), interact_with(x,y)
 Remember: To interact with an npc, get as close as possible with the navigate_to tool, then use the interact_with tool!!
 Do not select a movement that is blocked. REMEMBER, BROWN LEDGES ARE BLOCKED!
@@ -1303,6 +1304,7 @@ Don't interact with NPCs unless you have to. It will likely waste time.
 ALSO IMPORTANT: You interact with warps/stairs by walking into them, not pressing 'A'. They will also show up in your movement preview. Confirm you are in front of them using your movement preview, then walk into them to transition.
 To interact with NPCs/Objects you also have access to an interact_with(x,y) tool. You can choose a traversable coordinate that you think contains an NPC and interact with it. GET AS CLOSE AS POSSIBLE TO THE NPC FIRST BEFORE USING THIS TOOL! Navigation is much quicker! 
 ***IMPORTANT RULE***: DO NOT use the interact_with(x,y) tool on any coordinates you previously used it on. CHECK YOUR PREVIOUS ACTIONS FIRST! You likely chose the wrong coordinate if you repeat them!!
+Critical rule: You cannot run from a trainer battle!
 Before choosing your action, inspect your frame. You have a tendency to get stuck on the "Got away safely!" image and stop recognizing you are stuck in dialogue.]
 
 ANALYSIS:
