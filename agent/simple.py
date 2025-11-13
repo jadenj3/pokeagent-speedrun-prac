@@ -1160,9 +1160,6 @@ These are the sub-objectives you have added. Avoid duplicate objectives here:
 Current location:
 {player_location}
 
-Rest of your state:
-{formatted_state}
-
 You should format your response as follows.
 
 OBJECTIVES:
@@ -1237,6 +1234,9 @@ Your most recent actions are:
 
 And your current coordinates:
 {current_player_coords}
+
+Rest of your state:
+{formatted_state}
 
 
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT, navigate_to(x,y), interact_with(x,y)
