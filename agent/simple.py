@@ -1255,8 +1255,6 @@ Pokemon party status:
 {party_block}
 
 
-
-
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT, navigate_to(x,y), interact_with(x,y)
 Remember: To interact with an npc, get as close as possible with the navigate_to tool, then use the interact_with tool!!
 Do not select a movement that is blocked. REMEMBER, BROWN LEDGES ARE BLOCKED!
