@@ -1210,6 +1210,9 @@ Current location:
 Known Portal Connections:
 {portal_summary}
 
+This is an ascii map of your current location, use this to see if you are going in the right direction or are encountering dead ends:
+{ascii_map}
+
 {party_block}
 
 This is your current inventory:
