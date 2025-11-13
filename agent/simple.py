@@ -1105,7 +1105,7 @@ class SimpleAgent:
 
             player_location = game_state.get("player", {}).get("location", "Unknown Location")
             if player_location == 'Map_18_0B':
-                player_location = 'PETALBURG_WOODS'
+                player_location = 'Map_18_0B'
             pathfinding_rules = ""
             if context != "title":
                 pathfinding_rules = ""
