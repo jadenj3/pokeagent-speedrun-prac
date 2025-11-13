@@ -1125,8 +1125,7 @@ class SimpleAgent:
             battle_info = game_state.get("game", {}).get("battle_info") or {}
             trainer_battle_text = "WARNING: You appear to be in a Trainer battle. REMEMBER: You cannot run from a trainer battle!" if battle_info.get("is_trainer_battle") else ""
             battle_prompt = f"""
-IMAGE DESCRIPTION:
-[Describe your current game frame. Double check the image. What do you see? If you're in battle, which option do you have selected?]
+            
 """
             if battle_info:
                 battle_text = battle_prompt
@@ -1136,6 +1135,8 @@ IMAGE DESCRIPTION:
                 prev_analysis = self.prev_analysis[-1]
             else:
                 prev_analysis = "No previous analysis yet"
+            if battle_info and self.prev_analysis:
+                prev_analysis = "\n".join(self.prev_analysis[-4:])
             recent_responses = list(self.response_history)[-3:]  # or whatever count you want
             prev_responses_str = "\n".join(
                 f"{resp.strip()}\n{'=' * 80}"
@@ -1259,17 +1260,17 @@ ALSO IMPORTANT: Use the interact_with(x,y) tool to interact with objects and NPC
 These are the sub-objectives added by the planning agent. These will help you accomplish the main story objectives:
 {active_added_objectives_summary}
 
-This is your analysis from your previous turn:
+This is your analysis from your previous turn(s):
 {prev_analysis}
 
 Your current location is:
 {player_location}
 
 The current reachable tiles from your location are:
-{reachable_tiles_text}
+{reachable_tiles_text if not battle_info}
 
 Movement preview (check this to make sure you aren't selecting a blocked action):
-{map_preview}
+{map_preview if not battle_info}
 IMPORTANT: The movement preview doesn't show NPCs, so look for visual confirmation if you think an NPC is blocking your path. If you are blocked by an NPC you should move around them, they only block a single tile. If you need to complete a story segment to move an npc, it will show up in your objectives.
 
 Your most recent actions are:
@@ -1279,14 +1280,15 @@ And your current coordinates:
 {current_player_coords}
 
 Known Portal Connections:
-{portal_summary}
+{portal_summary if not battle_info}
 
 Note the coordinates still have to be in the traversable tile list for you to use the navigate_to(x,y) tool.
 But the connections can be helpful for figuring out directions.
 
 {party_block}
 
-{trainer_battle_text}
+If your pokemon are too weak or low HP to continue, you can ignore the current main objective until you heal or level up your pokemon. Make sure to note this in your turn analysis.
+
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT, navigate_to(x,y), interact_with(x,y)
 Remember: To interact with an npc, get as close as possible with the navigate_to tool, then use the interact_with tool on their coordinates!!
 Do not select a movement that is blocked. REMEMBER, BROWN LEDGES ARE BLOCKED!
@@ -1301,7 +1303,7 @@ In your response include the following sections:
 - Check your current location in your prompt. It accurately contains your current location!
 
 Battle tips:
-- Inspect the game frame and history for your current selection. Be careful not to get stuck in a loop! (eg checking your bag repeatedly, or attempting to fleeing from a battle you cannot flee from)
+- Inspect the game frame and history for your current selection. You tend to get stuck on selecting the "bag" icon
 
 You should format your response as follows:
 {battle_text}
