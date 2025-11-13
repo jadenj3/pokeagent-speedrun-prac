@@ -1281,7 +1281,6 @@ But the connections can be helpful for figuring out directions.
 
 {trainer_battle_text}
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT, navigate_to(x,y), interact_with(x,y)
-Remember: To interact with an npc, get as close as possible with the navigate_to tool, then use the interact_with tool!!
 Do not select a movement that is blocked. REMEMBER, BROWN LEDGES ARE BLOCKED!
 
 **IMPORTANT** To enter doors/stairs/warps CHECK THE MOVEMENT PREVIEW AND USE SINGLE ACTIONS. navigate_to is great for long distances, but it can struggle with entering locations if you are not perfectly aligned with the door or you are stuck on an NPC. The movement preview will have better information for you to use.
