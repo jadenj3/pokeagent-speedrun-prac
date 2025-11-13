@@ -228,6 +228,13 @@ class SimpleAgent:
                 "milestone_id": "PLAYER_BEDROOM"
             },
             {
+                "id": "story_clock_set",
+                "description": "Set the clock on the wall in the player's bedroom. Interact with the clock (5,1) by pressing A while facing it. Then, leave the house.",
+                "objective_type": "location",
+                "target_value": "Clock Set",
+                "milestone_id": "CLOCK_SET"
+            },
+            {
                 "id": "story_rival_house",
                 "description": "Visit May's house next door",
                 "objective_type": "location",
