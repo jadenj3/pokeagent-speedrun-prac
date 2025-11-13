@@ -46,7 +46,7 @@ import heapq
 from utils.state_formatter import (
     format_state_for_llm,
     format_movement_preview_for_llm,
-    _format_map_info,
+    _format_map_info, _format_party_info,
 )
 
 logger = logging.getLogger(__name__)
@@ -984,7 +984,11 @@ class SimpleAgent:
             
             # Format the current state for LLM (includes movement preview)
             formatted_state = format_state_for_llm(game_state)
-            
+            player_data = game_state.get('player', {})
+            game_data = game_state.get('game', {})
+            party_context = _format_party_info(player_data, game_data)
+            party_block = "\n".join(party_context)
+
             # Get movement memory for the current area
             movement_memory = ""
             if coords:
@@ -1226,6 +1230,9 @@ Your most recent actions are:
 
 And your current coordinates:
 {current_player_coords}
+
+Pokemon party status:
+{party_block}
 
 
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT, navigate_to(x,y), interact_with(x,y)
