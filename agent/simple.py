@@ -1329,7 +1329,7 @@ In your response include the following sections:
 
 Battle tips:
 - Inspect the game frame and history for your current selection. You tend to get stuck on selecting the "bag" icon
-- You cannot run from wild Taillow
+
 You should format your response as follows:
 {battle_text}
 
