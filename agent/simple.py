@@ -1124,7 +1124,10 @@ class SimpleAgent:
                 loop_warning = "⚠️ You are revisiting the same coordinates repeatedly. Pick a direction you haven't tried yet (use the map and movement preview)."
             battle_info = game_state.get("game", {}).get("battle_info") or {}
             trainer_battle_text = "WARNING: You appear to be in a Trainer battle. REMEMBER: You cannot run from a trainer battle!" if battle_info.get("is_trainer_battle") else ""
-
+            if len(self.prev_analysis) > 0:
+                prev_analysis = self.prev_analysis[-1]
+            else:
+                prev_analysis = "No previous analysis yet"
             recent_responses = list(self.response_history)[-3:]  # or whatever count you want
             prev_responses_str = "\n".join(
                 f"{resp.strip()}\n{'=' * 80}"
@@ -1248,7 +1251,7 @@ These are the sub-objectives added by the planning agent. These will help you ac
 {active_added_objectives_summary}
 
 This is your analysis from your previous turn:
-{self.prev_analysis[-1]}
+{prev_analysis}
 
 Your current location is:
 {player_location}
