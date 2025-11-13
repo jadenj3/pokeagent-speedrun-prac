@@ -1182,8 +1182,6 @@ You also have access to the current game frame. Visually inspect it to get a sen
 Current story objectives you are trying to accomplish:
 {objectives_summary}
 
-IMPORTANT: If you see coordinates in the story objective, your sub-objective should contain them as well. (eg interact with clock  at 5,1)
-
 These are the sub-objectives you have added. Avoid duplicate objectives here:
 {added_objectives_summary}
 
@@ -1502,7 +1500,7 @@ Very important: Avoid mentioning coordinates at all here, you tend to hallucinat
         storyline_active = [obj for obj in active_objectives if obj.storyline]
         if storyline_active:
             lines.append("🎯 ACTIVE STORY OBJECTIVES:")
-            for idx, obj in enumerate(storyline_active[:3], 1):
+            for idx, obj in enumerate(storyline_active[:2], 1):
                 target_str = f" (Target: {obj.target_value})" if obj.target_value else ""
                 lines.append(f"  {idx}. [{obj.objective_type}] {obj.description}{target_str} [ID: {obj.id}]")
         else:
