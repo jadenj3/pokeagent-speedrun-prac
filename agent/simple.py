@@ -1210,9 +1210,12 @@ Current location:
 Known Portal Connections:
 {portal_summary}
 
+This is an ascii map of your current location, use this to see if you are going in the right direction or are encountering dead ends:
+{ascii_map}
+
 {party_block}
 
-This is your current inventory: #
+This is your current inventory:
 {inventory_str}
 
 You should format your response as follows.
@@ -1268,10 +1271,6 @@ ALSO IMPORTANT: Use the interact_with(x,y) tool to interact with objects and NPC
 
 These are the sub-objectives added by the planning agent. These will help you accomplish the main story objectives:
 {active_added_objectives_summary}
-
-
-This is an ascii map of your current location, use this to see if you are going in the right direction or are encountering dead ends:
-{ascii_map}
 
 This is your analysis from your previous turn(s):
 {prev_analysis}
