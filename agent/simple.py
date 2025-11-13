@@ -175,6 +175,8 @@ class SimpleAgent:
 
         self.interact_destination_list = []
 
+        self.deadends = dict() #deadend: turns remaining
+
     def _complete_all_added_objectives(self, reason: str = "Reset before planner update"):
         """Mark all non-storyline objectives as completed (used when refreshing planner guidance)."""
         any_completed = False
@@ -1260,6 +1262,12 @@ These are the previous responses:
             self.story_objective_completed = False
             if self.state.step_counter < 3:
                 return "WAIT"
+            deadend_str = ""
+            for deadend in list(self.deadends):
+                deadend_str = deadend_str + "\n" + deadend
+                self.deadends[deadend] -= 1
+                if self.deadends[deadend] == 0:
+                    del self.deadends[deadend]
 
             # Create enhanced prompt with objectives, history context and chain of thought request
             prompt = f"""You are playing as the Protagonist Brendan in Pokemon Emerald. 
@@ -1281,15 +1289,20 @@ Your current location is:
 The current reachable tiles from your location are:
 {reachable_tiles_text if not battle_info else ""}
 
+And your current coordinates:
+{current_player_coords}
+
 Movement preview (check this to make sure you aren't selecting a blocked action):
 {map_preview if not battle_info else ""}
 IMPORTANT: The movement preview doesn't show NPCs, so look for visual confirmation if you think an NPC is blocking your path. If you are blocked by an NPC you should move around them, they only block a single tile. If you need to complete a story segment to move an npc, it will show up in your objectives.
 
+IMPORTANT: You also have a list of deadends. These are deadends you have marked on your previous turns. Avoid going in these directions.
+List of deadends:
+{deadend_str}
+
+
 Your most recent actions are:
 {recent_actions_str}
-
-And your current coordinates:
-{current_player_coords}
 
 Known Portal Connections:
 {portal_summary if not battle_info else ""}
@@ -1320,8 +1333,14 @@ Battle tips:
 You should format your response as follows:
 {battle_text}
 
-INSPECT MAP:
-[Look at the ascii map provided above. Are you in any dead ends? Which direction should you go next?]
+DEADEND:
+[In this section you have the option to mark dead ends you encounter during navigation.
+These will persist for multiple turns. This will help you avoid looping through blocked sections in the future.
+Give as much detail as you would like to mark a deadend. You can only mark one per turn, so everything you write in this section will
+be part of the deadend context. I recommend providing some location context to help future turns, for example: 
+"The tall grass patch north of the house leads to a cul de sac of trees, I should backtrack and try going east instead."
+If you do not have a deadend to mark, leave this section totally empty.] 
+
 
 NPCS:
 [List all the NPCs you see here. What are their identities (eg Professor Birch, May) inspect them carefully.
@@ -1385,8 +1404,9 @@ Very important: Avoid mentioning coordinates at all here, you tend to hallucinat
             if response:
                 self.response_history.append(response)
             # Extract action(s) from structured response
-            actions, reasoning, analysis = self._parse_structured_response(response, game_state, json_data = json_data)
-
+            actions, reasoning, analysis, deadend = self._parse_structured_response(response, game_state, json_data = json_data)
+            if len(deadend) > 3:
+                self.deadends[deadend] = 5
             self.last_turn_actions = actions
 
             self.prev_analysis.append(analysis)
@@ -1597,6 +1617,7 @@ Very important: Avoid mentioning coordinates at all here, you tend to hallucinat
             objectives_section = ""
             plan = ""
             reasoning = ""
+            deadend = ""
             actions = []
             
             # Split response into lines for processing
@@ -1624,6 +1645,9 @@ Very important: Avoid mentioning coordinates at all here, you tend to hallucinat
                     memory = line[9:].strip()
                     if len(memory) > 5: #
                         self.memories.append(memory)
+                elif line.upper().startswith('DEADEND:'):
+                    current_section = 'deadend'
+                    deadend = line[8:].strip()
                 elif line.upper().startswith('ACTION:'):
                     current_section = 'action'
                     # Extract actions from this line
@@ -1642,6 +1666,8 @@ Very important: Avoid mentioning coordinates at all here, you tend to hallucinat
                         reasoning += " " + line
                     elif current_section == 'memories':
                         self.memories.append(line)
+                    elif current_section == 'deadend':
+                        deadend += " " + line
                     elif current_section == 'action':
                         # Additional action parsing from action section content
                         if line.strip():  # Only process non-empty lines
@@ -1672,7 +1698,7 @@ Very important: Avoid mentioning coordinates at all here, you tend to hallucinat
             
             full_reasoning = " | ".join(reasoning_parts) if reasoning_parts else "No reasoning provided"
             
-            return actions, full_reasoning, analysis
+            return actions, full_reasoning, analysis, deadend
             
         except Exception as e:
             logger.warning(f"Error parsing structured response: {e}")
