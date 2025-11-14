@@ -1333,6 +1333,10 @@ Battle tips:
 You should format your response as follows:
 {battle_text}
 
+NPCS:
+[List all the NPCs you see here. What are their identities (eg Professor Birch, May) inspect them carefully.
+How far are they from you? What is their approximate coordinates?
+
 DEADEND:
 [In this section you have the option to mark dead ends you encounter during navigation.
 These will persist for multiple turns. This will help you avoid looping through blocked sections in the future.
@@ -1340,11 +1344,6 @@ Give as much detail as you would like to mark a deadend. You can only mark one p
 be part of the deadend context. I recommend providing some location context to help future turns, for example: 
 "The tall grass patch north of the house leads to a cul de sac of trees, I should backtrack and try going east instead."
 If you do not have a deadend to mark, leave this section totally empty.] 
-
-
-NPCS:
-[List all the NPCs you see here. What are their identities (eg Professor Birch, May) inspect them carefully.
-How far are they from you? What is their approximate coordinates?
 
 OBJECTIVES:
 [Make sure to review your current objectives. These are your highest priority, everything you do should be in service of accomplishing these goals
