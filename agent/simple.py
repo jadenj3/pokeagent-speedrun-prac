@@ -1450,7 +1450,7 @@ Very important: Avoid mentioning coordinates at all here, you tend to hallucinat
 
             if not battle_info:
                 self.overworld_analysis.append(analysis)
-                self.overworld_coords(coords)
+                self.overworld_coords.append(coords)
             
             # Update recent actions
             if isinstance(actions, list):
