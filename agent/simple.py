@@ -1289,7 +1289,7 @@ THINK about your current location, and how to get to your next objective.
 
 These are the agents current objectives that you or the planning module have added:
 {active_added_objectives_summary}
-DO NOT add duplicate objectives! You will be called every 10 turns, so only add essential objectives to get unstuck.
+DO NOT add duplicate objectives! You will be called every 20 turns, so only add essential objectives to get unstuck.
 
 These are the current main story objectives you are trying to accomplish:
 {objectives_summary}
