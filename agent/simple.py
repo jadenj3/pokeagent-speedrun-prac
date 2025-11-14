@@ -1249,6 +1249,8 @@ Also, avoid duplicate goals here. They will take up unnecessary precious space i
                 # will automatically update objectives
                 actions, reasoning, analysis, deadend = self._parse_structured_response(response, game_state, json_data=json_data)
             self.story_objective_completed = False
+            if self.state.step_counter < 2:
+                return 'WAIT'
             deadend_str = ""
             for deadend in list(self.deadends):
                 deadend_str = deadend_str + "\n" + deadend
