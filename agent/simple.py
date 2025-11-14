@@ -1203,7 +1203,8 @@ Think about common failure modes for pokemon agents. Sometimes they need explici
 Also try to break up big objectives into smaller parts, giving detailed steps and directions that the agent can complete along the way.
 Provide essential steps and break up large objectives into smaller sequential parts! The model will be able to complete these objectives sequentially.
 The action agent cannot directly see the story objectives, so make sure to include sub objectives for ALL parts of the main story objective. Each building you have to enter, each NPC you have to talk to, should each have its own objective.
-Be thorough with adding all the required sub objectives for the next story objective.
+Be thorough with adding all the required sub objectives for the next story objective
+IMPORTANT: do not include objectives for unnecessary events that will automatically trigger, for example Trainer Battles.
 
 You also have access to the current game frame. Visually inspect it to get a sense of your current location and context.
 
