@@ -1291,6 +1291,10 @@ CRUCIAL: Look at your pokemon party. If they are not powerful enough or do not h
             
             Your current location is:
             {player_location}
+            
+            These are the agents current objectives:
+            {active_added_objectives_summary}
+            DO NOT add duplicate objectives! You will be called every 10 turns, so only add essential objectives to get unstuck.
             Format your response as follows:
 
             Reasoning:
