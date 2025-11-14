@@ -1293,7 +1293,7 @@ CRUCIAL: Look at your pokemon party. If they are not powerful enough or do not h
             Your current location is:
             {player_location}
             
-            These are the agents current objectives:
+            These are the agents current objectives that you or the planning module have added:
             {active_added_objectives_summary}
             DO NOT add duplicate objectives! You will be called every 10 turns, so only add essential objectives to get unstuck.
             
@@ -1307,7 +1307,7 @@ CRUCIAL: Look at your pokemon party. If they are not powerful enough or do not h
 
             Objectives:
             [In this section you have access to the ADD_OBJECTIVES: tool. Create objectives here for the agent to follow. They will be able to mark them complete. It is critical that you provide enough objectives to break the agents loop, eg ADD_OBJECTIVE: The path north from your current position is BLOCKED, AVOID IT!. Continue south to investigate a way out of this maze
-            You also have access to the COMPLETE_OBJECTIVES: tool. This lets you get rid of any stale or misleading objectives. Use this to keep the objective list updated and accurate. Use it on a new line:
+            You also have access to the COMPLETE_OBJECTIVES: tool. This lets you get rid of any stale or misleading objectives on the agents current objectives. Use this to keep the objective list updated and accurate. Use it on a new line:
             COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs"]
             
             """
