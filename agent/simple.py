@@ -1499,8 +1499,8 @@ Very important: Avoid mentioning coordinates at all here, you tend to hallucinat
 
             dest_x, dest_y = map(int, interact_match.groups())
             self.interact_destination_list.clear()
-            for dx, dy in directions.values():
-                self.interact_destination_list.append((dest_x + dx, dest_y + dy))
+            #for dx, dy in directions.values(): #turning off tool for now.
+               # self.interact_destination_list.append((dest_x + dx, dest_y + dy))
             path = self.build_interact_actions(dest_x, dest_y, json_data)
             if path:
                 return path
