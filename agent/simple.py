@@ -1326,10 +1326,6 @@ Battle tips:
 You should format your response as follows:
 {battle_text}
 
-NPCS:
-[List all the NPCs you see here. What are their identities (eg Professor Birch, May) inspect them carefully.
-How far are they from you? What is their approximate coordinates?
-
 
 OBJECTIVES:
 [Make sure to review your current objectives. These are your highest priority, everything you do should be in service of accomplishing these goals
