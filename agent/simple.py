@@ -1199,11 +1199,8 @@ Your goal is to complete the game as fast as possible, so make sure each objecti
 
 You will be called after every story objective to add objectives to assist the agent to get to the direct next story objective, you have the most crucial role in the entire scaffolding!
 
-Think about common failure modes for pokemon agents. Sometimes they need explicitly directional hints and context to avoid loops or missing the right path!
-Also try to break up big objectives into smaller parts, giving detailed steps and directions that the agent can complete along the way.
 Provide essential steps and break up large objectives into smaller sequential parts! The model will be able to complete these objectives sequentially.
-The action agent cannot directly see the story objectives, so make sure to include sub objectives for ALL parts of the main story objective. Each building you have to enter, each NPC you have to talk to, should each have its own objective.
-Be thorough with adding all the required sub objectives for the next story objective
+The action agent cannot directly see the story objectives, so make sure to include sub objectives for ALL parts of the main story objective.
 IMPORTANT: do not include objectives for unnecessary events that will automatically trigger, for example Trainer Battles.
 
 You also have access to the current game frame. Visually inspect it to get a sense of your current location and context.
@@ -1227,11 +1224,10 @@ You should format your response as follows.
 
 OBJECTIVES:
 [Review your current objectives. You have main storyline objectives (story_*) that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them. 
-You also have access to the following command in this section to sub-objectives: ADD_OBJECTIVE: type:description:target_value (e.g., "ADD_OBJECTIVE: location:Go west to exit the town:West"). The action model will be able to manually complete these objectives
+You also have access to the following command in this section to sub-objectives: ADD_OBJECTIVE: type:description:target_value (e.g., "ADD_OBJECTIVE: location:Continue along the route to reach the town:Town"). The action model will be able to manually complete these objectives
 This section should only contain calls do the ADD_OBJECTIVE tool at the start of each line, eg
-ADD_OBJECTIVE: location:Exit the town to the west:West. You should only add objectives that directly help you accomplish the next story goal.
-Also, avoid duplicate goals here. They will take up unnecessary precious space in the limited goal space.
-**IMPORTANT** be very specific with your directions. Eg when designating buildings, prefer directions like "south west, last building" over generic "west side of town".]
+ADD_OBJECTIVE: location:Exit the town to the west:Exit. You should only add objectives that directly help you accomplish the next story goal.
+Also, avoid duplicate goals here. They will take up unnecessary precious space in the limited goal space.]
 """
             # Make VLM call for planning module - double-check frame validation before VLM
             self_critique_response = ""
