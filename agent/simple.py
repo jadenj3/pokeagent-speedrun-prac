@@ -1277,7 +1277,7 @@ These are the previous responses:
             if self.overworld_coords:
                 overworld_coords_str = "Here is your previous overworld coordinates: \n"
                 for entry in self.overworld_coords:
-                    overworld_coords_str += "\n" + entry
+                    overworld_coords_str += "\n" + str(entry)
 
             # Create enhanced prompt with objectives, history context and chain of thought request
             prompt = f"""You are playing as the Protagonist Brendan in Pokemon Emerald. 
