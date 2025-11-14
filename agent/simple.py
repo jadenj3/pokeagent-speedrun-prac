@@ -1236,12 +1236,6 @@ Only include essential goals. Goals like "level up your pokemon" or "go here to 
 **IMPORTANT** be very specific with your directions. Eg when designating buildings, prefer directions like "south west, last building" over generic "west side of town".
 CRUCIAL: Look at your pokemon party. If they are not powerful enough or do not have enough hp to accomplish your next objectives, add an earlier objective to level them up, catch more pokemon, or heal them.]
 """
-
-            self_critique_prompt = f"""
-You are managing an action agent for pokemon emerald in a pokemon emerald speedrun. You are the self critique module. You should examine the current objectives, the analysis history of the planning agent, and use your knowledge of pokemon emerald to detect loops, mistaken assumptions, and provide guidance for the action module to complete the main story objectives.
-You are called at the start of a turn for the LLM, so the actions you are seeing have already occured. 
-These are the previous responses:
-"""
             # Make VLM call for planning module - double-check frame validation before VLM
             self_critique_response = ""
             if self.state.step_counter < 2:
@@ -1282,6 +1276,31 @@ These are the previous responses:
                 overworld_coords_str = "Here is your previous overworld coordinates: \n"
                 for entry in reversed(self.overworld_coords):
                     overworld_coords_str += "\n" + str(entry)
+
+            self_critique_prompt = f"""
+            You are a pokemon agent module as part of a scaffolding. You are the self-critique module. Your job is to inspect the LLMs analysis of their previous turns, overworld coordinates. You should be very critical of their current trajectory and look for any loops or dead ends the agent is encountering. For example if the agent keeps try to go north, but their coordinate history is not going significantly farther north, they are likely in a dead end.
+            Once you identify a loop or dead end, you should strongly suggest to the model to take a different path, and forbid it from continuing on its current plan.
+
+            Here is your analysis of your previous overworld turns, ordered from newest to oldest:
+            {overworld_str}
+            
+            Here is your previous overworld coordinates: 
+            Remember, lower y value is north, higher is south. Lower X value is west, higher is east.
+            It is ordered from newest to oldest.
+            {overworld_coords_str}
+            
+            Your current location is:
+            {player_location}
+            Format your response as follows:
+
+            Reasoning:
+            [Analyse the current situation, explain what is happening, and what the agent should do next]
+
+            Objectives:
+            [In this section you have access to the ADD_OBJECTIVES: tool. Create objectives here for the agent to follow. They will be able to mark them complete. It is critical that you provide enough objectives to break the agents loop, eg ADD_OBJECTIVE: The path north from your current position is BLOCKED, AVOID IT!. Continue south to investigate a way out of this maze]
+            
+            """
+
 
             # Create enhanced prompt with objectives, history context and chain of thought request
             prompt = f"""You are playing as the Protagonist Brendan in Pokemon Emerald. 
