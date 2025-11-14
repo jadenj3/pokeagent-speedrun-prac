@@ -177,6 +177,9 @@ class SimpleAgent:
 
         self.deadends = dict() #deadend: turns remaining
 
+        self.overworld_coords = []
+        self.overworld_analysis = []
+
     def _complete_all_added_objectives(self, reason: str = "Reset before planner update"):
         """Mark all non-storyline objectives as completed (used when refreshing planner guidance)."""
         any_completed = False
@@ -1265,6 +1268,16 @@ These are the previous responses:
                 self.deadends[deadend] -= 1
                 if self.deadends[deadend] == 0:
                     del self.deadends[deadend]
+            overworld_str = ""
+            overworld_coords_str = ""
+            if self.overworld_analysis:
+                overworld_str = "Here is your analysis of your preious overworld turns: \n"
+                for entry in self.overworld_analysis:
+                    overworld_str += "\n" + entry
+            if self.overworld_coords:
+                overworld_coords_str = "Here is your previous overworld coordinates: \n"
+                for entry in self.overworld_coords:
+                    overworld_coords_str += "\n" + entry
 
             # Create enhanced prompt with objectives, history context and chain of thought request
             prompt = f"""You are playing as the Protagonist Brendan in Pokemon Emerald. 
@@ -1279,6 +1292,10 @@ These are the sub-objectives added by the planning agent. These will help you ac
 
 This is your analysis from your previous turn(s):
 {prev_analysis}
+
+{overworld_str}
+
+{overworld_coords_str}
 
 Your current location is:
 {player_location}
@@ -1430,6 +1447,10 @@ Very important: Avoid mentioning coordinates at all here, you tend to hallucinat
                 game_state_summary=game_state_summary
             )
             self.state.history.append(history_entry)
+
+            if battle_info:
+                self.overworld_analysis.append(analysis)
+                self.overworld_coords(coords)
             
             # Update recent actions
             if isinstance(actions, list):
