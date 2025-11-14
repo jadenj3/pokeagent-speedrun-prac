@@ -1289,7 +1289,7 @@ THINK about your current location, and how to get to your next objective.
 
 These are the agents current objectives that you or the planning module have added:
 {active_added_objectives_summary}
-DO NOT add duplicate objectives! You will be called every 20 turns, so only add essential objectives to get unstuck.
+DO NOT add duplicate objectives! You will be called every 5 turns, so only add essential objectives to get unstuck.
 
 These are the current main story objectives you are trying to accomplish:
 {objectives_summary}
@@ -1307,8 +1307,7 @@ IMPORTANT: When adding objectives, only add a single objective!!!]
             
             """
 
-
-            if len(self.overworld_coords) > 1 and  len(self.overworld_coords) % 20 == 0:
+            if len(self.overworld_coords) > 1 and  len(self.overworld_coords) % 5 == 0:
                 #self._complete_all_added_objectives("Story milestone reached - refreshing planner objectives")
                 if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                     print("🔍 Making VLM objectives call...")
