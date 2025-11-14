@@ -1356,7 +1356,7 @@ Don't interact with NPCs unless you have to. It will likely waste time.
 ALSO IMPORTANT: You interact with warps/stairs by walking into them, not pressing 'A'. They will also show up in your movement preview. Confirm you are in front of them using your movement preview, then walk into them to transition.
 To interact with NPCs/Objects you also have access to an interact_with(x,y) tool. You can choose a traversable coordinate that you think contains an NPC and interact with it. GET AS CLOSE AS POSSIBLE TO THE NPC FIRST BEFORE USING THIS TOOL! Navigation is much quicker! 
 ***IMPORTANT RULE***: DO NOT use the interact_with(x,y) tool on any coordinates you previously used it on. CHECK YOUR PREVIOUS ACTIONS FIRST! You likely chose the wrong coordinate if you repeat them!!
-Critical rule: You cannot run from a trainer battle!
+Critical rule: You cannot run from a trainer battle! If you have no PP, you should only choose run or fight actions! Choosing a special move will throw you into a loop.
 Before choosing your action, inspect your frame. You have a tendency to get stuck on the "Got away safely!" image and stop recognizing you are stuck in dialogue.
 Also important: Check your deadend notes before taking an action. You should not move closer to any dead ends you discovered!]
 
