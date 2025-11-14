@@ -1302,6 +1302,24 @@ CRUCIAL: Look at your pokemon party. If they are not powerful enough or do not h
             """
 
 
+            if len(self.overworld_coords) > 1 and  len(self.overworld_coords) % 10 == 0:
+                #self._complete_all_added_objectives("Story milestone reached - refreshing planner objectives")
+                if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
+                    print("🔍 Making VLM objectives call...")
+                    try:
+                        response = self.vlm.get_query(frame, self_critique_prompt, "simple_mode", model_name = 'gemini-2.5-pro')
+                        print(f"🔍 VLM response received: {response[:100]}..." if len(
+                            response) > 100 else f"🔍 VLM response: {response}")
+                    except Exception as e:
+                        print(f"❌ VLM call failed: {e}")
+                        return "WAIT"
+                else:
+                    logger.error("🚫 CRITICAL: About to call VLM but frame validation failed - this should never happen!")
+                    return "WAIT"
+                # will automatically update objectives
+                actions, reasoning, analysis, deadend = self._parse_structured_response(response, game_state, json_data=json_data, prepend_new = True)
+
+
             # Create enhanced prompt with objectives, history context and chain of thought request
             prompt = f"""You are playing as the Protagonist Brendan in Pokemon Emerald. 
             Based on the current game frame and state information, think through your next move and choose the best action.
@@ -1645,7 +1663,7 @@ Very important: Avoid mentioning coordinates at all here, you tend to hallucinat
 
         return "\n".join(lines), any_active
     
-    def _parse_structured_response(self, response: str, game_state: Dict[str, Any] = None, json_data = None) -> Tuple[List[str], str, str, str]:
+    def _parse_structured_response(self, response: str, game_state: Dict[str, Any] = None, json_data = None, prepend_new = False) -> Tuple[List[str], str, str, str]:
         """Parse structured chain-of-thought response and extract actions and reasoning"""
         try:
             # Extract sections from structured response
@@ -1714,7 +1732,9 @@ Very important: Avoid mentioning coordinates at all here, you tend to hallucinat
                                 break
             
             # Process objectives if mentioned
-            if objectives_section:
+            if objectives_section and prepend_new:
+                self._process_objectives_from_response(objectives_section, True)
+            elif objectives_section:
                 self._process_objectives_from_response(objectives_section)
             
             # If no actions found in structured format, fall back to parsing entire response
