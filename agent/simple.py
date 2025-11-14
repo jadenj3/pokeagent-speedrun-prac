@@ -1270,11 +1270,11 @@ CRUCIAL: Look at your pokemon party. If they are not powerful enough or do not h
             overworld_coords_str = ""
             if self.overworld_analysis:
                 overworld_str = "Here is your analysis of your preious overworld turns: \n"
-                for entry in reversed(self.overworld_analysis):
+                for entry in reversed(self.overworld_analysis[-20:]):
                     overworld_str += "\n" + entry
             if self.overworld_coords:
                 overworld_coords_str = "Here is your previous overworld coordinates: \n"
-                for entry in reversed(self.overworld_coords):
+                for entry in reversed(self.overworld_coords[-20:]):
                     overworld_coords_str += "\n" + str(entry)
 
             self_critique_prompt = f"""
