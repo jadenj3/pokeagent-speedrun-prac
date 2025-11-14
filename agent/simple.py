@@ -1592,7 +1592,7 @@ Very important: Avoid mentioning coordinates at all here, you tend to hallucinat
         storyline_active = [obj for obj in active_objectives if obj.storyline]
         if storyline_active:
             lines.append("🎯 ACTIVE STORY OBJECTIVES:")
-            for idx, obj in enumerate(storyline_active[:2], 1):
+            for idx, obj in enumerate(storyline_active[:1], 1):
                 target_str = f" (Target: {obj.target_value})" if obj.target_value else ""
                 lines.append(f"  {idx}. [{obj.objective_type}] {obj.description}{target_str} [ID: {obj.id}]")
         else:
