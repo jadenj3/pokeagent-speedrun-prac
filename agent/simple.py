@@ -1329,7 +1329,11 @@ IMPORTANT: When adding objectives, only add a single objective!!!]
                 # will automatically update objectives
                 actions, reasoning, analysis, deadend = self._parse_structured_response(response, game_state, json_data=json_data, prepend_new = True)
 
-
+            prev_coords = self.state.history[-1].player_coords
+            if prev_coords:
+                prev_coords_str = self.state.history[-1].player_coords
+            else:
+                prev_coords_str = ""
             # Create enhanced prompt with objectives, history context and chain of thought request
             prompt = f"""You are playing as the Protagonist Brendan in Pokemon Emerald. 
             Based on the current game frame and state information, think through your next move and choose the best action.
@@ -1352,6 +1356,10 @@ The current reachable tiles from your location are:
 
 And your current coordinates:
 {current_player_coords}
+
+Previous coordinates:
+{prev_coords_str}
+RULE: You should avoid backtracking to your previous coordinates, unless the way forward is completely blocked.
 
 Movement preview (check this to make sure you aren't selecting a blocked action):
 {map_preview if not battle_info else ""}
@@ -1377,7 +1385,6 @@ Navigation tips:
 - Enter and exit locations through the middle rather than hugging a specific side, this maximizes visibility of the area to locate the exit.
 - Unless you are blocked, use the navigate_to() tool as much as possible. This is much faster than single steps.
 
-
 You should format your response as follows:
 {battle_text}
 
@@ -1401,7 +1408,8 @@ Don't interact with NPCs unless you have to. It will likely waste time.
 ALSO IMPORTANT: You interact with warps/stairs by walking into them, not pressing 'A'. They will also show up in your movement preview. Confirm you are in front of them using your movement preview, then walk into them to transition.
 To interact with NPCs/Objects you also have access to an interact_with(x,y) tool. You can choose a traversable coordinate that you think contains an NPC and interact with it. GET AS CLOSE AS POSSIBLE TO THE NPC FIRST BEFORE USING THIS TOOL! Navigation is much quicker! 
 ***IMPORTANT RULE***: DO NOT use the interact_with(x,y) tool on any coordinates you previously used it on. CHECK YOUR PREVIOUS ACTIONS FIRST! You likely chose the wrong coordinate if you repeat them!!
-Critical rule: You cannot run from a trainer battle! If you have no PP, you should only choose run or fight actions! Choosing a special move will throw you into a loop.]
+Critical rule: You cannot run from a trainer battle! If you have no PP, you should only choose run or fight actions! Choosing a special move will throw you into a loop.
+Try to avoid backtracking towards your previous coordinates.]
 
 ANALYSIS:
 [Summarize your current situation. This will be passed onto you as context during your next turn. It's especially important to summarize any dead ends you found and potential alternate paths. This is the only information that gets passed forward in time, so note anything important here. You can be as verbose as you like.
