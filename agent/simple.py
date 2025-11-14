@@ -325,7 +325,7 @@ class SimpleAgent:
             },
             {
                 "id": "story_route_104_south",
-                "description": "Travel through southern section of Route 104",
+                "description": "Travel to the southern section of Route 104",
                 "objective_type": "location",
                 "target_value": "Route 104 South",
                 "milestone_id": "ROUTE_104_SOUTH"
