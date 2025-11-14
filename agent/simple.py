@@ -1329,9 +1329,10 @@ IMPORTANT: When adding objectives, only add a single objective!!!]
                 # will automatically update objectives
                 actions, reasoning, analysis, deadend = self._parse_structured_response(response, game_state, json_data=json_data, prepend_new = True)
 
-            prev_coords = self.state.history[-1].player_coords
-            if prev_coords:
-                prev_coords_str = self.state.history[-1].player_coords
+            if len(self.state.history) > 0:
+                prev_coords = self.state.history[-1].player_coords
+                if prev_coords:
+                    prev_coords_str = self.state.history[-1].player_coords
             else:
                 prev_coords_str = ""
             # Create enhanced prompt with objectives, history context and chain of thought request
