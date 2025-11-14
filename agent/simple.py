@@ -1337,7 +1337,7 @@ ALSO IMPORTANT: Use the interact_with(x,y) tool to interact with objects and NPC
 These are the sub-objectives added by the planning agent. These will help you accomplish the main story objectives:
 {active_added_objectives_summary}
 
-This is your analysis from your previous turn(s):
+This is your analysis from your previous turn, think about this carefully:
 {prev_analysis}
 
 Your current location is:
@@ -1390,6 +1390,14 @@ Make sure you are confident you successfully completed the objectives before mar
 mark the objective complete on the turn you see the dialogue box with that NPC. You should also visually confirm you entered the right location before marking location objectives as complete.
 Don't mark them pre-emptively as you are executing the action.]
 
+ANALYSIS:
+[Summarize your current situation. This will be passed onto you as context during your next turn. You can be as verbose as you like.
+First, summarize your previous turn. Think about your next action, how does that relate to your previous turn? Would it make sense after taking your previous analysis into consideration?
+Use this space to think carefully. For example, if you see that you just went east, and now your path is blocked, you should mention it here and choose an action that doesn't go into a dead end.
+Did you just attempt an action that leads to a loop? For example, trying to run away from a trainer battle, only to realize you cannot.
+Again, look at your previous turn analysis and think about it carefully.]
+
+
 ACTION:
 [If you are in dialogue or battle, prefer single actions like 'A'.
 You also have access to the navigate_to(x,y) tool. This will automatically run A* on your selected coordinate to find the optimal way to reach your destination. This is a powerful tool that should be used
@@ -1401,12 +1409,7 @@ ALSO IMPORTANT: You interact with warps/stairs by walking into them, not pressin
 To interact with NPCs/Objects you also have access to an interact_with(x,y) tool. You can choose a traversable coordinate that you think contains an NPC and interact with it. GET AS CLOSE AS POSSIBLE TO THE NPC FIRST BEFORE USING THIS TOOL! Navigation is much quicker! 
 ***IMPORTANT RULE***: DO NOT use the interact_with(x,y) tool on any coordinates you previously used it on. CHECK YOUR PREVIOUS ACTIONS FIRST! You likely chose the wrong coordinate if you repeat them!!
 Critical rule: You cannot run from a trainer battle! If you have no PP, you should only choose run or fight actions! Choosing a special move will throw you into a loop.
-Try to avoid backtracking towards your previous coordinates.]
-
-ANALYSIS:
-[Summarize your current situation. This will be passed onto you as context during your next turn. It's especially important to summarize any dead ends you found and potential alternate paths. This is the only information that gets passed forward in time, so note anything important here. You can be as verbose as you like.
-Very important: Avoid mentioning coordinates at all here, you tend to hallucinate and confuse yourself, ending up in an eternal loop]"""
-            
+Try to avoid backtracking towards your previous coordinates.]"""
             # Print complete prompt to terminal for debugging
             '''
             print("\n" + "="*120)
