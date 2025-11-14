@@ -468,7 +468,8 @@ class SimpleAgent:
             logger.warning(f"Error getting map ID: {e}")
         return None
     
-    def add_objective(self, description: str, objective_type: str, target_value: Any = None) -> str:
+    def add_objective(self, description: str, objective_type: str, target_value: Any = None,
+                      prepend: bool = False) -> str:
         """Add a new objective and return its ID"""
         obj_id = f"obj{len(self.state.objectives)}"
         objective = Objective(
@@ -477,7 +478,10 @@ class SimpleAgent:
             objective_type=objective_type,
             target_value=target_value
         )
-        self.state.objectives.append(objective)
+        if prepend:
+            self.state.objectives.insert(0, objective)
+        else:
+            self.state.objectives.append(objective)
         self.state.objectives_updated = True
         logger.info(f"Added objective: {description}")
         return obj_id
@@ -1272,11 +1276,11 @@ These are the previous responses:
             overworld_coords_str = ""
             if self.overworld_analysis:
                 overworld_str = "Here is your analysis of your preious overworld turns: \n"
-                for entry in self.overworld_analysis:
+                for entry in reversed(self.overworld_analysis):
                     overworld_str += "\n" + entry
             if self.overworld_coords:
                 overworld_coords_str = "Here is your previous overworld coordinates: \n"
-                for entry in self.overworld_coords:
+                for entry in reversed(self.overworld_coords.reverse()):
                     overworld_coords_str += "\n" + str(entry)
 
             # Create enhanced prompt with objectives, history context and chain of thought request
@@ -1718,7 +1722,7 @@ Very important: Avoid mentioning coordinates at all here, you tend to hallucinat
             # Fall back to basic action parsing
             return self._parse_actions(response, game_state, json_data), "Error parsing reasoning", "", ""
     
-    def _process_objectives_from_response(self, objectives_text: str):
+    def _process_objectives_from_response(self, objectives_text: str, prepend_new: bool = False):
         """Process objective management commands from LLM response"""
         try:
             # Look for ADD_OBJECTIVE and COMPLETE_OBJECTIVE commands
@@ -1743,7 +1747,7 @@ Very important: Avoid mentioning coordinates at all here, you tend to hallucinat
                         #parsed_target = self._parse_target_value(obj_type, target_value)
                         
                         # Add the objective
-                        self.add_objective(description, obj_type, target_value)
+                        self.add_objective(description, obj_type, target_value, prepend=prepend_new)
                 
                 elif upper_line.startswith('COMPLETE_OBJECTIVE:'):
                     # Parse format: COMPLETE_OBJECTIVE: objective_id:notes
@@ -1760,7 +1764,7 @@ Very important: Avoid mentioning coordinates at all here, you tend to hallucinat
                             logger.info(f"LLM manually completed objective: {obj_id}")
                         else:
                             logger.warning(f"LLM tried to complete non-existent or already completed objective: {obj_id}")
-                        
+
         except Exception as e:
             logger.warning(f"Error processing objectives from response: {e}")
     
