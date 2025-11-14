@@ -1448,7 +1448,7 @@ Very important: Avoid mentioning coordinates at all here, you tend to hallucinat
             )
             self.state.history.append(history_entry)
 
-            if battle_info:
+            if not battle_info:
                 self.overworld_analysis.append(analysis)
                 self.overworld_coords(coords)
             
