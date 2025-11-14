@@ -329,7 +329,7 @@ class SimpleAgent:
             },
             {
                 "id": "story_petalburg_woods",
-                "description": "Navigate through Petalburg Woods to help Devon researcher",
+                "description": "Navigate through Petalburg Woods to reach Rustboro",
                 "objective_type": "location",
                 "target_value": "Petalburg Woods",
                 "milestone_id": "PETALBURG_WOODS"
