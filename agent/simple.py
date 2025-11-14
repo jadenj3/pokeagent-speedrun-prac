@@ -1292,6 +1292,8 @@ CRUCIAL: Look at your pokemon party. If they are not powerful enough or do not h
             
             Your current location is:
             {player_location}
+            **IMPORTANT: This is VERY ACCURATE and should not be ignored!**
+            
             
             These are the agents current objectives that you or the planning module have added:
             {active_added_objectives_summary}
@@ -1369,11 +1371,7 @@ But the connections can be helpful for figuring out directions.
 
 {party_block}
 
-If your pokemon are too weak or low HP to continue, you can ignore the current main objective until you heal or level up your pokemon. Make sure to note this in your turn analysis.
-
 Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT, navigate_to(x,y), interact_with(x,y)
-Remember: To interact with an npc, get as close as possible with the navigate_to tool, then use the interact_with tool on their coordinates!!
-Do not select a movement that is blocked. REMEMBER, BROWN LEDGES ARE BLOCKED!
 
 **IMPORTANT** To enter doors/stairs/warps CHECK THE MOVEMENT PREVIEW AND USE SINGLE ACTIONS. navigate_to is great for long distances, but it can struggle with entering locations if you are not perfectly aligned with the door or you are stuck on an NPC. The movement preview will have better information for you to use.
 If you want to you can use navigate_to to get close to the door, but afterwards make sure to use single actions.
@@ -1381,11 +1379,7 @@ If you want to you can use navigate_to to get close to the door, but afterwards 
 Navigation tips:
 - Enter and exit locations through the middle rather than hugging a specific side, this maximizes visibility of the area to locate the exit.
 - Unless you are blocked, use the navigate_to() tool as much as possible. This is much faster than single steps.
-In your response include the following sections:
-- Check your current location in your prompt. It accurately contains your current location!
 
-Battle tips:
-- Inspect the game frame and history for your current selection. You tend to get stuck on selecting the "bag" icon
 
 You should format your response as follows:
 {battle_text}
@@ -1410,10 +1404,7 @@ Don't interact with NPCs unless you have to. It will likely waste time.
 ALSO IMPORTANT: You interact with warps/stairs by walking into them, not pressing 'A'. They will also show up in your movement preview. Confirm you are in front of them using your movement preview, then walk into them to transition.
 To interact with NPCs/Objects you also have access to an interact_with(x,y) tool. You can choose a traversable coordinate that you think contains an NPC and interact with it. GET AS CLOSE AS POSSIBLE TO THE NPC FIRST BEFORE USING THIS TOOL! Navigation is much quicker! 
 ***IMPORTANT RULE***: DO NOT use the interact_with(x,y) tool on any coordinates you previously used it on. CHECK YOUR PREVIOUS ACTIONS FIRST! You likely chose the wrong coordinate if you repeat them!!
-Critical rule: You cannot run from a trainer battle! If you have no PP, you should only choose run or fight actions! Choosing a special move will throw you into a loop.
-Before choosing your action, inspect your frame. You have a tendency to get stuck on the "Got away safely!" image and stop recognizing you are stuck in dialogue.
-Also important: Check your deadend notes before taking an action. You should not move closer to any dead ends you discovered!
-CRITICAL NUMBER 1 RULE!!!: You CANNOT navigate through trees!! They will block you! If a path only has trees, mark it as a deadend!]
+Critical rule: You cannot run from a trainer battle! If you have no PP, you should only choose run or fight actions! Choosing a special move will throw you into a loop.]
 
 ANALYSIS:
 [Summarize your current situation. This will be passed onto you as context during your next turn. It's especially important to summarize any dead ends you found and potential alternate paths. This is the only information that gets passed forward in time, so note anything important here. You can be as verbose as you like.
