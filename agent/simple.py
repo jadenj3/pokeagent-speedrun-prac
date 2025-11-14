@@ -1331,12 +1331,10 @@ You should format your response as follows:
 {battle_text}
 
 DEADEND:
-[In this section you have the option to mark dead ends you encounter during navigation.
-These will persist for multiple turns. This will help you avoid looping through blocked sections in the future.
-Give as much detail as you would like to mark a deadend. You can only mark one per turn, so everything you write in this section will
-be part of the deadend context. I recommend providing some location context to help future turns, for example: 
-"The tall grass patch north of the house leads to a cul de sac of trees, I should backtrack and try going east instead."
-If you do not have a deadend to mark, leave this section totally empty.] 
+[Mark any deadends you find during navigation in this section. The information here will only persist for a few turns.
+Be very liberal with adding items here, this will avoid loops. Use it whenever you attempt to navigate in a direction but are blocked.
+For example "I attempted to go north past the trainer, but ran into a wall of water tiles blocking the northern path."
+Also Critical: If you have no deadends, leave this section completely empty. Don't place anything else here, even "there are no deadends".] 
 
 OBJECTIVES:
 [Make sure to review your current objectives. These are your highest priority, everything you do should be in service of accomplishing these goals
