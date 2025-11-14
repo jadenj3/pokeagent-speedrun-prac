@@ -1312,7 +1312,7 @@ IMPORTANT: When adding objectives, only add a single objective!!!]
             """
 
 
-            if len(self.overworld_coords) > 1 and  len(self.overworld_coords) % 10 == 0:
+            if len(self.overworld_coords) > 1 and  len(self.overworld_coords) % 20 == 0:
                 #self._complete_all_added_objectives("Story milestone reached - refreshing planner objectives")
                 if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                     print("🔍 Making VLM objectives call...")
