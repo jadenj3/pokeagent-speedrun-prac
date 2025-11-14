@@ -1334,10 +1334,6 @@ These are the sub-objectives added by the planning agent. These will help you ac
 This is your analysis from your previous turn(s):
 {prev_analysis}
 
-{overworld_str}
-
-{overworld_coords_str}
-
 Your current location is:
 {player_location}
 
@@ -1350,11 +1346,6 @@ And your current coordinates:
 Movement preview (check this to make sure you aren't selecting a blocked action):
 {map_preview if not battle_info else ""}
 IMPORTANT: The movement preview doesn't show NPCs, so look for visual confirmation if you think an NPC is blocking your path. If you are blocked by an NPC you should move around them, they only block a single tile. If you need to complete a story segment to move an npc, it will show up in your objectives.
-
-IMPORTANT: You also have a list of deadends. These are deadends you have marked on your previous turns. Avoid going in these directions.
-List of deadends:
-{deadend_str}
-
 
 Your most recent actions are:
 {recent_actions_str}
@@ -1387,12 +1378,6 @@ Battle tips:
 
 You should format your response as follows:
 {battle_text}
-
-DEADEND:
-[Mark any deadends you find during navigation in this section. The information here will only persist for a few turns.
-Be very liberal with adding items here, this will avoid loops. Use it whenever you attempt to navigate in a direction but are blocked.
-For example "I attempted to go north past the trainer, but ran into a wall of water tiles blocking the northern path."
-Also Critical: If you have no deadends, leave this section completely empty. Don't place anything else here, even "there are no deadends".] 
 
 OBJECTIVES:
 [Make sure to review your current objectives. These are your highest priority, everything you do should be in service of accomplishing these goals
