@@ -1220,8 +1220,6 @@ Current location:
 Known Portal Connections:
 {portal_summary}
 
-{party_block}
-
 This is your current inventory:
 {inventory_str}
 
@@ -1229,13 +1227,11 @@ You should format your response as follows.
 
 OBJECTIVES:
 [Review your current objectives. You have main storyline objectives (story_*) that track overall Emerald progression - these are automatically verified and you CANNOT manually complete them. 
-You also have access to the following command in this section to sub-objectives: ADD_OBJECTIVE: type:description:target_value (e.g., "ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20)" or "ADD_OBJECTIVE: item:Buy Pokeballs:5"). The action model will be able to manually complete these objectives
+You also have access to the following command in this section to sub-objectives: ADD_OBJECTIVE: type:description:target_value (e.g., "ADD_OBJECTIVE: location:Go west to exit the town:(15,20)"). The action model will be able to manually complete these objectives
 This section should only contain calls do the ADD_OBJECTIVE tool at the start of each line, eg
-ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20). You should only add objectives that directly help you accomplish the next story goal.
+ADD_OBJECTIVE: location:Exit the town to the west:(15,20). You should only add objectives that directly help you accomplish the next story goal.
 Also, avoid duplicate goals here. They will take up unnecessary precious space in the limited goal space.
-Only include essential goals. Goals like "level up your pokemon" or "go here to get a free potion" are not helpful.]
-**IMPORTANT** be very specific with your directions. Eg when designating buildings, prefer directions like "south west, last building" over generic "west side of town".
-CRUCIAL: Look at your pokemon party. If they are not powerful enough or do not have enough hp to accomplish your next objectives, add an earlier objective to level them up, catch more pokemon, or heal them.]
+**IMPORTANT** be very specific with your directions. Eg when designating buildings, prefer directions like "south west, last building" over generic "west side of town".]
 """
             # Make VLM call for planning module - double-check frame validation before VLM
             self_critique_response = ""
