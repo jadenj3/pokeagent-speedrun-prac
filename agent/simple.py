@@ -1231,10 +1231,8 @@ Also, avoid duplicate goals here. They will take up unnecessary precious space i
 """
             # Make VLM call for planning module - double-check frame validation before VLM
             self_critique_response = ""
-            if self.state.step_counter < 2:
-                return "WAIT"
 
-            if self.state.step_counter == 2 or not any_active:
+            if self.state.step_counter == 0 or not any_active:
                 #self._complete_all_added_objectives("Story milestone reached - refreshing planner objectives")
                 if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                     print("🔍 Making VLM objectives call...")
@@ -1251,8 +1249,6 @@ Also, avoid duplicate goals here. They will take up unnecessary precious space i
                 # will automatically update objectives
                 actions, reasoning, analysis, deadend = self._parse_structured_response(response, game_state, json_data=json_data)
             self.story_objective_completed = False
-            if self.state.step_counter < 3:
-                return "WAIT"
             deadend_str = ""
             for deadend in list(self.deadends):
                 deadend_str = deadend_str + "\n" + deadend
