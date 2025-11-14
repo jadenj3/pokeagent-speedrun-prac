@@ -1280,7 +1280,7 @@ These are the previous responses:
                     overworld_str += "\n" + entry
             if self.overworld_coords:
                 overworld_coords_str = "Here is your previous overworld coordinates: \n"
-                for entry in reversed(self.overworld_coords.reverse()):
+                for entry in reversed(self.overworld_coords):
                     overworld_coords_str += "\n" + str(entry)
 
             # Create enhanced prompt with objectives, history context and chain of thought request
