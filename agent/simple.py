@@ -1711,9 +1711,6 @@ Very important: Avoid mentioning coordinates at all here, you tend to hallucinat
                         if line.strip():  # Only process non-empty lines
                             additional_actions = self._parse_actions(line, game_state, json_data = json_data)
                             actions.extend(additional_actions)
-                            if len(actions) >= 10:  # Max 10 actions
-                                actions = actions[:10]
-                                break
             
             # Process objectives if mentioned
             if objectives_section and prepend_new:
