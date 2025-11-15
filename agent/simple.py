@@ -346,7 +346,7 @@ class SimpleAgent:
             },
             {
                 "id": "story_route_104_north",
-                "description": "Travel through northern section of Route 104 to Rustboro",
+                "description": "Travel through northern section of Route 104 to Rustboro. DO NOT go into the flower shop",
                 "objective_type": "location",
                 "target_value": "Route 104 North",
                 "milestone_id": "ROUTE_104_NORTH"
