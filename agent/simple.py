@@ -1299,7 +1299,7 @@ DO NOT add duplicate objectives! You will be called every 5 turns, so only add e
 These are the current main story objectives you are trying to accomplish:
 {objectives_summary}
 
-These are also blockers you recently added:
+These are also blockers you recently added. These are CRITICAL for navigation:
 {blocker_str}
 
 Format your response as follows:
