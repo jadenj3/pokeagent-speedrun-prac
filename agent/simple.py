@@ -1384,7 +1384,7 @@ Your most recent actions are:
 Known Portal Connections:
 {portal_summary if not battle_info else ""}
 
-Note the coordinates still have to be in the traversable tile list for you to use the navigate_to(x,y) tool.
+Note the coordinates still have to be in the reachable tile list for you to use the navigate_to(x,y) tool.
 But the connections can be helpful for figuring out directions.
 
 {party_block}
