@@ -1332,6 +1332,8 @@ BLOCKERS:
 [You have access to the ADD_BLOCKER: tool. This keeps track of blockers you encounter and identifies dead ends. It is critical you use this tool to not
 end up in a loop. This tool is critical! These persist for a long time. You should use the current coordinates in your response, for example:
 ADD_BLOCKER: EAST and NORTH of (9,5) are fully blocked by trees. AVOID THIS AREA 
+Important: Also use this to mark the ENTRANCE to paths that lead to a dead end. For example:
+ADD_BLOCKER: Path North of (x,y) leads to a complete dead end. AVOID TAKING THIS PATH AT ALL COSTS. Look for a different path out of this area.]
 
 Objectives:
 [In this section you have access to the ADD_OBJECTIVE: tool. Create UP TO TWO objective here for the agent to follow. They will be able to mark them complete. It is critical that you provide enough objectives to break the agents loop, eg ADD_OBJECTIVE: The path north from your current position is BLOCKED, AVOID IT!. Continue south to investigate a way out of this maze
