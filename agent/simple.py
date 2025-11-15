@@ -1450,6 +1450,9 @@ Make sure you are confident you successfully completed the objectives before mar
 mark the objective complete on the turn you see the dialogue box with that NPC. You should also visually confirm you entered the right location before marking location objectives as complete.
 Don't mark them pre-emptively as you are executing the action.]
 
+BLOCKERS:
+[What are my blockers nearby? Which paths should I avoid to prevent me going to a dead end?]
+
 ANALYSIS:
 [Summarize your current situation. This will be passed onto you as context during your next turn. You can be as verbose as you like.
 First, summarize your previous turn. Think about your next action, how does that relate to your previous turn? Would it make sense after taking your previous analysis into consideration?
