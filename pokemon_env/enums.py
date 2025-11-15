@@ -909,7 +909,7 @@ class MapLocation(IntEnum):
     
     # Indoor Route 104 (Group 18)
     ROUTE_104_MR_BRINEYS_HOUSE = 0x1200
-    ROUTE_104_PRETTY_PETAL_FLOWER_SHOP = 0x1201
+    ROUTE_104_PRETTY_PETAL_FLOWER_SHOP = 0x1100
     
     # Indoor Route 111 (Group 19)
     ROUTE_111_WINSTRATE_FAMILYS_HOUSE = 0x1300
@@ -1021,7 +1021,7 @@ class MapLocation(IntEnum):
     
     # Dungeons (Group 17)
     METEOR_FALLS_1F_1R = 0x1100
-    METEOR_FALLS_1F_2R = 0x1101
+    METEOR_FALLS_1F_2R = 0x1201
     METEOR_FALLS_B1F_1R = 0x1102
     METEOR_FALLS_B1F_2R = 0x1103
     RUSTURF_TUNNEL = 0x1104
