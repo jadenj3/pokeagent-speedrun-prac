@@ -1460,7 +1460,8 @@ ALSO IMPORTANT: You interact with warps/stairs by walking into them, not pressin
 To interact with NPCs/Objects you also have access to an interact_with(x,y) tool. You can choose a traversable coordinate that you think contains an NPC and interact with it. GET AS CLOSE AS POSSIBLE TO THE NPC FIRST BEFORE USING THIS TOOL! Navigation is much quicker! 
 ***IMPORTANT RULE***: DO NOT use the interact_with(x,y) tool on any coordinates you previously used it on. CHECK YOUR PREVIOUS ACTIONS FIRST! You likely chose the wrong coordinate if you repeat them!!
 Critical rule: You cannot run from a trainer battle! If you have no PP, you should only choose run or fight actions! Choosing a special move will throw you into a loop.
-Try to avoid backtracking towards your previous coordinates.]"""
+Try to avoid backtracking towards your previous coordinates.
+** YOU SHOULD RUN FROM WILD POKEMON ENCOUNTERS ** ]"""
             # Print complete prompt to terminal for debugging
             '''
             print("\n" + "="*120)
