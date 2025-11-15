@@ -1253,7 +1253,7 @@ Also, avoid duplicate goals here. They will take up unnecessary precious space i
                 return 'WAIT'
             deadend_str = ""
             for deadend in list(self.deadends):
-                deadend_str = deadend_str + "\n" + deadend
+                deadend_str = deadend_str  + deadend
                 self.deadends[deadend] -= 1
                 if self.deadends[deadend] == 0:
                     del self.deadends[deadend]
@@ -1300,7 +1300,7 @@ These are the current main story objectives you are trying to accomplish:
 {objectives_summary}
 
 These are also blockers you recently added. These are CRITICAL for navigation:
-{blocker_str}
+{deadend_str}
 
 Format your response as follows:
 
@@ -1362,6 +1362,10 @@ Your current location is:
 The current reachable tiles from your location are:
 {reachable_tiles_text if not battle_info else ""}
 
+CRITICAL! These are your blockers surfaced by another agent:
+{deadend_str}
+DO NOT GO INTO BLOCKED PATHS! Pay attention carefully.
+
 And your current coordinates:
 {current_player_coords}
 
@@ -1411,7 +1415,8 @@ ANALYSIS:
 First, summarize your previous turn. Think about your next action, how does that relate to your previous turn? Would it make sense after taking your previous analysis into consideration?
 Use this space to think carefully. For example, if you see that you just went east, and now your path is blocked, you should mention it here and choose an action that doesn't go into a dead end.
 Did you just attempt an action that leads to a loop? For example, trying to run away from a trainer battle, only to realize you cannot.
-Again, look at your previous turn analysis and think about it carefully.]
+Again, look at your previous turn analysis and think about it carefully. 
+**IMPORTANT** Examine your current blockers. Make sure you are not entering a blocked path.]
 
 
 ACTION:
@@ -1459,7 +1464,7 @@ Try to avoid backtracking towards your previous coordinates.]"""
             # Extract action(s) from structured response
             actions, reasoning, analysis, deadend = self._parse_structured_response(response, game_state, json_data = json_data)
             if len(deadend) > 3:
-                self.deadends[deadend] = 5
+                self.deadends[deadend] = 30
             self.last_turn_actions = actions
 
             self.prev_analysis.append(analysis)
@@ -1702,7 +1707,7 @@ Try to avoid backtracking towards your previous coordinates.]"""
                     memory = line[9:].strip()
                     if len(memory) > 5: #
                         self.memories.append(memory)
-                elif line.upper().startswith('DEADEND:'):
+                elif line.upper().startswith('BLOCKERS:'):
                     current_section = 'deadend'
                     deadend = line[8:].strip()
                 elif line.upper().startswith('ACTION:'):
@@ -1724,7 +1729,8 @@ Try to avoid backtracking towards your previous coordinates.]"""
                     elif current_section == 'memories':
                         self.memories.append(line)
                     elif current_section == 'deadend':
-                        deadend += " " + line
+                        if line.startswith('ADD_BLOCKER:'):
+                            deadend += "\n" + line[12:].strip()
                     elif current_section == 'action':
                         # Additional action parsing from action section content
                         if line.strip():  # Only process non-empty lines
