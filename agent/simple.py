@@ -1317,6 +1317,9 @@ DO NOT add duplicate objectives! You will be called every 5 turns, so only add e
 These are the current main story objectives you are trying to accomplish:
 {objectives_summary}
 
+This is the movement preview available for both you and the action agent:
+{map_preview}
+
 These are also blockers you recently added. These are CRITICAL for navigation:
 {deadend_str}
 
