@@ -1462,16 +1462,16 @@ Inspect your self-critique, does what you are doing align with it?]
 
 ACTION:
 [If you are in dialogue or battle, prefer single actions like 'A'.
+RULE 0, HIGHEST PRIORITY, DO NOT DEVIATE FROM THIS: AVOID going towards and through blockers marked in the blocking section. AVOID THOSE COORDINATES AND PATHS, YOU WILL BE IN A LOOP IF YOU IGNORE THIS.
 You also have access to the navigate_to(x,y) tool. This will automatically run A* on your selected coordinate to find the optimal way to reach your destination. This is a powerful tool that should be used
 liberally! Using it will also override any other actions you input, so don't include it with other actions.
-When using the navigate_to(x,y) tool, you can only choose from the reachable tiles! Other tiles are NOT ALLOWED, YOU WILL BE STUCK. Always check the list of reachable tiles! The list of reachables tiles is provided above. Lower X means the tile is to your west, while a lower Y means the tile is to your north.
+When using the navigate_to(x,y) tool, you can only choose from the reachable tiles! Other tiles are NOT ALLOWED, YOU WILL BE STUCK. Always check the list of reachable tiles! The list of reachables tiles is provided above. Lower X means the tile is to your west, while a lower Y means the tile is to your north. Don't forget to avoid blockers and blocked paths!
 Some important notes: Don't use the navigate_to(x,y) tool when you are in dialogue or battle, you will be stuck.
 Don't interact with NPCs unless you have to. It will likely waste time.
 ALSO IMPORTANT: You interact with warps/stairs by walking into them, not pressing 'A'. They will also show up in your movement preview. Confirm you are in front of them using your movement preview, then walk into them to transition.
 To interact with NPCs/Objects you also have access to an interact_with(x,y) tool. You can choose a traversable coordinate that you think contains an NPC and interact with it. GET AS CLOSE AS POSSIBLE TO THE NPC FIRST BEFORE USING THIS TOOL! Navigation is much quicker! 
 ***IMPORTANT RULE***: DO NOT use the interact_with(x,y) tool on any coordinates you previously used it on. CHECK YOUR PREVIOUS ACTIONS FIRST! You likely chose the wrong coordinate if you repeat them!!
 Critical rule: You cannot run from a trainer battle! If you have no PP, you should only choose run or fight actions! Choosing a special move will throw you into a loop.
-Try to avoid backtracking towards your previous coordinates.
 ** YOU SHOULD RUN FROM WILD POKEMON ENCOUNTERS ** ]"""
             # Print complete prompt to terminal for debugging
             '''
