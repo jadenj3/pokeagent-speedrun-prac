@@ -1250,7 +1250,7 @@ Also, avoid duplicate goals here. They will take up unnecessary precious space i
             # Make VLM call for planning module - double-check frame validation before VLM
             self_critique_response = ""
 
-            if self.state.step_counter == 0 or not any_active:
+            if self.state.step_counter > 500 or not any_active:
                 #self._complete_all_added_objectives("Story milestone reached - refreshing planner objectives")
                 if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                     print("🔍 Making VLM objectives call...")
@@ -1384,7 +1384,10 @@ Hint: Use the reachable tiles, map preview, and visual frame to determine which 
 
 ALSO IMPORTANT: Use the interact_with(x,y) tool to interact with objects and NPCs. Remember, select the coordinates of the object itself.
 
-These are the sub-objectives added by the planning agent. These will help you accomplish the main story objectives:
+These are the current main story objectives you are trying to accomplish, focus on these goals:
+{objectives_summary}
+
+These are the sub-objectives that the self-critique module added:
 {active_added_objectives_summary}
 
 This is your analysis from your previous turn, think about this carefully:
