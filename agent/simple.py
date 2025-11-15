@@ -1757,7 +1757,7 @@ Critical rule: You cannot run from a trainer battle! If you have no PP, you shou
                         self.memories.append(memory)
                 elif line.upper().startswith('BLOCKERS:'):
                     current_section = 'deadend'
-                    deadend = line[8:].strip()
+                    deadend = line[9:].strip()
                 elif line.upper().startswith('ACTION:'):
                     current_section = 'action'
                     # Extract actions from this line
