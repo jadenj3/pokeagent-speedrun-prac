@@ -1359,6 +1359,8 @@ Think, is the agent in a loop? What are the traversable areas? In which directio
                     json_data=json_data,
                     prepend_new=True,
                 )
+                if len(deadend) > 3:
+                    self.deadends[deadend] = 30
 
             if len(self.state.history) > 0:
                 prev_coords = self.state.history[-1].player_coords
