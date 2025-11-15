@@ -1268,6 +1268,8 @@ Also, avoid duplicate goals here. They will take up unnecessary precious space i
                 for entry in reversed(self.overworld_coords[-20:]):
                     overworld_coords_str += "\n" + str(entry)
 
+            blocker_str = ""
+
             self_critique_prompt = f"""
             You are a pokemon agent module as part of a scaffolding. You are the self-critique module. Your job is to inspect the LLMs analysis of their previous turns, overworld coordinates. You should be very critical of their current trajectory and look for any loops or dead ends the agent is encountering. For example if the agent keeps try to go north, but their coordinate history is not going significantly farther north, they are likely in a dead end.
             Once you identify a loop or dead end, you should strongly suggest to the model to take a different path, and forbid it from continuing on its current plan.
@@ -1290,7 +1292,6 @@ Your current location is:
 **IMPORTANT: This is VERY ACCURATE and should not be ignored!**
 THINK about your current location, and how to get to your next objective.
 
-
 These are the agents current objectives that you or the planning module have added:
 {active_added_objectives_summary}
 DO NOT add duplicate objectives! You will be called every 5 turns, so only add essential objectives to get unstuck.
@@ -1298,20 +1299,27 @@ DO NOT add duplicate objectives! You will be called every 5 turns, so only add e
 These are the current main story objectives you are trying to accomplish:
 {objectives_summary}
 
+These are also blockers you recently added:
+{blocker_str}
+
 Format your response as follows:
 
 Reasoning:
 [Analyse the current situation, explain what is happening, and what the agent should do next]
 
+BLOCKERS:
+[You have access to the ADD_BLOCKER: tool. This keeps track of blockers you encounter and identifies dead ends. It is critical you use this tool to not
+end up in a loop
+
 Objectives:
 [In this section you have access to the ADD_OBJECTIVE: tool. Create UP TO TWO objective here for the agent to follow. They will be able to mark them complete. It is critical that you provide enough objectives to break the agents loop, eg ADD_OBJECTIVE: The path north from your current position is BLOCKED, AVOID IT!. Continue south to investigate a way out of this maze
 You also have access to the COMPLETE_OBJECTIVES: tool. This lets you get rid of any stale or misleading objectives on the agents current objectives. Use this to keep the objective list updated and accurate. Use it on a new line:
 COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs"
-IMPORTANT: When adding objectives, only add a single objective!!!]
+Think, is the agent in a loop? What are the traversable areas? In which directions are there blockers? Choose a path that avoids blockers.]
             
             """
 
-            if len(self.overworld_coords) > 1 and  len(self.overworld_coords) % 4 == 0:
+            if len(self.overworld_coords) > 1 and  len(self.overworld_coords) % 4 == 0 and not battle_info:
                 #self._complete_all_added_objectives("Story milestone reached - refreshing planner objectives")
                 if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                     print("🔍 Making VLM objectives call...")
