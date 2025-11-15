@@ -906,8 +906,26 @@ class SimpleAgent:
         summary["doors"] = doors
         summary["stairs"] = stairs
 
+        def _direction_from_start(entry):
+            """Return cardinal/diagonal direction from player to entry."""
+            dx = entry["x"] - start_coord[0]
+            dy = entry["y"] - start_coord[1]
+            parts = []
+            if dy < 0:
+                parts.append("North")
+            elif dy > 0:
+                parts.append("South")
+            if dx < 0:
+                parts.append("West")
+            elif dx > 0:
+                parts.append("East")
+            return "-".join(parts) if parts else "Here"
+
         def _fmt_entry(entry):
             base = f"({entry['x']},{entry['y']})"
+            direction = _direction_from_start(entry)
+            if direction:
+                base += f" - {direction}"
             if entry.get("warp_destination"):
                 dest = entry["warp_destination"]
                 dest_name = dest.get("to_name", "Unknown")
@@ -1362,6 +1380,7 @@ Your current location is:
 
 The current reachable tiles from your location are:
 {reachable_tiles_text if not battle_info else ""}
+They also include cardinal directions eg North-West. So if you want to West from your current position, choose a tile North-West, South-West, or West, and avoid any tile that says East.
 
 These are your blockers surfaced by another agent:
 {deadend_str}
