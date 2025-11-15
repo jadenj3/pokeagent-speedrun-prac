@@ -1339,7 +1339,7 @@ Important: Also use this to mark the ENTRANCE to paths that lead to a dead end. 
 ADD_BLOCKER: Path North of (x,y) leads to a complete dead end. AVOID TAKING THIS PATH AT ALL COSTS. Look for a different path out of this area.]
 
 Objectives:
-[In this section you have access to the ADD_OBJECTIVE: tool. Create UP TO TWO objective here for the agent to follow. They will be able to mark them complete. It is critical that you provide enough objectives to break the agents loop, eg ADD_OBJECTIVE: The path north from your current position is BLOCKED, AVOID IT!. Continue south to investigate a way out of this maze
+[In this section you have access to the ADD_OBJECTIVE: tool. Create UP TO TWO objective here for the agent to follow. They will be able to mark them complete. It is critical that you only provide objectives to break the agents loop, eg ADD_OBJECTIVE: The path north from your current position is BLOCKED, AVOID IT!. Continue south to investigate a way out of this maze
 You also have access to the COMPLETE_OBJECTIVES: tool. This lets you get rid of any stale or misleading objectives on the agents current objectives. Use this to keep the objective list updated and accurate. Use it on a new line:
 COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs"
 Think, is the agent in a loop? What are the traversable areas? In which directions are there blockers? Choose a path that avoids blockers.]
