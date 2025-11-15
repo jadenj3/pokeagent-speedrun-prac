@@ -909,7 +909,7 @@ class MapLocation(IntEnum):
     
     # Indoor Route 104 (Group 18)
     ROUTE_104_MR_BRINEYS_HOUSE = 0x1200
-    ROUTE_104_PRETTY_PETAL_FLOWER_SHOP = 0x1100
+    ROUTE_104_PRETTY_PETAL_FLOWER_SHOP = 0x1101
     
     # Indoor Route 111 (Group 19)
     ROUTE_111_WINSTRATE_FAMILYS_HOUSE = 0x1300
