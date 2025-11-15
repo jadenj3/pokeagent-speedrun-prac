@@ -1278,6 +1278,12 @@ Here is your previous overworld coordinates:
 Remember, lower y value is north, higher is south. Lower X value is west, higher is east.
 It is ordered from newest to oldest.
 {overworld_coords_str}
+
+These are the coordinates you can currently reach. You can examine these to see if there are any promising paths forward:
+{reachable_tiles_text}
+
+And your current coordinates:
+{player_coords}
             
 Your current location is:
 {player_location}
@@ -1298,7 +1304,7 @@ Reasoning:
 [Analyse the current situation, explain what is happening, and what the agent should do next]
 
 Objectives:
-[In this section you have access to the ADD_OBJECTIVE: tool. Create A SINGLE objective here for the agent to follow. They will be able to mark them complete. It is critical that you provide enough objectives to break the agents loop, eg ADD_OBJECTIVE: The path north from your current position is BLOCKED, AVOID IT!. Continue south to investigate a way out of this maze
+[In this section you have access to the ADD_OBJECTIVE: tool. Create UP TO TWO objective here for the agent to follow. They will be able to mark them complete. It is critical that you provide enough objectives to break the agents loop, eg ADD_OBJECTIVE: The path north from your current position is BLOCKED, AVOID IT!. Continue south to investigate a way out of this maze
 You also have access to the COMPLETE_OBJECTIVES: tool. This lets you get rid of any stale or misleading objectives on the agents current objectives. Use this to keep the objective list updated and accurate. Use it on a new line:
 COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs"
 IMPORTANT: When adding objectives, only add a single objective!!!]
