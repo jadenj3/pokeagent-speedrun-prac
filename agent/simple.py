@@ -1319,8 +1319,8 @@ COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_12
 Think, is the agent in a loop? What are the traversable areas? In which directions are there blockers? Choose a path that avoids blockers.]
             
             """
-
-            if len(self.overworld_coords) > 1 and  len(self.overworld_coords) % 4 == 0 and not battle_info:
+            critique_reasoning = ""
+            if len(self.overworld_coords) > 2 and not battle_info:
                 #self._complete_all_added_objectives("Story milestone reached - refreshing planner objectives")
                 if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                     print("🔍 Making VLM objectives call...")
@@ -1335,7 +1335,7 @@ Think, is the agent in a loop? What are the traversable areas? In which directio
                     logger.error("🚫 CRITICAL: About to call VLM but frame validation failed - this should never happen!")
                     return "WAIT"
                 # will automatically update objectives
-                actions, reasoning, analysis, deadend = self._parse_structured_response(response, game_state, json_data=json_data, prepend_new = True)
+                actions, critique_reasoning, analysis, deadend = self._parse_structured_response(response, game_state, json_data=json_data, prepend_new = True)
 
             if len(self.state.history) > 0:
                 prev_coords = self.state.history[-1].player_coords
@@ -1363,7 +1363,7 @@ Your current location is:
 The current reachable tiles from your location are:
 {reachable_tiles_text if not battle_info else ""}
 
-CRITICAL! These are your blockers surfaced by another agent:
+These are your blockers surfaced by another agent:
 {deadend_str}
 DO NOT GO INTO BLOCKED PATHS! Pay attention carefully.
 
@@ -1394,9 +1394,11 @@ Available actions: A, B, START, SELECT, UP, DOWN, LEFT, RIGHT, navigate_to(x,y),
 **IMPORTANT** To enter doors/stairs/warps CHECK THE MOVEMENT PREVIEW AND USE SINGLE ACTIONS. navigate_to is great for long distances, but it can struggle with entering locations if you are not perfectly aligned with the door or you are stuck on an NPC. The movement preview will have better information for you to use.
 If you want to you can use navigate_to to get close to the door, but afterwards make sure to use single actions.
 
-Navigation tips:
-- Enter and exit locations through the middle rather than hugging a specific side, this maximizes visibility of the area to locate the exit.
-- Unless you are blocked, use the navigate_to() tool as much as possible. This is much faster than single steps.
+CRITICAL: As part of the scaffolding you will receive critique of your previous actions from a self-critique agent.
+They will detect if you are on the right path and are going into any loops. LIST TO THEIR ADVICE!
+Previous turn self-critique:
+{critique_reasoning}
+
 
 You should format your response as follows:
 {battle_text}
@@ -1417,7 +1419,8 @@ First, summarize your previous turn. Think about your next action, how does that
 Use this space to think carefully. For example, if you see that you just went east, and now your path is blocked, you should mention it here and choose an action that doesn't go into a dead end.
 Did you just attempt an action that leads to a loop? For example, trying to run away from a trainer battle, only to realize you cannot.
 Again, look at your previous turn analysis and think about it carefully. 
-**IMPORTANT** Examine your current blockers. Make sure you are not entering a blocked path.]
+**IMPORTANT** Examine your current blockers. Make sure you are not entering a blocked path.
+Inspect your self-critique, does what you are doing align with it?]
 
 
 ACTION:
