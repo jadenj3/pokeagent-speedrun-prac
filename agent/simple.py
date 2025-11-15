@@ -1323,6 +1323,9 @@ This is the movement preview available for both you and the action agent:
 These are also blockers you recently added. These are CRITICAL for navigation:
 {deadend_str}
 
+HINT: If you run into a dead end, you should backtrack and mark the entrance as a blocker, that way you don't return.
+Sometimes you don't want to follow the greedy path (for example, always going north to reach a northern objective). Sometimes you have to move in a different direction to find the correct path to your objective.
+
 Format your response as follows:
 
 Reasoning:
