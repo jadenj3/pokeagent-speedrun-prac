@@ -1353,7 +1353,12 @@ Think, is the agent in a loop? What are the traversable areas? In which directio
                     logger.error("🚫 CRITICAL: About to call VLM but frame validation failed - this should never happen!")
                     return "WAIT"
                 # will automatically update objectives
-                actions, critique_reasoning, analysis, deadend = self._parse_structured_response(response, game_state, json_data=json_data, prepend_new = True)
+                actions, critique_reasoning, analysis, deadend = self._parse_structured_response(
+                    response,
+                    game_state,
+                    json_data=json_data,
+                    prepend_new=True,
+                )
 
             if len(self.state.history) > 0:
                 prev_coords = self.state.history[-1].player_coords
@@ -1694,7 +1699,13 @@ Try to avoid backtracking towards your previous coordinates.]"""
 
         return "\n".join(lines), any_active
     
-    def _parse_structured_response(self, response: str, game_state: Dict[str, Any] = None, json_data = None, prepend_new = False) -> Tuple[List[str], str, str, str]:
+    def _parse_structured_response(
+        self,
+        response: str,
+        game_state: Dict[str, Any] = None,
+        json_data=None,
+        prepend_new=False,
+    ) -> Tuple[List[str], str, str, str]:
         """Parse structured chain-of-thought response and extract actions and reasoning"""
         try:
             # Extract sections from structured response
@@ -1770,18 +1781,18 @@ Try to avoid backtracking towards your previous coordinates.]"""
             if not actions:
                 actions = self._parse_actions(response, game_state, json_data = json_data)
             
-            # Create concise reasoning summary
+            # Create concise reasoning summary (kept for future flexibility)
             reasoning_parts = []
             if analysis:
                 reasoning_parts.append(f"Analysis: {analysis}")
-            if objectives_section:
-                reasoning_parts.append(f"Objectives: {objectives_section}")
+            # Objectives are handled separately (added/removed) and shouldn't pollute reasoning text
             if plan:
                 reasoning_parts.append(f"Plan: {plan}")
             if reasoning:
                 reasoning_parts.append(f"Reasoning: {reasoning}")
             
-            full_reasoning = " | ".join(reasoning_parts) if reasoning_parts else "No reasoning provided"
+            # Return only the explicit reasoning block for downstream prompts
+            full_reasoning = reasoning if reasoning else "No reasoning provided"
             
             return actions, full_reasoning, analysis, deadend
             
