@@ -1116,7 +1116,7 @@ These are the previous responses:
             # Make VLM call for planning module - double-check frame validation before VLM
             self_critique_response = ""
 
-            if self.story_objective_completed or self.state.step_counter == 1:
+            if False:
                 self._complete_all_added_objectives("Story milestone reached - refreshing planner objectives")
                 if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                     print("🔍 Making VLM objectives call...")
