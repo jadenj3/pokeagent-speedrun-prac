@@ -1105,7 +1105,7 @@ You also have access to the following command in this section to sub-objectives:
 This section should only contain calls do the ADD_OBJECTIVE tool at the start of each line, eg
 ADD_OBJECTIVE: location:Find Pokemon Center in town:(15,20). You should only add objectives that directly help you accomplish the next story goal.
 Only include essential goals. Goals like "level up your pokemon" or "get a free potion" are not helpful.
-GIVE EXTREMELY SPECIFIC STEP BY STEP DIRECTIONS AND GOALS. For example "Leave the woods to the west, when you reach a dirt road, go north". Be VERY detailed!]
+GIVE EXTREMELY SPECIFIC STEP BY STEP DIRECTIONS AND GOALS. For example "Leave the woods to the west, when you reach a dirt road, go north". Be VERY detailed! Leave no turn left unmentioned]
 """
 
             self_critique_prompt = f"""
