@@ -1115,7 +1115,7 @@ These are the previous responses:
             # Make VLM call for planning module - double-check frame validation before VLM
             self_critique_response = ""
 
-            if self.story_objective_completed or self.state.step_counter == 1:
+            if False:
                 self._complete_all_added_objectives("Story milestone reached - refreshing planner objectives")
                 if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                     print("🔍 Making VLM objectives call...")
@@ -1143,9 +1143,6 @@ ALSO IMPORTANT: Use the interact_with(x,y) tool to interact with objects and NPC
 
 Your current story objectives are:
 {objectives_summary}
-
-These are the sub-objectives added by the planning agent. These will help you accomplish the main story objectives:
-{added_objectives_summary}
 
 This is your analysis from your previous turn:
 {prev_analysis}
