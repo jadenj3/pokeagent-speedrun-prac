@@ -1349,7 +1349,7 @@ ACTIONS:
             
             """
             critique_reasoning = ""
-            if len(self.overworld_coords) > 2 and not battle_info and len(self.overworld_coords)%3 == 0:
+            if len(self.overworld_coords) > 2 and not battle_info and len(self.overworld_coords)%2 == 0:
                 #self._complete_all_added_objectives("Story milestone reached - refreshing planner objectives")
                 if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                     print("🔍 Making VLM objectives call...")
