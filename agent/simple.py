@@ -1343,6 +1343,9 @@ Objectives:
 You also have access to the COMPLETE_OBJECTIVES: tool. This lets you get rid of any stale or misleading objectives on the agents current objectives. Use this to keep the objective list updated and accurate. Use it on a new line:
 COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs"
 Think, is the agent in a loop? What are the traversable areas? In which directions are there blockers? Choose a path that avoids blockers.]
+
+ACTIONS:
+[This section is optional, but if the agent is stuck, you can use an action here (navigate_to(x,y), to navigate to a specific coordinate). This will override the agents action for this turn and could help you avoid a loop.]
             
             """
             critique_reasoning = ""
