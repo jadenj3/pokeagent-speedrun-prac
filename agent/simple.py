@@ -332,7 +332,7 @@ class SimpleAgent:
             },
             {
                 "id": "story_route_104_north",
-                "description": "Travel through northern section of Route 104 to Rustboro",
+                "description": "Travel through Route 104 to Rustboro",
                 "objective_type": "location",
                 "target_value": "Route 104 North",
                 "milestone_id": "ROUTE_104_NORTH"
