@@ -1250,7 +1250,7 @@ Also, avoid duplicate goals here. They will take up unnecessary precious space i
             # Make VLM call for planning module - double-check frame validation before VLM
             self_critique_response = ""
 
-            if False:
+            if self.state.step_counter == 1 or not any_active:
                 #self._complete_all_added_objectives("Story milestone reached - refreshing planner objectives")
                 if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                     print("🔍 Making VLM objectives call...")
