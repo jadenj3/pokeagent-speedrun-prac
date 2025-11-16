@@ -923,6 +923,8 @@ class VLM:
             reasoning_effort = backend_kwargs.pop("reasoning_effort", None)
             if not reasoning_effort:
                 reasoning_effort = os.getenv("OPENAI_REASONING_EFFORT")
+            if not reasoning_effort:
+                reasoning_effort = "medium"
             if reasoning_effort:
                 backend_kwargs["reasoning_effort"] = reasoning_effort
             
