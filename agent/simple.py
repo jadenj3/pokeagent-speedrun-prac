@@ -1344,8 +1344,9 @@ You also have access to the COMPLETE_OBJECTIVES: tool. This lets you get rid of 
 COMPLETE_OBJECTIVE: objective_id:notes (e.g., "COMPLETE_OBJECTIVE: my_sub_obj_123:Successfully bought Pokeballs"
 Think, is the agent in a loop? What are the traversable areas? In which directions are there blockers? Choose a path that avoids blockers.]
 
-ACTIONS:
-[This section is optional, but if the agent is stuck, you can use an action here (navigate_to(x,y), to navigate to a specific coordinate). This will override the agents action for this turn and could help you avoid a loop.]
+ACTION:
+[This section is optional, but if the agent is stuck, you can use an action here (navigate_to(x,y), to navigate to a specific coordinate). This will override the agents action for this turn and could help you avoid a loop. For example:
+navigate_to(2,4)]
             
             """
             critique_reasoning = ""
