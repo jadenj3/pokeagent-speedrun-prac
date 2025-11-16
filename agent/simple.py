@@ -1245,7 +1245,9 @@ OBJECTIVES:
 You also have access to the following command in this section to sub-objectives: ADD_OBJECTIVE: type:description:target_value (e.g., "ADD_OBJECTIVE: location:Continue along the route to reach the town:Town"). The action model will be able to manually complete these objectives
 This section should only contain calls do the ADD_OBJECTIVE tool at the start of each line, eg
 ADD_OBJECTIVE: location:Exit the town to the west:Exit. You should only add objectives that directly help you accomplish the next story goal.
-Also, avoid duplicate goals here. They will take up unnecessary precious space in the limited goal space.]
+Also, avoid duplicate goals here. They will take up unnecessary precious space in the limited goal space.
+Be VERY SPECIFIC with directions. Leave no turn left unturned. For example: "Once you reach the exit, stay on the dirt path. When the dirt path forks, go north to the city."
+You also have a web search option, use this thoroughly!]
 """
             # Make VLM call for planning module - double-check frame validation before VLM
             self_critique_response = ""
@@ -1255,7 +1257,13 @@ Also, avoid duplicate goals here. They will take up unnecessary precious space i
                 if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                     print("🔍 Making VLM objectives call...")
                     try:
-                        response = self.vlm.get_query(frame, planning_prompt, "simple_mode", model_name = 'gemini-2.5-pro')
+                        response = self.vlm.get_query(
+                            frame,
+                            planning_prompt,
+                            "simple_mode",
+                            model_name='gemini-2.5-pro',
+                            use_grounding=True,
+                        )
                         print(f"🔍 VLM response received: {response[:100]}..." if len(
                             response) > 100 else f"🔍 VLM response: {response}")
                     except Exception as e:
@@ -1355,7 +1363,13 @@ navigate_to(2,4)]
                 if frame and (hasattr(frame, 'save') or hasattr(frame, 'shape')):
                     print("🔍 Making VLM objectives call...")
                     try:
-                        response = self.vlm.get_query(frame, self_critique_prompt, "simple_mode", model_name = 'gemini-2.5-pro')
+                        response = self.vlm.get_query(
+                            frame,
+                            self_critique_prompt,
+                            "simple_mode",
+                            model_name='gemini-2.5-pro',
+                            use_grounding=True,
+                        )
                         print(f"🔍 VLM response received: {response[:100]}..." if len(
                             response) > 100 else f"🔍 VLM response: {response}")
                     except Exception as e:

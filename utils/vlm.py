@@ -747,15 +747,27 @@ class GeminiBackend(VLMBackend):
         # 1. Create a client. This is the new entry point.
         self.client = genai.Client()
 
-        # 2. Define the tool
+        # 2. Define optional tools (code execution + Google search grounding)
+        tools = []
         code_execution_tool = self.types.Tool(
             code_execution=self.types.ToolCodeExecution()
         )
+        tools.append(code_execution_tool)
+
+        # Enable Google Search grounding for planning module usage
+        try:
+            grounding_tool = self.types.Tool(
+                google_search=self.types.GoogleSearch()
+            )
+            tools.append(grounding_tool)
+        except AttributeError:
+            # Older SDK without GoogleSearch support - skip silently
+            logger.warning("Gemini Backend: GoogleSearch tool not available in current SDK version")
 
         # 3. Define the generation config, including tools
-        # This will be passed to every generate_content call.
+        # This will be passed to generate_content calls when requested.
         self.generation_config = self.types.GenerateContentConfig(
-            tools=[code_execution_tool]
+            tools=tools
         )
         # ---------------------
 
@@ -771,20 +783,23 @@ class GeminiBackend(VLMBackend):
             raise ValueError(f"Unsupported image type: {type(img)}")
 
     @retry_with_exponential_backoff
-    def _call_generate_content(self, content_parts):
+    def _call_generate_content(self, content_parts, use_grounding: bool = False):
         """Calls the generate_content method with exponential backoff."""
 
         # --- NEW SDK LOGIC ---
         # Call generate_content on the client's 'models' service.
-        # Pass the model name string and the config here.
-        response = self.client.models.generate_content(
-            model=self.model_name,
-            contents=content_parts,
-            #config=self.generation_config
-        )
+        # Pass the model name string and the config here when grounding is needed.
+        generation_kwargs = {
+            "model": self.model_name,
+            "contents": content_parts,
+        }
+        if use_grounding:
+            generation_kwargs["config"] = self.generation_config
+
+        response = self.client.models.generate_content(**generation_kwargs)
         return response
 
-    def get_query(self, img: Union[Image.Image, np.ndarray], text: str, module_name: str = "Unknown", model_name = None) -> str:
+    def get_query(self, img: Union[Image.Image, np.ndarray], text: str, module_name: str = "Unknown", model_name = None, use_grounding: bool = False) -> str:
         """Process an image and text prompt using Gemini API"""
         start_time = time.time()
         if model_name:
@@ -797,7 +812,7 @@ class GeminiBackend(VLMBackend):
             logger.info(f"[{module_name}] GEMINI VLM IMAGE QUERY:")
             logger.info(f"[{module_name}] PROMPT: {prompt_preview}")
 
-            response = self._call_generate_content(content_parts)
+            response = self._call_generate_content(content_parts, use_grounding=use_grounding)
 
             # Use the stored FinishReason enum for a robust safety check
             if hasattr(response, 'candidates') and response.candidates:
@@ -963,7 +978,8 @@ class VLM:
             return 'openai'
     
     def get_query(self, img: Union[Image.Image, np.ndarray], text: str, module_name: str = "Unknown",
-                  reasoning_effort: Optional[str] = None, model_name: Optional[str] = None) -> str:
+                  reasoning_effort: Optional[str] = None, model_name: Optional[str] = None,
+                  use_grounding: bool = False) -> str:
         """Process an image and text prompt"""
         try:
             backend_kwargs = {}
@@ -972,6 +988,8 @@ class VLM:
                 backend_kwargs["reasoning_effort"] = reasoning_effort
             if model_name and self.backend_type == "gemini":
                 backend_kwargs["model_name"] = model_name
+            if use_grounding and self.backend_type == "gemini":
+                backend_kwargs["use_grounding"] = True
             # Backend handles its own logging, so we don't duplicate it here
             result = self.backend.get_query(img, text, module_name, **backend_kwargs)
             if model_name and self.backend_type == "gemini":
