@@ -1,3 +1,16 @@
+
+This is my submission to the NeuRIPS PokeAgent Challenge. 
+
+The agent lives in agent/simple.py.
+
+The agent follows a minimal context philosophy. On every turn, the agent writes a summary of the current turn. This is the only information that gets passed to subsequent turns.
+All the spatial information comes from a local 15x15 window that both the player and the agent can see, not a global stitched map.
+The biggest improvements come from giving the agent a tool that shows which tiles are traversable from the current location and their coordinates. 
+I also experimented with many other tools including dead-end markings, scratchpads, self-critique/reflection, but none were a noticeable difference over the clean minimal context Agent. 
+
+
+
+
 # PokéAgent Challenge: RPG Speedrunning Agent in Pokémon Emerald
 
 ![PokéAgent Challenge: RPG Speedrunning Agent in Pokémon Emerald](emerald.png)
